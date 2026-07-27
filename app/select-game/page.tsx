@@ -1,0 +1,114 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Game, GameCategory } from '@/lib/types'
+import { useApp } from '@/context/AppContext'
+import Sidebar from '@/components/game-select/Sidebar'
+import GameGrid from '@/components/game-select/GameGrid'
+import VersionSelector from '@/components/game-select/VersionSelector'
+import AnimatedBackground from '@/components/ui/AnimatedBackground'
+
+export default function SelectGamePage() {
+  const router = useRouter()
+  const { setSelectedGame, selectedGame } = useApp()
+  const [activeCategory, setActiveCategory] = useState<GameCategory>('extraction')
+  const [localGame, setLocalGame] = useState<Game | null>(selectedGame)
+  // Kept mounted just long enough to play the slide-out transition after deselect
+  const [closingGame, setClosingGame] = useState<Game | null>(null)
+  const [panelClosing, setPanelClosing] = useState(false)
+
+  function handleGameSelect(game: Game) {
+    if (localGame?.id === game.id) {
+      // Deselect — tile highlight clears immediately, panel animates out and unmounts after
+      setClosingGame(game)
+      setPanelClosing(true)
+      setLocalGame(null)
+      setSelectedGame(null)
+      setTimeout(() => {
+        setPanelClosing(false)
+        setClosingGame(null)
+      }, 200) // matches VersionSelector's CSS transition duration
+    } else {
+      setClosingGame(null)
+      setPanelClosing(false)
+      setLocalGame(game)
+      setSelectedGame(game)
+    }
+  }
+
+  return (
+    <div
+      style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        position: 'relative',
+        zIndex: 1,
+      }}
+    >
+      <AnimatedBackground />
+      {/* Top bar */}
+      <div
+        style={{
+          height: '52px',
+          backgroundColor: '#111318',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '0 24px',
+          gap: '24px',
+          flexShrink: 0,
+        }}
+      >
+        <span
+          style={{
+            fontFamily: 'var(--font-rajdhani), sans-serif',
+            fontSize: '16px',
+            fontWeight: 700,
+            color: '#e8a020',
+            letterSpacing: '0.05em',
+          }}
+        >
+          SQUADFINDER
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={() => router.push('/')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#4a5568',
+              fontSize: '13px',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            ← Back
+          </button>
+          <span style={{ color: '#4a5568', fontSize: '12px' }}>/</span>
+          <span style={{ color: '#8b95a5', fontSize: '13px' }}>Select Game</span>
+        </div>
+      </div>
+
+      {/* Three-column layout — fit-content sidebar + flex game grid + fit-content version panel */}
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
+        {/* Sidebar — fit-content */}
+        <Sidebar activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
+
+        {/* Game grid — flex 1, takes remaining space */}
+        <GameGrid
+          category={activeCategory}
+          selectedGame={localGame}
+          onGameSelect={handleGameSelect}
+        />
+
+        {/* Version selector — fit-content, only mounted when a game is selected (or animating out) */}
+        {(localGame || closingGame) && (
+          <VersionSelector game={localGame ?? closingGame} closing={panelClosing} />
+        )}
+      </div>
+    </div>
+  )
+}
