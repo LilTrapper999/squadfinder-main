@@ -91,21 +91,6 @@ export default function ProfileForm() {
   const gq = GAME_QUESTIONS[gameId]
 
   // ── helpers ──────────────────────────────────────────────────────────────────
-  function getArr(key: string): string[] {
-    const v = profileAnswers[key]
-    return Array.isArray(v) ? v : []
-  }
-
-  function getNum(key: string): number {
-    const v = profileAnswers[key]
-    return typeof v === 'number' ? v : 0
-  }
-
-  function getStr(key: string): string {
-    const v = profileAnswers[key]
-    return typeof v === 'string' ? v : ''
-  }
-
   // Nested key helpers  (e.g. 'gamesmanship.weapons')
   function nestedArr(group: string, field: string): string[] {
     const g = profileAnswers[group]
@@ -240,7 +225,7 @@ export default function ProfileForm() {
           {/* G3 — Roles */}
           {gq?.roles && gq.roles.length > 0 && (
             <QuestionBlock>
-              <QuestionLabel>What's your role?</QuestionLabel>
+              <QuestionLabel>What&apos;s your role?</QuestionLabel>
               <div
                 style={{
                   display: 'grid',

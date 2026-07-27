@@ -179,7 +179,7 @@ export default function AlliesPanel({ allies }: AlliesPanelProps) {
               No allies yet.
             </p>
             <p style={{ margin: 0, fontSize: '13px', color: '#8b95a5', lineHeight: 1.5 }}>
-              Accept a squad request to add them as an ally — you'll be able to chat right away.
+              Accept a squad request to add them as an ally — you&apos;ll be able to chat right away.
             </p>
           </div>
         ) : (

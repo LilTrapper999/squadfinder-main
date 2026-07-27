@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useApp } from '@/context/AppContext'
 import { MOCK_MATCHES, MOCK_OPPONENT_PROFILES } from '@/lib/mockData'
-import { Ally, MatchPlayer, Profile, ProfileAnswers } from '@/lib/types'
+import { MatchPlayer, Profile, ProfileAnswers } from '@/lib/types'
 import { calculateMatch } from '@/lib/matching'
 import MatchCard from '@/components/matches/MatchCard'
 import AlliesPanel from '@/components/matches/AlliesPanel'
@@ -50,7 +50,7 @@ export default function SquadMatchesPage() {
     profileAnswers,
     allies, addAlly,
     incomingRequests, shiftIncomingRequest,
-    blockedUsers, blockUser,
+    blockUser,
     notificationsEnabled, setNotificationsEnabled,
     squadAccepted, acceptedMatchId, setSquadAccepted,
   } = useApp()
@@ -165,7 +165,7 @@ export default function SquadMatchesPage() {
             color: '#0a0b0f',
             letterSpacing: '0.08em',
           }}>
-            YOU'RE IN A SQUAD!
+            YOU&apos;RE IN A SQUAD!
           </span>
         </div>
       )}

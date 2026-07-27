@@ -72,12 +72,6 @@ function PFP() {
   )
 }
 
-const STATUS_DOT: Record<AllyStatus, string> = {
-  'searching': '#22c55e',
-  'in-squad':  '#facc15',
-  'offline':   'rgba(255,255,255,0.3)',
-}
-
 const STATUS_LABEL: Record<AllyStatus, string> = {
   'searching': '● Searching for a squad',
   'in-squad':  '● In squad',
@@ -270,7 +264,6 @@ export default function HomePage() {
               ) : (
                 allies.map((ally) => {
                   const invState = inviteStates[ally.id] ?? 'idle'
-                  const canInvite = ally.status === 'searching' && !squadFull
 
                   return (
                     <div

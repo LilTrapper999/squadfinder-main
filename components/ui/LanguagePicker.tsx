@@ -31,7 +31,6 @@ export default function LanguagePicker({ selected, onChange }: LanguagePickerPro
   function handleOtherCheck() {
     if (otherChecked) {
       // Uncheck — remove the custom language from selected
-      const cleaned = selected.filter((v) => !LANGUAGES.includes(v) === false || v === otherText)
       onChange(selected.filter((v) => v !== otherText))
       setOtherText('')
     }
@@ -147,7 +146,7 @@ export default function LanguagePicker({ selected, onChange }: LanguagePickerPro
             }}
           />
           <p style={{ margin: '5px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
-            Will be capitalised automatically (e.g. "klingon" → "Klingon")
+            Will be capitalised automatically (e.g. &quot;klingon&quot; → &quot;Klingon&quot;)
           </p>
         </div>
       )}
