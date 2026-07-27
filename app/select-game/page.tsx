@@ -35,6 +35,22 @@ export default function SelectGamePage() {
     }
   }
 
+  function handleCategoryChange(category: GameCategory) {
+    // A game picked in one tab (e.g. Extraction Shooters) shouldn't stay "selected" after
+    // switching to a different tab (e.g. FPS) where it isn't even listed.
+    if (localGame) {
+      setClosingGame(localGame)
+      setPanelClosing(true)
+      setLocalGame(null)
+      setSelectedGame(null)
+      setTimeout(() => {
+        setPanelClosing(false)
+        setClosingGame(null)
+      }, 200)
+    }
+    setActiveCategory(category)
+  }
+
   return (
     <div
       style={{
@@ -94,7 +110,7 @@ export default function SelectGamePage() {
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
         <GameGrid
           category={activeCategory}
-          onCategoryChange={setActiveCategory}
+          onCategoryChange={handleCategoryChange}
           selectedGame={localGame}
           closingGame={closingGame}
           panelClosing={panelClosing}

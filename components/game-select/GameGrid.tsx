@@ -87,6 +87,15 @@ export default function GameGrid({
     }
   }, [selectedGame?.id])
 
+  // Keep the selected tile in view — picking a game further down the grid shouldn't leave it
+  // scrolled off-screen while the page is still scrolled up top.
+  useEffect(() => {
+    if (!selectedGame) return
+    document
+      .getElementById(`game-tile-${selectedGame.id}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [selectedGame?.id])
+
   const showVersionPanel =
     !!(selectedGame && needsVersionChoice(selectedGame)) ||
     !!(closingGame && needsVersionChoice(closingGame))
@@ -201,35 +210,44 @@ export default function GameGrid({
         {showVersionPanel && (
           <VersionSelector game={selectedGame ?? closingGame} closing={panelClosing} />
         )}
-
-        {/* Single-version tiles skip the picker — go straight to the CTA */}
-        {showDirectCta && (
-          <div style={{ position: 'absolute', bottom: '20px', right: '20px', zIndex: 3 }}>
-            <button
-              onClick={handleFindSquad}
-              onMouseEnter={() => setHoverBtn(true)}
-              onMouseLeave={() => setHoverBtn(false)}
-              style={{
-                padding: '13px 28px',
-                borderRadius: '8px',
-                border: 'none',
-                backgroundColor: hoverBtn ? '#f0b030' : '#e8a020',
-                color: '#0a0b0f',
-                fontSize: '14px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontFamily: 'var(--font-rajdhani), sans-serif',
-                letterSpacing: '0.05em',
-                transition: 'all 0.15s ease',
-                whiteSpace: 'nowrap',
-                boxShadow: '0 4px 20px rgba(232,160,32,0.3)',
-              }}
-            >
-              Find My Squad →
-            </button>
-          </div>
-        )}
       </div>
+
+      {/* Footer — a strip dedicated solely to the CTA, only present for single-version tiles
+          that skipped the version picker */}
+      {showDirectCta && (
+        <div
+          style={{
+            flexShrink: 0,
+            padding: '16px 24px',
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+            display: 'flex',
+            justifyContent: 'flex-end',
+          }}
+        >
+          <button
+            onClick={handleFindSquad}
+            onMouseEnter={() => setHoverBtn(true)}
+            onMouseLeave={() => setHoverBtn(false)}
+            style={{
+              padding: '13px 28px',
+              borderRadius: '8px',
+              border: 'none',
+              backgroundColor: hoverBtn ? '#f0b030' : '#e8a020',
+              color: '#0a0b0f',
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'var(--font-rajdhani), sans-serif',
+              letterSpacing: '0.05em',
+              transition: 'all 0.15s ease',
+              whiteSpace: 'nowrap',
+              boxShadow: '0 4px 20px rgba(232,160,32,0.3)',
+            }}
+          >
+            Find My Squad →
+          </button>
+        </div>
+      )}
     </div>
   )
 }

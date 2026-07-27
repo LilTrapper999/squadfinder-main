@@ -1,10 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useApp } from '@/context/AppContext'
 import { GAME_QUESTIONS } from '@/lib/mockData'
 import CheckboxGrid from '@/components/ui/CheckboxGrid'
-import YesNoToggle from '@/components/ui/YesNoToggle'
 import LanguagePicker from '@/components/ui/LanguagePicker'
 import Slider from '@/components/ui/Slider'
 
@@ -78,6 +78,119 @@ function QuestionBlock({ children }: { children: React.ReactNode }) {
   )
 }
 
+// ─── Comms style slider — replaces the separate chat/voice yes-no toggles ─────────────
+
+const COMMS_STYLE_LABELS = ['No Communication', 'Only Text Chat', 'Only Voice Chat', 'Both']
+
+function CommsSlider({ chat, voice, onChange }: {
+  chat: string
+  voice: string
+  onChange: (chat: 'yes' | 'no', voice: 'yes' | 'no') => void
+}) {
+  const chatOn = chat === 'yes'
+  const voiceOn = voice === 'yes'
+  const activeIndex = chatOn && voiceOn ? 3 : voiceOn ? 2 : chatOn ? 1 : 0
+  const maxIndex = COMMS_STYLE_LABELS.length - 1
+  const pct = (activeIndex / maxIndex) * 100
+
+  function handleDrag(index: number) {
+    onChange(index === 1 || index === 3 ? 'yes' : 'no', index === 2 || index === 3 ? 'yes' : 'no')
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div style={{ textAlign: 'center' }}>
+        <span style={{
+          fontSize: '16px',
+          fontWeight: 700,
+          color: '#e8a020',
+          fontFamily: 'var(--font-rajdhani), sans-serif',
+          letterSpacing: '0.04em',
+          textTransform: 'uppercase',
+        }}>
+          {COMMS_STYLE_LABELS[activeIndex]}
+        </span>
+      </div>
+
+      <div style={{ position: 'relative', paddingBottom: '30px' }}>
+        {/* Track */}
+        <div style={{ position: 'relative', height: '4px', borderRadius: '2px', backgroundColor: 'rgba(255,255,255,0.08)' }}>
+          <div
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              height: '100%',
+              width: `${pct}%`,
+              backgroundColor: '#e8a020',
+              borderRadius: '2px',
+              transition: 'width 0.15s ease',
+            }}
+          />
+        </div>
+
+        {/* Tick marks + labels */}
+        <div style={{ position: 'absolute', top: '8px', left: 0, right: 0, display: 'flex', justifyContent: 'space-between', pointerEvents: 'none' }}>
+          {COMMS_STYLE_LABELS.map((label, i) => (
+            <div key={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '1px' }}>
+              <div style={{ width: '1px', height: '6px', backgroundColor: 'rgba(255,255,255,0.25)' }} />
+              <span
+                style={{
+                  fontSize: '9px',
+                  color: i === activeIndex ? '#e8a020' : 'rgba(255,255,255,0.4)',
+                  fontWeight: i === activeIndex ? 600 : 400,
+                  marginTop: '4px',
+                  whiteSpace: 'nowrap',
+                  transform: 'translateX(-50%)',
+                  textAlign: 'center',
+                }}
+              >
+                {label}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Draggable native range input — 4 discrete stops */}
+        <input
+          type="range"
+          min={0}
+          max={maxIndex}
+          step={1}
+          value={activeIndex}
+          onChange={(e) => handleDrag(Number(e.target.value))}
+          style={{
+            position: 'absolute',
+            top: '-6px',
+            left: 0,
+            width: '100%',
+            opacity: 0,
+            cursor: 'pointer',
+            height: '16px',
+            margin: 0,
+          }}
+        />
+
+        {/* Thumb */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '-5px',
+            left: `calc(${pct}% - 7px)`,
+            width: '14px',
+            height: '14px',
+            borderRadius: '50%',
+            backgroundColor: '#e8a020',
+            border: '2px solid #0a0b0f',
+            boxShadow: '0 0 0 2px #e8a020',
+            pointerEvents: 'none',
+          }}
+        />
+      </div>
+    </div>
+  )
+}
+
 // ─── Main component ────────────────────────────────────────────────────────────
 
 export default function ProfileForm() {
@@ -86,6 +199,12 @@ export default function ProfileForm() {
 
   const gameId = selectedGame?.id ?? ''
   const gq = GAME_QUESTIONS[gameId]
+
+  // Weapon categories unfold on click rather than living behind a native <select> dropdown.
+  const [openWeaponCats, setOpenWeaponCats] = useState<Record<string, boolean>>({})
+  function toggleWeaponCat(category: string) {
+    setOpenWeaponCats((prev) => ({ ...prev, [category]: !prev[category] }))
+  }
 
   // ── helpers ──────────────────────────────────────────────────────────────────
   // Nested key helpers  (e.g. 'gamesmanship.weapons')
@@ -122,6 +241,16 @@ export default function ProfileForm() {
       ? (g as Record<string, unknown>)
       : {}
     updateProfileAnswer(group, { ...existing, [field]: value })
+  }
+
+  // Both fields must land in the same update — two sequential updateNested calls would each
+  // read the same pre-render 'comms' snapshot and the second would clobber the first.
+  function handleCommsStyleChange(chat: 'yes' | 'no', voice: 'yes' | 'no') {
+    const g = profileAnswers['comms']
+    const existing = (g && typeof g === 'object' && !Array.isArray(g))
+      ? (g as Record<string, unknown>)
+      : {}
+    updateProfileAnswer('comms', { ...existing, willingToChat: chat, willingToSpeak: voice })
   }
 
   // ── validation ────────────────────────────────────────────────────────────────
@@ -188,38 +317,30 @@ export default function ProfileForm() {
         <div style={{ breakInside: 'avoid', marginBottom: '28px' }}>
           <GroupHeader label="Gamesmanship" />
 
-          {/* G1 — Weapons (categorised with animated subtitles per FIX 3) */}
-          {gq?.weapons && gq.weapons.length > 0 && (
-            <QuestionBlock>
-              <QuestionLabel>Which weapons do you run?</QuestionLabel>
-              {gq.weapons.map((cat) => (
-                <div key={cat.category} style={{ marginBottom: '12px' }}>
-                  <div style={{ marginTop: '16px', marginBottom: '6px' }}>
-                    <span className="sub-heading weapon-category-title">{cat.category}</span>
-                  </div>
-                  <CheckboxGrid
-                    options={cat.weapons}
-                    selected={nestedArr('gamesmanship', 'weapons')}
-                    onChange={(v) => updateNested('gamesmanship', 'weapons', v)}
-                    columns={cat.weapons.length > 8 ? 3 : 2}
-                  />
-                </div>
-              ))}
-            </QuestionBlock>
-          )}
+          {/* G1 — Role matching style (SPEC_AMENDMENT_08 FIX 2) */}
+          <QuestionBlock>
+            <QuestionLabel>Role matching style</QuestionLabel>
+            <Slider
+              value={(() => {
+                const raw = nestedNum('gamesmanship', 'roleMatchPreference')
+                const g = profileAnswers['gamesmanship']
+                const isSet = g && typeof g === 'object' && !Array.isArray(g) && 'roleMatchPreference' in g
+                return isSet ? raw : 50
+              })()}
+              onChange={(v) => updateNested('gamesmanship', 'roleMatchPreference', v)}
+              tickLabels={ROLE_MATCH_LABELS}
+            />
+          </QuestionBlock>
 
-          {/* G2 — Maps */}
-          {gq?.maps && gq.maps.length > 0 && (
-            <QuestionBlock>
-              <QuestionLabel>Which maps do you know well?</QuestionLabel>
-              <CheckboxGrid
-                options={gq.maps}
-                selected={nestedArr('gamesmanship', 'maps')}
-                onChange={(v) => updateNested('gamesmanship', 'maps', v)}
-                columns={gq.maps.length > 12 ? 3 : 2}
-              />
-            </QuestionBlock>
-          )}
+          {/* G2 — Skill */}
+          <QuestionBlock>
+            <QuestionLabel>Skill level</QuestionLabel>
+            <Slider
+              value={nestedNum('gamesmanship', 'skill')}
+              onChange={(v) => updateNested('gamesmanship', 'skill', v)}
+              tickLabels={SKILL_LABELS}
+            />
+          </QuestionBlock>
 
           {/* G3 — Roles */}
           {gq?.roles && gq.roles.length > 0 && (
@@ -303,30 +424,71 @@ export default function ProfileForm() {
             </QuestionBlock>
           )}
 
-          {/* G3.5 — Role matching style (SPEC_AMENDMENT_08 FIX 2) */}
-          <QuestionBlock>
-            <QuestionLabel>Role matching style</QuestionLabel>
-            <Slider
-              value={(() => {
-                const raw = nestedNum('gamesmanship', 'roleMatchPreference')
-                const g = profileAnswers['gamesmanship']
-                const isSet = g && typeof g === 'object' && !Array.isArray(g) && 'roleMatchPreference' in g
-                return isSet ? raw : 50
-              })()}
-              onChange={(v) => updateNested('gamesmanship', 'roleMatchPreference', v)}
-              tickLabels={ROLE_MATCH_LABELS}
-            />
-          </QuestionBlock>
+          {/* G4 — Maps */}
+          {gq?.maps && gq.maps.length > 0 && (
+            <QuestionBlock>
+              <QuestionLabel>Which maps do you know well?</QuestionLabel>
+              <CheckboxGrid
+                options={gq.maps}
+                selected={nestedArr('gamesmanship', 'maps')}
+                onChange={(v) => updateNested('gamesmanship', 'maps', v)}
+                columns={gq.maps.length > 12 ? 3 : 2}
+              />
+            </QuestionBlock>
+          )}
 
-          {/* G4 — Skill */}
-          <QuestionBlock>
-            <QuestionLabel>Skill level</QuestionLabel>
-            <Slider
-              value={nestedNum('gamesmanship', 'skill')}
-              onChange={(v) => updateNested('gamesmanship', 'skill', v)}
-              tickLabels={SKILL_LABELS}
-            />
-          </QuestionBlock>
+          {/* G5 — Weapons: each category unfolds on click instead of a native <select> */}
+          {gq?.weapons && gq.weapons.length > 0 && (
+            <QuestionBlock>
+              <QuestionLabel>Which weapons do you run?</QuestionLabel>
+              {gq.weapons.map((cat) => {
+                const isOpen = !!openWeaponCats[cat.category]
+                return (
+                  <div key={cat.category} style={{ marginBottom: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleWeaponCat(cat.category)}
+                      aria-expanded={isOpen}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        width: '100%',
+                        background: 'none',
+                        border: 'none',
+                        padding: 0,
+                        marginTop: '16px',
+                        marginBottom: '6px',
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      <span className="sub-heading weapon-category-title">{cat.category}</span>
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          color: '#e8a020',
+                          fontSize: '10px',
+                          transition: 'transform 0.15s ease',
+                          transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                        }}
+                      >
+                        ▼
+                      </span>
+                    </button>
+                    {isOpen && (
+                      <CheckboxGrid
+                        options={cat.weapons}
+                        selected={nestedArr('gamesmanship', 'weapons')}
+                        onChange={(v) => updateNested('gamesmanship', 'weapons', v)}
+                        columns={cat.weapons.length > 8 ? 3 : 2}
+                      />
+                    )}
+                  </div>
+                )
+              })}
+            </QuestionBlock>
+          )}
         </div>
 
         {/* ── GROUP 2: Vibe Check ───────────────────────────────────────────── */}
@@ -409,37 +571,17 @@ export default function ProfileForm() {
             Languages determine your match score. Chat and mic preferences are shown to potential squadmates.
           </p>
 
-          {/* C1 — Chat */}
+          {/* C1 — Comms style (replaces separate chat/voice yes-no toggles) */}
           <QuestionBlock>
-            <QuestionLabel>Willing to text chat?</QuestionLabel>
-            <YesNoToggle
-              value={
-                nestedStr('comms', 'willingToChat') === 'yes'
-                  ? 'yes'
-                  : nestedStr('comms', 'willingToChat') === 'no'
-                  ? 'no'
-                  : null
-              }
-              onChange={(v) => updateNested('comms', 'willingToChat', v)}
+            <QuestionLabel>Comms style</QuestionLabel>
+            <CommsSlider
+              chat={nestedStr('comms', 'willingToChat')}
+              voice={nestedStr('comms', 'willingToSpeak')}
+              onChange={handleCommsStyleChange}
             />
           </QuestionBlock>
 
-          {/* C2 — Voice */}
-          <QuestionBlock>
-            <QuestionLabel>Willing to use voice comms?</QuestionLabel>
-            <YesNoToggle
-              value={
-                nestedStr('comms', 'willingToSpeak') === 'yes'
-                  ? 'yes'
-                  : nestedStr('comms', 'willingToSpeak') === 'no'
-                  ? 'no'
-                  : null
-              }
-              onChange={(v) => updateNested('comms', 'willingToSpeak', v)}
-            />
-          </QuestionBlock>
-
-          {/* C3 — Languages */}
+          {/* C2 — Languages */}
           <QuestionBlock>
             <QuestionLabel>Languages you play in</QuestionLabel>
             <LanguagePicker

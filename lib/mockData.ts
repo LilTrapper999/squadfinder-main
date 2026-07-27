@@ -702,14 +702,11 @@ export const GAMES_BY_CATEGORY: Record<GameCategory, Game[]> = {
     {
       id: 'abi', name: 'Arena Breakout: Infinite', category: 'extraction', mark: '©',
       steamAppId: 2073620, logoUrl: STEAM(2073620), hasTeamFeature: true,
-      platforms: ['PC', 'Mobile'],
+      // PC-only entry — the mobile variant is its own separate catalogue entry ('ab', Arena
+      // Breakout), not a platform tab here. No `platforms`/`platformVersions` on purpose.
       versions: [
         { id: 'abi-s6', label: 'Season 6: White Nights (ABI 2.0)', date: 'June 30, 2026' },
       ],
-      platformVersions: {
-        PC:     [{ id: 'abi-s6-pc',     label: 'Season 6: White Nights (ABI 2.0)', date: 'June 30, 2026' }],
-        Mobile: [{ id: 'abi-s6-mobile', label: 'Season 6: White Nights (Mobile)', date: '2026' }],
-      },
     },
     {
       id: 'scum', name: 'Scum', category: 'extraction', mark: '©',

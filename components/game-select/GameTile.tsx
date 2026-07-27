@@ -17,6 +17,7 @@ export default function GameTile({ game, selected, onSelect }: GameTileProps) {
 
   return (
     <button
+      id={`game-tile-${game.id}`}
       className={`game-tile${selected ? ' selected' : ''}`}
       onClick={onSelect}
       onMouseEnter={() => setHovered(true)}
