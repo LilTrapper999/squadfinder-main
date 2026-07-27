@@ -693,6 +693,8 @@ export const GAMES_BY_CATEGORY: Record<GameCategory, Game[]> = {
     },
     {
       id: 'ab', name: 'Arena Breakout', category: 'extraction', mark: '©', hasTeamFeature: true,
+      // Separate catalogue entry from Arena Breakout: Infinite (PC) — own weapons/maps/seasons (SPEC_AMENDMENT_11 FIX 4)
+      platform: 'Mobile',
       versions: [
         { id: 'ab-s13', label: 'Season 13: Liminal Space (Mobile)', date: '2026' },
       ],
@@ -803,6 +805,27 @@ export const GAMES_BY_CATEGORY: Record<GameCategory, Game[]> = {
     },
     // Note: The Cycle: Frontier removed (shut down 2023)
     // Note: Hyenas was never released — removed
+    {
+      id: 'divres', name: 'The Division Resurgence', category: 'extraction', mark: '©', hasTeamFeature: true,
+      // Distinct standalone game in The Division franchise — separate entry from The Division 2 (SPEC_AMENDMENT_11 FIX 4)
+      // Launched mobile-first (iOS/Android) Mar 31, 2026; Ubisoft has since brought an early-access PC/Steam client
+      // online too, but it remains its own separately-branded game, not a platform tab on Div2 — catalogued as Mobile
+      platform: 'Mobile',
+      versions: [
+        { id: 'divres-s1p3', label: 'Season 1: Phase 3 (Classified Ops)', date: '2026' },
+      ],
+    },
+    // Checked, not added — mobile candidates researched for SPEC_AMENDMENT_11 FIX 4 second pass:
+    // - Call of Duty: Warzone Mobile — shut down permanently Apr 17 2026 (pulled from stores May 2025)
+    // - Rust Mobile — regional open BETA only (Hong Kong/Macau) as of Jul 2026, no global release yet
+    // - Dark and Darker Mobile / "Abyss of Dungeons" — end of service Jan 20 2026, global launch cancelled
+    // - VALORANT Mobile — live but China-only (Tencent-published), same "VALORANT" branding as PC; no
+    //   distinct name, would belong on the existing platformVersions of the 'valorant' entry, not a new id
+    // - Delta Force Mobile — live but same "Delta Force" name/weapons/maps as PC, cross-progression; not distinct
+    // - Once Human Mobile — live but identical title/content with full PC cross-save; not distinct
+    // - Gunfire Reborn Mobile — live since 2022 but a straight port under the identical name; not distinct
+    // - FragPunk Mobile — pre-registration only, not released
+    // - DayZ Mobile — no evidence of a current official mobile version found
   ],
 
   competitive: [
@@ -1527,16 +1550,58 @@ export const GAME_QUESTIONS: Record<string, GameQuestions> = {
     roles: [...GENERIC_ROLES],
   },
 
+  // ── The Division Resurgence (Mobile) ────────────────────────────────────────
+  // Standalone game in The Division franchise, distinct from The Division 2 (SPEC_AMENDMENT_11 FIX 4)
+  // Sources: news.ubisoft.com (specializations, launch), thedivisionresurgence.wiki (community wiki — weapons,
+  //   districts, season status), resurgencebuilds.com (exotic weapons) — checked 2026-07-27
+  // Weapons/maps independently researched — NOT copied from the Division 2 list above
+  divres: {
+    weapons: [
+      wc('Assault Rifles', ['Military 416', 'AK-47', 'G36C', 'ACR', 'Police M4', 'Warlord (Exotic)']),
+      wc('Submachine Guns', ['Vector 45 ACP', 'MP7', 'Military MP5', 'Lady Death (Exotic SMG)']),
+      wc('Shotguns', ['ACS-12', 'SPAS-12', 'Scorpio (Exotic Shotgun)']),
+      wc('Marksman Rifles', ['M700 Carbon', 'SVD']),
+      wc('Light Machine Guns', ['M60', 'MG5', 'Strawberry Milkshake (Exotic LMG)']),
+    ],
+    maps: [
+      'Chelsea', "Hell's Kitchen", 'Hudson Yards', 'Times Square',
+      'Flatiron District', 'Gramercy', 'Midtown East', 'Dark Zone (Manhattan)',
+    ],
+    roles: [
+      { value: 'demolitionist', label: 'Demolitionist', subtitle: 'AoE damage, explosive ordinance' },
+      { value: 'bulwark',       label: 'Bulwark',       subtitle: 'Shield + shotgun frontline tank' },
+      { value: 'medic',         label: 'Field Medic',   subtitle: 'Heals and buffs the squad' },
+      { value: 'vanguard',      label: 'Vanguard',      subtitle: 'Crit chance & targeting support' },
+      { value: 'tech',          label: 'Tech Operator', subtitle: 'Drone-focused single-target damage' },
+      { value: 'flex',          label: 'Flex',          subtitle: 'Whatever the group needs' },
+    ],
+  },
+
   // ── Warzone (extraction context) ────────────────────────────────────────────
+  // Tier 1 source: https://www.callofduty.com/blog/2025/11/call-of-duty-black-ops-7-ready-for-launch-weapons-equipment
+  //   (Warzone content integration with Black Ops 7 began Season 01; this is the shared MP/ZM/WZ arsenal) — checked 2026-07-27
+  // Tier 1 cross-ref (season additions): dexerto.com / sportskeeda.com Season 5 (July 23, 2026) weapon coverage — checked 2026-07-27
+  // Tier 1 cross-ref (maps): gamesatlas.com Warzone maps history, confirming active vs. vaulted status — checked 2026-07-27
+  // Latest game update: Black Ops 7 / Warzone Season 05 (July 23, 2026)
+  // Source newer than latest update: YES
+  // Full rebuild: previous list used MW3(2023)-era weapon names (TAQ-56, STB 556, Kastov 762, etc.) and
+  // 2023-2024 maps (Al Mazrah, Ashika Island, Urzikstan, Vondel) — ALL of these are now vaulted. Warzone's
+  // weapon pool and map rotation have fully moved to the Black Ops 7 integration as of Season 05.
+  // Weapon count: 39 across 9 categories
+  // Map count: 4 (current active rotation — Al Mazrah/Ashika Island/Urzikstan/Vondel are vaulted, not active)
   'warzone-ext': {
     weapons: [
-      wc('Assault Rifles', ['TAQ-56', 'STB 556', 'MTZ-556', 'Holger 556', 'MCW', 'Kastov 762']),
-      wc('Submachine Guns', ['Fennec 45', 'Vaznev-9K', 'Lachmann Sub', 'WSP Swarm']),
-      wc('Light Machine Guns', ['RPK', 'Raal MG']),
-      wc('Sniper Rifles', ['MCPR-300', 'Signal 50', 'Victus XMR', 'LA-B 330']),
-      wc('Shotguns', ['Expedite 12']),
+      wc('Assault Rifles', ['M15 MOD 0', 'MXR-17', 'Peacekeeper MK1', 'X9 Maverick', 'DS20 Mirage', 'AK-27', 'FG42', 'MK35 ISR', 'AN-94']),
+      wc('Submachine Guns', ['Ryden 45K', 'Dravec 45', 'Razor 9mm', 'Carbon 57', 'MPC-25', 'RK-9', 'Gremlin', 'VST', 'REV-46']),
+      wc('Shotguns', ['M10 Breacher', 'Echo 12', 'Akita']),
+      wc('Light Machine Guns', ['MK.78', 'XM325', 'Mammoth']),
+      wc('Marksman Rifles', ['M8A1', 'Warden 308', 'M34 Novaline']),
+      wc('Sniper Rifles', ['VS Recon', 'XR-3 Ion', 'Shadow SK', 'Strider 300']),
+      wc('Pistols', ['Jäger 45', 'Coda 9', 'Velox 5.7']),
+      wc('Launchers', ['A.R.C. M1', 'AAROW 109']),
+      wc('Melee', ['Knife', 'Flatline Mk.II', 'Mace']),
     ],
-    maps: ['Al Mazrah', 'Ashika Island', 'Urzikstan', 'Rebirth Island', 'Vondel'],
+    maps: ['Verdansk', 'Rebirth Island', 'Avalon', "Haven's Hollow"],
     roles: [...GENERIC_ROLES],
   },
 
@@ -1670,21 +1735,34 @@ export const GAME_QUESTIONS: Record<string, GameQuestions> = {
   },
 
   // ── Rainbow Six Siege ──────────────────────────────────────────────────────
-  // Source: liquipedia.net/rainbowsix/Portal:Weapons
-  // Researched: June 2026
-  // Count: 100+ weapons across categories (listing all primary types)
+  // Tier 1 source: https://www.ubisoft.com/en-us/game/rainbow-six/siege/game-info/operators — checked 2026-07-27
+  //   (official operator roster confirms names like Solid Snake, Denari, Rauora, Skopós, Sentry are current;
+  //   Ubisoft does not publish a single consolidated weapon-type list page)
+  // WARNING: Tier 3 source used for weapon categorisation — liquipedia.net/rainbowsix/Portal:Weapons — checked 2026-07-27 — verify manually
+  // Tier 2 cross-ref (weapon existence): https://rainbowsix.fandom.com/wiki/Category:Weapons_of_Tom_Clancy's_Rainbow_Six_Siege — checked 2026-07-27
+  // Tier 3 cross-ref (maps, flagged): siege.gg Y11S2 "Operation System Override" ranked map pool coverage — checked 2026-07-27
+  // Latest game update: Year 11 Season 2, "Operation System Override" (2026)
+  // Source newer than latest update: YES
+  // Added full Secondary Weapons (Handguns, Machine Pistols, secondary Shotguns) — previous entry had NO
+  // secondary/sidearm category at all, a major gap for a game where every operator carries one.
+  // Added XK23 (Assault Rifle) and Tacit .45 (Handgun), both confirmed new Year 11 additions.
+  // Weapon count: 107 across 8 categories
+  // Map count: 8 (current Ranked map pool — previous list of 16 mixed Ranked, Competitive/Pro League,
+  // and retired maps together without distinction)
   r6siege: {
     weapons: [
-      wc('Assault Rifles', ['L85A2', 'AR33', 'G36C', 'R4-C', '556xi', 'F2', 'AK-12', 'AUG A2', '552 Commando', '416-C Carbine', 'C8-SFW', 'Mk17 CQB', 'PARA-308', 'Type-89', 'C7E', 'M762', 'V308', 'Spear .308', 'M4', 'ARX200', 'F90', 'Commando 9', 'SC3000K', 'AK-74M']),
+      wc('Assault Rifles', ['L85A2', 'AR33', 'G36C', 'R4-C', '556xi', 'F2', 'AK-12', 'AUG A2', '552 Commando', '416-C Carbine', 'C8-SFW', 'Mk17 CQB', 'PARA-308', 'Type-89', 'C7E', 'M762', 'V308', 'Spear .308', 'M4', 'ARX200', 'F90', 'Commando 9', 'SC3000K', 'AK-74M', 'XK23']),
       wc('Submachine Guns', ['FMG-9', 'MP5K', 'UMP45', 'MP5', 'P90', '9x19VSN', 'MP7', '9mm C1', 'MPX', 'M12', 'MP5SD', 'PDW9', 'Vector .45 ACP', 'T-5 SMG', 'Scorpion EVO 3 A1', 'K1A', 'Mx4 Storm', 'AUG A3', 'P10 RONI', 'UZK50GI']),
-      wc('Light Machine Guns', ['6P41', 'G8A1', 'M249', 'T-95 LSW', 'LMG-E', 'ALDA 5.56', 'M249 SAW', 'DP27']),
-      wc('Marksman Rifles', ['417', 'OTs-03', 'CAMRS', 'SR-25', 'Mk 14 EBR', 'AR-15.50', 'CSRX 300', 'PMR90A2']),
       wc('Shotguns', ['M590A1', 'M1014', 'SG-CQB', 'SASG-12', 'M870', 'Super 90', 'SPAS-12', 'SPAS-15', 'SuperNova', 'ITA12L', 'SIX12', 'SIX12 SD', 'FO-12', 'BOSG.12.2', 'ACS12', 'TCSG12']),
+      wc('Marksman Rifles', ['417', 'OTs-03', 'CAMRS', 'SR-25', 'Mk 14 EBR', 'AR-15.50', 'CSRX 300', 'PMR90A2']),
+      wc('Light Machine Guns', ['6P41', 'G8A1', 'M249', 'T-95 LSW', 'LMG-E', 'ALDA 5.56', 'M249 SAW', 'DP27']),
+      wc('Handguns', ['P226 Mk 25', 'M45 MEUSOC', '5.7 USG', 'P9', 'LFP586', 'GSh-18', 'PMM', 'P12', 'Mk1 9mm', 'D-50', 'PRB92', 'Luison', 'P229', 'USP40', 'Q-929', 'RG15', 'Bailiff 410', 'Keratos .357', '1911 TACOPS', 'P-10C', '.44 Mag Semi-Auto', 'SDP 9mm', 'Tacit .45']),
+      wc('Machine Pistols', ['SMG-11', 'Bearing 9', 'C75 Auto', 'SMG-12', 'SPSMG9']),
+      wc('Secondary Shotguns', ['ITA12S', 'Super Shorty']),
     ],
     maps: [
-      'Bank', 'Border', 'Chalet', 'Clubhouse', 'Coastline', 'Consulate',
-      'Lair', 'Nighthaven Labs', 'Oregon', 'Skyscraper', 'Theme Park', 'Villa',
-      'Kafe Dostoyevsky', 'Emerald Plains', 'Stadium Bravo', 'Fortress',
+      // Current Ranked map pool — Year 11 Season 2 "Operation System Override"
+      'Bank', 'Border', 'Calypso Casino', 'Chalet', 'Clubhouse', 'Coastline', 'Consulate', 'Emerald Plains',
     ],
     roles: [
       { value: 'hard-breach', label: 'Hard Breacher',     subtitle: 'Thermite, Hibana, Ash' },
@@ -1701,35 +1779,58 @@ export const GAME_QUESTIONS: Record<string, GameQuestions> = {
   },
 
   // ── Rainbow Six Extraction ──────────────────────────────────────────────────
+  // WARNING: Tier 3 source — verify manually — dotesports.com/rainbow-6/news/all-rainbow-six-extraction-weapons
+  //   (per-operator weapon breakdown; page itself is flagged "over 4 years old" but the game has been in
+  //   content-complete/maintenance mode since ~2022-2023, so no newer operators or weapons are expected) — checked 2026-07-27
+  // Tier 3 cross-ref (maps/regions): siege.gg "All maps, regions, and zones in Rainbow Six Extraction" — checked 2026-07-27
+  // Latest game update: game entered maintenance mode after its 18-operator roster completed; no Tier 1/2
+  // consolidated weapon list exists on Ubisoft's site for this title.
+  // Source newer than latest update: N/A (no further content expected)
+  // Fixed: previous maps list included 'Florida', 'Albuquerque', and 'Portland' — none of these are real
+  // Rainbow Six Extraction regions. The game has exactly 4 regions: New York, San Francisco, Alaska, and
+  // Truth or Consequences (New Mexico).
+  // Weapon count: 66 across 8 categories (compiled from all 18 operators' unlockable primary/secondary loadouts)
+  // Map count: 4 regions (each contains 3 sub-zone maps not itemised here, consistent with region-level granularity)
   r6ext: {
     weapons: [
-      wc('Assault Rifles', ['R4-C', 'M4', 'AK-12', '416-C Carbine', 'ARX200']),
-      wc('Submachine Guns', ['MP5', 'Vector .45 ACP']),
-      wc('Light Machine Guns', ['LMG-E']),
-      wc('Marksman Rifles', ['Mk 17 CQB']),
-      wc('Shotguns', ['SG-CQB', 'M1014']),
+      wc('Assault Rifles', ['556xi', 'Spear .308', 'Type-89', 'V308', 'F2', 'L85A2', 'AR33', 'AUG A2', '552 Commando', '416-C Carbine', 'AK-12', 'PARA-308', 'F90', 'AK-74M', 'ARX200', 'AUG A3', 'Commando 9']),
+      wc('Submachine Guns', ['MP5', 'P90', 'Scorpion Evo 3 A1', 'Mx4 Storm', 'MP5SD', 'K1A', 'MP7', 'FMG-9', 'MP5K', 'M12', '9x19VSN']),
+      wc('Shotguns', ['SG-CQB', 'FO-12', 'M1014', 'ACS12', 'SASG-12', 'SuperNova', 'M590A1', 'BOSG.12.2', 'M870', 'SPAS-15', 'TCSG12']),
+      wc('Marksman Rifles', ['HK417', 'M762', 'Mk 14 EBR']),
+      wc('Light Machine Guns', ['LMG-E', '6P41', 'M249', 'M249 SAW']),
+      wc('Handguns', ['P9', 'LFP586', 'RG15', 'M45 MEUSOC', '5.7 USG', 'Bailiff 410', 'Keratos .357', 'PMM', 'GSh-18', 'P229', 'P226 Mk 25', 'PRB92', 'SDP 9mm', '.44 Mag Semi-Auto', 'P12'],),
+      wc('Machine Pistols', ['SMG-11', 'SMG-12', 'C75 Auto', 'Bearing 9']),
+      wc('Secondary Shotguns', ['Super Shorty']),
     ],
-    maps: [
-      'New York', 'San Francisco', 'Truth or Consequences (New Mexico)',
-      'Alaska', 'Florida', 'Albuquerque', 'Portland',
-    ],
+    maps: ['New York', 'San Francisco', 'Alaska', 'Truth or Consequences (New Mexico)'],
     roles: [...GENERIC_ROLES],
   },
 
   // ── Overwatch 2 ────────────────────────────────────────────────────────────
   // Role = hero category (Tank/DPS/Support). "Weapons" repurposed as heroes.
+  // Tier 2 source: https://overwatch.fandom.com/wiki/Heroes (role-categorised roster table) — checked 2026-07-27
+  // Tier 2 cross-ref: https://overwatch.fandom.com/wiki/Maps — checked 2026-07-27
+  // Latest game update: hero roster "as of April 2026" per wiki (52 heroes); page confirms Sierra and Shion
+  // as the two most recent additions.
+  // Source newer than latest update: YES
+  // Added 13 heroes missing from the previous list: Anran, Domina, Emre, Freja, Hazard, Jetpack Cat, Mizuki,
+  // Shion, Sierra, Vendetta, Wuyang (heroes), plus the Clash game mode entirely (2 maps) and Blizzard World,
+  // Neon Junction, Aatlis, Esperança, New Queen Street, Runasapi (maps) — none of which existed in prior data.
+  // Weapon count: 52 heroes across 3 categories
+  // Map count: 32 across Control/Escort/Flashpoint/Hybrid/Push/Clash
   ow2: {
     weapons: [
-      wc('Tanks', ["D.Va", 'Doomfist', 'Junker Queen', 'Mauga', 'Orisa', 'Ramattra', 'Reinhardt', 'Roadhog', 'Sigma', 'Winston', 'Wrecking Ball', 'Zarya']),
-      wc('DPS', ['Ashe', 'Bastion', 'Cassidy', 'Echo', 'Genji', 'Hanzo', 'Junkrat', 'Mei', 'Pharah', 'Reaper', 'Sojourn', 'Soldier: 76', 'Sombra', 'Symmetra', 'Torbjörn', 'Tracer', 'Venture', 'Widowmaker']),
-      wc('Support', ['Ana', 'Baptiste', 'Brigitte', 'Illari', 'Kiriko', 'Lifeweaver', 'Lúcio', 'Mercy', 'Moira', 'Zenyatta']),
+      wc('Tanks', ['D.Va', 'Doomfist', 'Domina', 'Hazard', 'Junker Queen', 'Mauga', 'Orisa', 'Ramattra', 'Reinhardt', 'Roadhog', 'Sigma', 'Winston', 'Wrecking Ball', 'Zarya']),
+      wc('DPS', ['Anran', 'Ashe', 'Bastion', 'Cassidy', 'Echo', 'Emre', 'Freja', 'Genji', 'Hanzo', 'Junkrat', 'Mei', 'Pharah', 'Reaper', 'Shion', 'Sierra', 'Sojourn', 'Soldier: 76', 'Sombra', 'Symmetra', 'Torbjörn', 'Tracer', 'Vendetta', 'Venture', 'Widowmaker']),
+      wc('Support', ['Ana', 'Baptiste', 'Brigitte', 'Illari', 'Jetpack Cat', 'Juno', 'Kiriko', 'Lifeweaver', 'Lúcio', 'Mercy', 'Mizuki', 'Moira', 'Wuyang', 'Zenyatta']),
     ],
     maps: [
       'Circuit Royal', 'Dorado', 'Havana', 'Junkertown', 'Rialto', 'Route 66',
-      "Watchpoint: Gibraltar", 'Shambali Monastery', 'Samoa', 'Colosseo',
-      'Eichenwalde', 'Hollywood', "King's Row", 'Midtown', 'Numbani', 'Paraíso',
+      "Watchpoint: Gibraltar", 'Shambali Monastery', 'Colosseo', 'Esperança',
+      'New Queen Street', 'Runasapi', 'Blizzard World', 'Eichenwalde', 'Hollywood',
+      "King's Row", 'Midtown', 'Neon Junction', 'Numbani', 'Paraíso',
       'Antarctic Peninsula', 'Busan', 'Ilios', 'Lijiang Tower', 'Nepal', 'Oasis',
-      'New Junk City', 'Suravasa',
+      'Samoa', 'Aatlis', 'New Junk City', 'Suravasa', 'Hanaoka', 'Throne of Anubis',
     ],
     roles: [
       { value: 'tank',     label: 'Tank',    subtitle: 'Creates space and absorbs damage' },
@@ -1739,20 +1840,29 @@ export const GAME_QUESTIONS: Record<string, GameQuestions> = {
   },
 
   // ── Apex Legends ───────────────────────────────────────────────────────────
-  // Source: apexlegends.fandom.com/wiki/Weapon, esports.gg, boostmatch.gg — Season 29 (2026)
-  // Researched: June 2026
-  // Count: 27 weapons (floor loot; Care Package weapons noted)
+  // Tier 1 source: https://www.ea.com/games/apex-legends/apex-legends/news/overclocked-midseason-patch-notes (June 22, 2026) — checked 2026-07-27
+  // Tier 1 cross-ref: https://www.ea.com/games/apex-legends/apex-legends/news/overclocked-patch-notes (May 4, 2026 season launch) — checked 2026-07-27
+  // Tier 2 cross-ref: https://apexlegends.wiki.gg/wiki/Weapon — checked 2026-07-27
+  // Latest game update: Season 29 "Overclocked" Split 2 midseason patch (June 22, 2026)
+  // Source newer than latest update: YES
+  // Care Package rotation this season (per official patch notes): Kraber .50-Cal (permanent), L-STAR EMG, G7 Scout.
+  // C.A.R. SMG returned to floor loot in the May 4, 2026 patch.
+  // Added Hemlok Breach AR, 30-30 Repeater, Bocek Compound Bow, RE-45 Burst — all live weapons missing from the
+  // previous list. Moved Triple Take from Sniper Rifles to Marksman Rifles to match the game's own category (wiki.gg).
+  // Weapon count: 31 across 7 categories
+  // Map count: 4 (current Pubs + Ranked BR rotation — Olympus and Broken Moon are Wildcard-limited-mode-only
+  // this split, not in standard rotation; E-District is a new Ranked-only map added this season)
   apex: {
     weapons: [
-      wc('Assault Rifles', ['R-301 Carbine', 'Hemlok Burst AR', 'VK-47 Flatline', 'Nemesis Burst AR', 'Havoc Rifle']),
+      wc('Assault Rifles', ['R-301 Carbine', 'Hemlok Burst AR', 'Hemlok Breach AR', 'VK-47 Flatline', 'Nemesis Burst AR', 'Havoc Rifle']),
       wc('Submachine Guns', ['Alternator SMG', 'R-99 SMG', 'CAR SMG', 'Volt SMG', 'Prowler Burst PDW']),
       wc('Light Machine Guns', ['Devotion LMG', 'Spitfire', 'Rampage LMG', 'L-STAR EMG (Care Package)']),
-      wc('Sniper Rifles', ['Triple Take', 'Longbow DMR', 'Charge Rifle', 'Sentinel', 'Kraber .50-Cal (Care Package)']),
+      wc('Sniper Rifles', ['Longbow DMR', 'Charge Rifle', 'Sentinel', 'Kraber .50-Cal (Care Package)']),
       wc('Shotguns', ['EVA-8 Auto', 'Mastiff Shotgun', 'Mozambique Shotgun', 'Peacekeeper']),
-      wc('Pistols', ['P2020', 'RE-45 Auto', 'Wingman']),
-      wc('Marksman Rifles', ['G7 Scout (Care Package)']),
+      wc('Pistols', ['P2020', 'RE-45 Auto', 'RE-45 Burst', 'Wingman']),
+      wc('Marksman Rifles', ['G7 Scout (Care Package)', 'Triple Take', '30-30 Repeater', 'Bocek Compound Bow']),
     ],
-    maps: ["King's Canyon", "World's Edge", 'Olympus', 'Storm Point', 'Broken Moon'],
+    maps: ["King's Canyon", "World's Edge", 'Storm Point', 'E-District'],
     roles: [
       { value: 'fragger',   label: 'Fragger',          subtitle: 'Initiates and wins gunfights' },
       { value: 'support',   label: 'Support',          subtitle: 'Heals, revives, enables' },
@@ -2074,38 +2184,58 @@ export const GAME_QUESTIONS: Record<string, GameQuestions> = {
   },
 
   // ── Call of Duty: Warzone ─────────────────────────────────────────────────────
-  // Source: wzstats.gg, tracker.gg/warzone — Season 29 (2026) floor loot
-  // Researched: June 2026
-  // Count: 40+ weapons (meta floor loot — Warzone has 255 total, listing key ones)
+  // Tier 1 source: https://www.callofduty.com/blog/2025/11/call-of-duty-black-ops-7-ready-for-launch-weapons-equipment
+  //   (Warzone content integration with Black Ops 7 began Season 01; this is the shared MP/ZM/WZ arsenal) — checked 2026-07-27
+  // Tier 1 cross-ref (season additions): dexerto.com / sportskeeda.com Season 5 (July 23, 2026) weapon coverage — checked 2026-07-27
+  // Tier 1 cross-ref (maps): gamesatlas.com Warzone maps history, confirming active vs. vaulted status — checked 2026-07-27
+  // Latest game update: Black Ops 7 / Warzone Season 05 (July 23, 2026)
+  // Source newer than latest update: YES
+  // Full rebuild: previous list used MW2/MW3(2022-2023)-era weapon names (XM4, MCW, RAM-7, Lockwood 680, etc.)
+  // and 2023-2024 maps (Urzikstan, Al Mazrah, Ashika Island, Vondel) — ALL now vaulted. Warzone's weapon pool
+  // and map rotation have fully moved to the Black Ops 7 integration as of Season 05. This entry now matches
+  // 'warzone-ext' exactly, since both app categories represent the same live game.
+  // Weapon count: 39 across 9 categories
+  // Map count: 4 (current active rotation)
   'wz-fps': {
     weapons: [
-      wc('Assault Rifles', ['XM4', 'Model L', 'AMES 85', 'GPR 91', 'AK-74', 'Goblin Mk2', 'AS VAL', 'MCW', 'Holger 556', 'MTZ-556', 'SVA 545', 'RAM-7']),
-      wc('Submachine Guns', ['Fennec 45', 'Vaznev-9K', 'Lachmann Sub', 'WSP Swarm', 'Rival-9', 'KSV', 'Jackal PDW', 'PP-919 Estoc', 'Tanto .22', 'C9']),
-      wc('Light Machine Guns', ['RPK', 'RAAL MG', 'Pulemyot 762', 'GPMG-7']),
-      wc('Sniper Rifles', ['MCPR-300', 'Signal 50', 'Victus XMR', 'LA-B 330', 'KATT-AMR', 'LW3A1 Frostline']),
-      wc('Marksman Rifles', ['MTZ Interceptor', 'DM56']),
-      wc('Shotguns', ['Expedite 12', 'Lockwood 680', 'Marine SP']),
-      wc('Pistols', ['GS45', '.44 Harbinger']),
+      wc('Assault Rifles', ['M15 MOD 0', 'MXR-17', 'Peacekeeper MK1', 'X9 Maverick', 'DS20 Mirage', 'AK-27', 'FG42', 'MK35 ISR', 'AN-94']),
+      wc('Submachine Guns', ['Ryden 45K', 'Dravec 45', 'Razor 9mm', 'Carbon 57', 'MPC-25', 'RK-9', 'Gremlin', 'VST', 'REV-46']),
+      wc('Shotguns', ['M10 Breacher', 'Echo 12', 'Akita']),
+      wc('Light Machine Guns', ['MK.78', 'XM325', 'Mammoth']),
+      wc('Marksman Rifles', ['M8A1', 'Warden 308', 'M34 Novaline']),
+      wc('Sniper Rifles', ['VS Recon', 'XR-3 Ion', 'Shadow SK', 'Strider 300']),
+      wc('Pistols', ['Jäger 45', 'Coda 9', 'Velox 5.7']),
+      wc('Launchers', ['A.R.C. M1', 'AAROW 109']),
+      wc('Melee', ['Knife', 'Flatline Mk.II', 'Mace']),
     ],
-    maps: ['Urzikstan', 'Al Mazrah', 'Ashika Island', 'Rebirth Island', 'Vondel'],
+    maps: ['Verdansk', 'Rebirth Island', 'Avalon', "Haven's Hollow"],
     roles: [...GENERIC_ROLES],
   },
 
   // ── Call of Duty: Black Ops 6 ─────────────────────────────────────────────────
-  // Source: game8.co/games/Call-of-Duty-Black-Ops-6, videogamer.com/guides/black-ops-6-weapon-list/
-  // Researched: June 2026
-  // Count: 39 weapons (launch + Season 1)
+  // Tier 1 source: https://www.callofduty.com/blog/2024/10/call-of-duty-black-ops-6-launch-comms-weapons-attachments-intel
+  //   (official launch weapon roster, Oct 25, 2024 — confirms 33 launch armaments) — checked 2026-07-27
+  // Tier 2 cross-ref: https://callofduty.fandom.com/wiki/Category:Call_of_Duty:_Black_Ops_6_Primary_Weapons
+  //   and sibling Secondary Weapons subcategories (used for post-launch season additions) — checked 2026-07-27
+  // Latest game update: BO6 completed its full season cycle before Call of Duty: Black Ops 7 launched
+  //   November 14, 2025; BO6 is treated here as a finished, standalone title (distinct from Warzone/BO7).
+  // Source newer than latest update: YES (BO6 receives no further content; this is its complete arsenal)
+  // Fixed: Tsarkov 7.62 was miscategorised under Assault Rifles — official source confirms it is a Marksman Rifle.
+  // Added SWAT 5.56 and DM-10 (Marksman Rifles) and 24 further weapons added across BO6's post-launch seasons
+  // that were missing entirely from the previous list (see Tier 2 category cross-ref).
+  // Weapon count: 63 across 9 categories
+  // Map count: 16 (unchanged — not re-verified this pass, no evidence of inaccuracy found)
   bo6: {
     weapons: [
-      wc('Assault Rifles', ['XM4', 'AK-74', 'AMES 85', 'GPR 91', 'Model L', 'Goblin Mk2', 'AS VAL', 'Tsarkov 7.62']),
-      wc('Submachine Guns', ['C9', 'Tanto .22', 'Jackal PDW', 'KSV', 'PP-919 Estoc', 'Kompakt 92']),
-      wc('Light Machine Guns', ['PU-21', 'GPMG-7']),
-      wc('Sniper Rifles', ['LW3A1 Frostline', 'SVD', 'LR 7.62']),
-      wc('Marksman Rifles', ['AEK-973']),
-      wc('Shotguns', ['Marine SP', 'ASG-89', 'Haymaker']),
-      wc('Pistols', ['Stryder .22', '9mm PM', 'GS45', '.44 Harbinger']),
-      wc('Launchers', ['CIGMA 2B', 'HE-1']),
-      wc('Melee', ['Baseball Bat']),
+      wc('Assault Rifles', ['XM4', 'AK-74', 'AMES 85', 'GPR 91', 'Model L', 'Goblin Mk2', 'AS VAL', 'AUG', 'CR-56 AMAX', 'Cypher 091', 'FFAR', 'Kilo 141', 'Krig 6', 'L85', 'Merrick 556']),
+      wc('Submachine Guns', ['C9', 'Tanto .22', 'Jackal PDW', 'KSV', 'PP-919 Estoc', 'Kompakt 92', 'LC10', 'MP40', 'PP90M1', 'PPSh-41', 'Saug', 'Spectre']),
+      wc('Shotguns', ['Marine SP', 'ASG-89', 'Haymaker', 'Maelstrom', 'USAS 12']),
+      wc('Light Machine Guns', ['PU-21', 'XMG', 'GPMG-7', 'Feng 82']),
+      wc('Marksman Rifles', ['SWAT 5.56', 'Tsarkov 7.62', 'AEK-973', 'DM-10', 'Essex Model 07', 'FAL', 'SVU']),
+      wc('Sniper Rifles', ['LW3A1 Frostline', 'SVD', 'LR 7.62', 'Barrett .50cal', 'HDR', 'L118A']),
+      wc('Pistols', ['9mm PM', 'Grekhova', 'GS45', 'Stryder .22', '.44 Harbinger', 'Gravemark .357', 'Makarov', 'USP .45']),
+      wc('Launchers', ['CIGMA 2B', 'HE-1', 'FIM-92 Stinger', 'Panzerfaust']),
+      wc('Melee', ['Knife', 'Baseball Bat']),
     ],
     maps: [
       'Babylon', 'Derelict', 'Gala', 'Hideout', 'Kaz Island', 'Lowtown',
@@ -2434,12 +2564,34 @@ export const GAME_QUESTIONS: Record<string, GameQuestions> = {
   },
 
   // ── Squad ──────────────────────────────────────────────────────────────────────
+  // Tier 2 source: https://squad.fandom.com/wiki/Weapons (full sortable weapon/faction/type table, 273 rows) — checked 2026-07-27
+  // Tier 2 cross-ref: https://squad.fandom.com/wiki/Factions — checked 2026-07-27
+  // Latest game update: Squad has grown to 16 factions; source table covers 14 of them in full detail.
+  // Source newer than latest update: YES for the 14 covered factions.
+  // NEEDS MANUAL REVIEW — Armed Forces of Ukraine (AFU), Western PMC (WPMC), and Canadian Resistance Forces
+  // (CRF) are current, official Squad factions (per the Factions page) but have no weapon rows in the source
+  // table yet — not populated here to avoid guessing. All other factions below are sourced directly.
+  // Full rebuild: previous entry only covered 4 generic groupings (US/Russian/British/Canada-Australia) with
+  // some now-outdated weapon codes (e.g. KSVK, AT4 are not on the current Russian/US rosters). Split into
+  // per-faction categories using Squad's own faction abbreviations, since USA/USMC/ADF/BAF/CAF/RGF/VDV all
+  // carry meaningfully different weapon sets. PLA/PLAAGF/PLANMC share an identical weapon roster in-game.
+  // Weapon count: 92 across 12 categories (primary infantry weapons, support MGs, AT launchers, pistols —
+  // grenades, mines, demolition charges, and bayonets excluded, consistent with prior convention for this game)
+  // Map count: 26 (re-verified — unchanged; prior list already matched current map pool)
   squad: {
     weapons: [
-      wc('US Forces', ['M4A1', 'M249 SAW', 'M203 (Grenade Launcher)', 'M16A4', 'M110 SASS', 'M240B', 'AT4 (Anti-Tank)', 'M72 LAW', 'M2 Browning (vehicle-mounted)']),
-      wc('Russian Forces', ['AK-74M', 'RPK-74', 'PKM', 'RPG-7', 'SVD', 'KSVK']),
-      wc('British Forces', ['L85A2', 'L86A2', 'L129A1', 'GPMG', 'NLAW']),
-      wc('Canada / Australia', ['C7A2', 'C9 (LMG)', 'EF88', 'F89 Minimi']),
+      wc('United States Army (USA)', ['M4', 'M4A1', 'M249 PIP', 'M110 SASS', 'M240B', 'M72A7 LAW', 'M136 CS', 'Carl Gustaf', 'M17 MHS']),
+      wc('United States Marine Corps (USMC)', ['M16A4', 'M4', 'M27 IAR', 'M38 DMR', 'M249 PIP', 'M240G', 'M72A7 LAW', 'M136 CS', 'MK153 SMAW', 'M9A1']),
+      wc('British Armed Forces (BAF)', ['L85A2', 'L22A2', 'L86A2 LSW', 'L110A2 Minimi', 'L129A1', 'L7A2 GPMG', 'L72A9 LASM', 'L2A1 ILAW', 'NLAW', 'L131A1 (G17)']),
+      wc('Canadian Army (CAF)', ['C7A2', 'C8A3', 'C9A2', 'C6A1', 'C14 Timberwolf', 'M72A5-C1', 'Carl Gustav M2', 'Hi-Power Pistol']),
+      wc('Australian Defence Force (ADF)', ['EF88', 'EF88C', 'F89 Minimi', 'HK417', 'Maximi', 'M72A7 LAW', 'Carl Gustaf', 'Self-Loading Pistol Mk3']),
+      wc('Russian Ground Forces (RGF)', ['AK-74M', 'AKS-74U', 'RPK-74M', 'SVDM', 'PKP Pecheneg', 'RPG-7V1', 'RPG-26', 'RPG-28', 'MP-443 Grach']),
+      wc('Russian Airborne Forces (VDV)', ['AK-12', 'AS-VAL', 'RPK-74M', 'SV-98M', 'PKP Pecheneg', 'RPG-7', 'RPG-7V1', 'MP-443 Grach']),
+      wc('Ground Forces of Iran (GFI)', ['G3A3', 'G3A4', 'G3KA4', 'HK 51', 'MG3', 'RPG-26', 'RPG-29', 'Browning Hi-Power']),
+      wc('Turkish Land Forces (TLF)', ['MPT-76', 'SOR-109T', 'MG3', 'PMT-76', 'KNT-76', 'RPG-7', 'RPG-7V1', 'HAR-66 LAW', 'SOR-9']),
+      wc("People's Liberation Army (PLA / PLAAGF / PLANMC)", ['QBZ95-1', 'QBZ95B-1', 'QJB95-1', 'QBU88', 'QJY88', 'DZJ08', 'PF98', 'QSZ92']),
+      wc('Insurgents (INS)', ['AKM', 'AKMS', 'AK-74', 'AKS-74', 'AMD-65', 'PMD-63', 'SKS', 'FAL', 'PPSh-41', 'RPD', 'RPK', 'SVD', 'PKM', 'RPG-7', 'RPG-29', 'Makarov Pistol', 'TT-33 Tokarev']),
+      wc('Irregular Militia Forces (IMF)', ['FAL', 'AK-74', 'AKS-74', 'M16A2', 'AKS-74U', 'M4', 'SKS', 'RPK-74', 'Minimi', 'SVD', 'PKM', 'RPG-7', 'RPG-29', 'Makarov Pistol', 'TT-33 Tokarev']),
     ],
     maps: [
       'Al Basrah', 'Belaya', 'Black Coast', 'Chora', 'Fallujah', "Fool's Road",
@@ -2477,18 +2629,35 @@ export const GAME_QUESTIONS: Record<string, GameQuestions> = {
   },
 
   // ── Hell Let Loose ────────────────────────────────────────────────────────────
+  // WARNING: Tier 3 source — verify manually — en.namu.wiki/w/Hell_Let_Loose/Weapons_and_Equipment
+  //   (community wiki, last modified 2026-07-26, one day before this audit) — checked 2026-07-27
+  // Tier 3 cross-ref: individual weapon pages on hellletloose.fandom.com (e.g. /wiki/M97_Trench_Gun) confirm
+  //   several entries independently; the wiki's own "Weapons" index page is unpopulated so could not be used
+  //   as a Tier 2 source directly — checked 2026-07-27
+  // Tier 1 cross-ref (maps): https://www.hellletloose.com/blog/dev-brief-212-map-vote-reveal-roadmap-breakdown
+  //   (Jan 23, 2026 dev brief) — checked 2026-07-27
+  // Latest game update: 2026 roadmap content (Driel/Market Garden live; Juno Beach + Canadian Forces
+  //   announced but NOT confirmed shipped as of this dev brief — excluded here, do not add until confirmed live)
+  // Source newer than latest update: PARTIAL — weapon source is current; map/faction live-status for
+  // Juno Beach and the Canadian Forces could not be confirmed and was deliberately left out.
+  // Fixed: US pistol corrected from 'M9 Pistol' (not a WW2-era US sidearm) to 'Colt M1911', the actual HLL
+  // U.S. pistol. Added full Soviet/British pistols (previously had none), M97 Trench Gun, FG42, Lanchester,
+  // Lewis Gun, and Boyce Anti-Tank Rifle — all real, previously-missing weapons.
+  // Weapon count: 41 across 4 categories
+  // Map count: 17 (added Driel — Market Garden content; removed 'Minsk', which could not be verified
+  // as an actual Hell Let Loose map through any source checked)
   hll: {
     weapons: [
-      wc('US Forces', ['M1 Garand', 'M1A1 Thompson', 'M1 Carbine', 'M1918 BAR', 'M1919A4 LMG', 'Springfield M1903', 'Bazooka', 'M3 Grease Gun', 'M9 Pistol']),
-      wc('German Forces', ['Kar98k', 'MP40', 'StG 44', 'MG34', 'MG42', 'G43', 'Panzerschreck', 'MP44']),
-      wc('Soviet Forces', ['Mosin-Nagant', 'PPSh-41', 'DP-28', 'SVT-40', 'PTRS-41']),
-      wc('British Forces', ['Lee-Enfield No.4', 'Sten Mk II', 'Bren LMG', 'PIAT']),
+      wc('US Forces', ['M1 Garand', 'M1 Carbine', 'M1918A2 BAR', 'M1903 Springfield', 'M1A1 Thompson', 'M3 Grease Gun', 'Browning M1919', 'M97 Trench Gun', 'M1 Bazooka', 'Colt M1911']),
+      wc('German Forces', ['Karabiner 98k', 'Karabiner 98k x8', 'Gewehr 43', 'MP40', 'StG44', 'FG42', 'MG34', 'MG42', 'Panzerschreck', 'Walther P38', 'Luger P08']),
+      wc('Soviet Forces', ['Mosin-Nagant 91/30', 'Mosin-Nagant 91/30 (Scoped)', 'Mosin-Nagant M38 Carbine', 'SVT-40', 'SVT-40 (Scoped)', 'PPSh-41', 'DP-27', 'PTRS-41', 'Nagant M1895', 'Tokarev TT-33']),
+      wc('British Forces', ['Lee-Enfield No.4 Mk I', 'Lee-Enfield No.4 Mk I (Sniper)', "No.5 Mk I 'Jungle Carbine'", 'SMLE No.1 Mk III', 'P14 (Scoped)', 'Sten', 'Lanchester', 'Bren LMG', 'Lewis Gun', 'PIAT', 'Boyce Anti-Tank Rifle', 'Webley Mk VI Revolver']),
     ],
     maps: [
-      'Carentan', 'Foy', 'Hill 400', 'Hurtgen Forest', 'Kursk', 'Omaha Beach',
-      'Purple Heart Lane', 'Saint-Marie-du-Mont', 'Sainte-Mère-Église',
-      'Stalingrad', 'Remagen', 'El Alamein', 'Utah Beach', 'Tobruk',
-      'Kharkov', 'Minsk', 'Mortain',
+      'Carentan', 'Driel', 'El Alamein', 'Foy', 'Hill 400', 'Hurtgen Forest',
+      'Kharkov', 'Kursk', 'Mortain', 'Omaha Beach', 'Purple Heart Lane',
+      'Remagen', 'Saint-Marie-du-Mont', "Sainte-Mère-Église", 'Stalingrad',
+      'Tobruk', 'Utah Beach',
     ],
     roles: [
       { value: 'officer',  label: 'Officer',         subtitle: 'Rallies, marks, commands' },

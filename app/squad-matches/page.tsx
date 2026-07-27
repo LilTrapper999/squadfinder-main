@@ -97,12 +97,17 @@ export default function SquadMatchesPage() {
   const queueLength = incomingRequests.length - 1
 
   // ── Popup handlers ────────────────────────────────────────────────────────
+  // Accepting always auto-allies — no separate "Add as Ally" step (SPEC_AMENDMENT_11 FIX 1)
   function handlePopupAccept() {
-    shiftIncomingRequest()
-  }
-
-  function handlePopupAcceptAndAlly(ally: Ally) {
-    addAlly(ally)
+    if (currentRequest) {
+      addAlly({
+        id: currentRequest.id,
+        username: currentRequest.senderUsername,
+        overall: currentRequest.overallMatch,
+        status: currentRequest.senderStatus,
+        statusGame: currentRequest.senderStatusGame,
+      })
+    }
     shiftIncomingRequest()
   }
 
@@ -134,10 +139,6 @@ export default function SquadMatchesPage() {
     // Remove card from DOM for the session (1hr hide in production)
     // TODO: persist 1hr cooldown in DB
     setHiddenIds((prev) => [...prev, playerId])
-  }
-
-  function handleAddAlly(ally: Ally) {
-    addAlly(ally)
   }
 
   return (
@@ -273,7 +274,6 @@ export default function SquadMatchesPage() {
                     player={player}
                     resolvedStatusGame={resolvedStatusGame}
                     isLocked={isLocked}
-                    onAddAlly={handleAddAlly}
                     onAccepted={handleCardAccepted}
                     onDeclined={handleCardDeclined}
                   />
@@ -340,7 +340,6 @@ export default function SquadMatchesPage() {
           request={currentRequest}
           queueLength={queueLength}
           onAccept={handlePopupAccept}
-          onAcceptAndAlly={handlePopupAcceptAndAlly}
           onDecline={handlePopupDecline}
           onDeclineAndBlock={handlePopupDeclineAndBlock}
           onExpire={handlePopupExpire}

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, ReactNode } from 'react'
-import { Game, GameVersion, ProfileAnswers, Ally, IncomingRequest } from '@/lib/types'
+import { Game, GameVersion, ProfileAnswers, Ally, IncomingRequest, AllyChat, ChatMessage } from '@/lib/types'
 
 interface AppContextValue {
   // Game selection
@@ -35,6 +35,13 @@ interface AppContextValue {
   squadAccepted: boolean
   acceptedMatchId: string | null
   setSquadAccepted: (id: string) => void
+
+  // Private ally chat (SPEC_AMENDMENT_11 FIX 2/3) — prototype: in-memory only
+  chats: AllyChat[]
+  getChat: (allyId: string) => AllyChat | undefined
+  sendMessage: (allyId: string, content: string) => void
+  toggleDisappearingMessages: (allyId: string) => void
+  pruneExpiredMessages: (allyId: string) => void
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
@@ -58,12 +65,63 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [squadAccepted, setSquadAcceptedState] = useState(false)
   const [acceptedMatchId, setAcceptedMatchId] = useState<string | null>(null)
 
+  // Private ally chat (SPEC_AMENDMENT_11 FIX 2/3)
+  const [chats, setChats] = useState<AllyChat[]>([])
+
   function updateProfileAnswer(key: string, value: string | string[] | number | Record<string, unknown>) {
     setProfileAnswers(prev => ({ ...prev, [key]: value }))
   }
 
   function addAlly(ally: Ally) {
     setAllies(prev => prev.some(a => a.id === ally.id) ? prev : [...prev, ally])
+    // Every ally relationship gets a chat immediately (SPEC_AMENDMENT_11 FIX 1/2)
+    setChats(prev => prev.some(c => c.allyId === ally.id)
+      ? prev
+      : [...prev, { allyId: ally.id, disappearingMessages: false, messages: [] }])
+  }
+
+  function getChat(allyId: string): AllyChat | undefined {
+    return chats.find(c => c.allyId === allyId)
+  }
+
+  function sendMessage(allyId: string, content: string) {
+    const trimmed = content.trim()
+    if (!trimmed) return
+    setChats(prev => {
+      const existing = prev.find(c => c.allyId === allyId)
+      const disappearing = existing?.disappearingMessages ?? false
+      const sentAt = Date.now()
+      const message: ChatMessage = {
+        id: `msg-${sentAt}-${Math.random().toString(36).slice(2, 8)}`,
+        senderId: 'me',
+        content: trimmed,
+        sentAt,
+        expiresAt: disappearing ? sentAt + 86400000 : null,
+      }
+      if (existing) {
+        return prev.map(c => c.allyId === allyId ? { ...c, messages: [...c.messages, message] } : c)
+      }
+      return [...prev, { allyId, disappearingMessages: false, messages: [message] }]
+    })
+  }
+
+  function toggleDisappearingMessages(allyId: string) {
+    setChats(prev => {
+      const existing = prev.find(c => c.allyId === allyId)
+      if (existing) {
+        return prev.map(c => c.allyId === allyId ? { ...c, disappearingMessages: !c.disappearingMessages } : c)
+      }
+      return [...prev, { allyId, disappearingMessages: true, messages: [] }]
+    })
+  }
+
+  function pruneExpiredMessages(allyId: string) {
+    const now = Date.now()
+    setChats(prev => prev.map(c =>
+      c.allyId === allyId
+        ? { ...c, messages: c.messages.filter(m => m.expiresAt === null || m.expiresAt > now) }
+        : c
+    ))
   }
 
   function removeAlly(id: string) {
@@ -112,6 +170,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       squadAccepted,
       acceptedMatchId,
       setSquadAccepted,
+      chats,
+      getChat,
+      sendMessage,
+      toggleDisappearingMessages,
+      pruneExpiredMessages,
     }}>
       {children}
     </AppContext.Provider>

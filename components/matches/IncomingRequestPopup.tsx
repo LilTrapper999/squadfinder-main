@@ -1,13 +1,13 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { IncomingRequest, Ally } from '@/lib/types'
+import { IncomingRequest } from '@/lib/types'
 
 interface IncomingRequestPopupProps {
   request: IncomingRequest
   queueLength: number          // how many more are waiting after this one
+  /** Accepting always auto-allies — no separate "Add as Ally" step (SPEC_AMENDMENT_11 FIX 1) */
   onAccept: () => void
-  onAcceptAndAlly: (ally: Ally) => void
   onDecline: () => void
   onDeclineAndBlock: () => void
   onExpire: () => void
@@ -25,7 +25,6 @@ export default function IncomingRequestPopup({
   request,
   queueLength,
   onAccept,
-  onAcceptAndAlly,
   onDecline,
   onDeclineAndBlock,
   onExpire,
@@ -71,16 +70,6 @@ export default function IncomingRequestPopup({
     'rgba(255,255,255,0.3)'
 
   const overallColor = getBarColor(request.overallMatch)
-
-  function buildAlly(): Ally {
-    return {
-      id: request.id,
-      username: request.senderUsername,
-      overall: request.overallMatch,
-      status: request.senderStatus,
-      statusGame: request.senderStatusGame,
-    }
-  }
 
   return (
     <>
@@ -179,52 +168,55 @@ export default function IncomingRequestPopup({
           </div>
         </div>
 
-        {/* 2×2 action buttons */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-          {/* Decline */}
-          <button
-            onClick={onDecline}
-            style={{
-              padding: '11px',
-              borderRadius: '7px',
-              border: '1px solid rgba(255,255,255,0.2)',
-              backgroundColor: 'transparent',
-              color: 'rgba(255,255,255,0.7)',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'var(--font-rajdhani), sans-serif',
-              letterSpacing: '0.03em',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            Decline
-          </button>
+        {/* Action buttons — secondary pair on top, primary Accept full-width below (auto-allies) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            {/* Decline */}
+            <button
+              onClick={onDecline}
+              style={{
+                padding: '11px',
+                borderRadius: '7px',
+                border: '1px solid rgba(255,255,255,0.2)',
+                backgroundColor: 'transparent',
+                color: 'rgba(255,255,255,0.7)',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'var(--font-rajdhani), sans-serif',
+                letterSpacing: '0.03em',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              Decline
+            </button>
 
-          {/* Decline & Block */}
-          <button
-            onClick={onDeclineAndBlock}
-            style={{
-              padding: '11px',
-              borderRadius: '7px',
-              border: '1px solid #ef4444',
-              backgroundColor: 'rgba(239,68,68,0.08)',
-              color: '#ef4444',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'var(--font-rajdhani), sans-serif',
-              letterSpacing: '0.03em',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            Decline &amp; Block
-          </button>
+            {/* Decline & Block */}
+            <button
+              onClick={onDeclineAndBlock}
+              style={{
+                padding: '11px',
+                borderRadius: '7px',
+                border: '1px solid #ef4444',
+                backgroundColor: 'rgba(239,68,68,0.08)',
+                color: '#ef4444',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'var(--font-rajdhani), sans-serif',
+                letterSpacing: '0.03em',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              Decline &amp; Block
+            </button>
+          </div>
 
-          {/* Accept */}
+          {/* Accept — automatically adds each other as allies (SPEC_AMENDMENT_11 FIX 1) */}
           <button
             onClick={onAccept}
             style={{
+              width: '100%',
               padding: '11px',
               borderRadius: '7px',
               border: 'none',
@@ -239,26 +231,6 @@ export default function IncomingRequestPopup({
             }}
           >
             Accept
-          </button>
-
-          {/* Accept & Add as Ally */}
-          <button
-            onClick={() => onAcceptAndAlly(buildAlly())}
-            style={{
-              padding: '11px',
-              borderRadius: '7px',
-              border: 'none',
-              backgroundColor: '#22c55e',
-              color: '#0a0b0f',
-              fontSize: '13px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              fontFamily: 'var(--font-rajdhani), sans-serif',
-              letterSpacing: '0.04em',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            Accept &amp; Ally
           </button>
         </div>
 

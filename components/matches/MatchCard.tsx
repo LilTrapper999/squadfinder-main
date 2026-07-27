@@ -1,18 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { MatchPlayer, Ally } from '@/lib/types'
+import { useRouter } from 'next/navigation'
+import { MatchPlayer } from '@/lib/types'
 import { useApp } from '@/context/AppContext'
 import { scoreToColour } from '@/lib/matchColour'
 
 type CardState = 'default' | 'waiting' | 'accepted' | 'declined' | 'locked'
-type AllyState = 'idle' | 'sending' | 'accepted' | 'declined'
 
 interface MatchCardProps {
   player: MatchPlayer
   resolvedStatusGame: string | null
   isLocked: boolean
-  onAddAlly: (ally: Ally) => void
   onAccepted: (playerId: string) => void
   onDeclined: (playerId: string) => void
 }
@@ -32,15 +31,14 @@ export default function MatchCard({
   player,
   resolvedStatusGame,
   isLocked,
-  onAddAlly,
   onAccepted,
   onDeclined,
 }: MatchCardProps) {
-  const { squadAccepted, acceptedMatchId } = useApp()
+  const router = useRouter()
+  const { squadAccepted, acceptedMatchId, addAlly } = useApp()
   const [cardState, setCardState] = useState<CardState>('default')
-  const [allyState, setAllyState] = useState<AllyState>('idle')
   const [hoverBtn, setHoverBtn] = useState(false)
-  const [hoverAllyBtn, setHoverAllyBtn] = useState(false)
+  const [hoverChatBtn, setHoverChatBtn] = useState(false)
 
   // FIX 2: If another card was accepted while this one is still waiting, lock it immediately
   useEffect(() => {
@@ -71,6 +69,15 @@ export default function MatchCard({
       if (accepted) {
         setCardState('accepted')
         onAccepted(player.id)
+        // Auto-ally on accept — no separate "Add as Ally" step (SPEC_AMENDMENT_11 FIX 1)
+        addAlly({
+          id: player.id,
+          // TODO: fetch revealedUsername from DB once auth is wired up
+          username: player.revealedUsername,
+          overall: player.overall,
+          status: player.status,
+          statusGame: resolvedStatusGame,
+        })
       } else {
         setCardState('declined')
         // TODO: persist 1hr cooldown in DB
@@ -80,29 +87,9 @@ export default function MatchCard({
     }, delay)
   }
 
-  // ── 50/50 Add as Ally mechanic ────────────────────────────────────────────
-  function handleAddAlly(e: React.MouseEvent) {
+  function handleGoToChat(e: React.MouseEvent) {
     e.stopPropagation()
-    if (allyState !== 'idle') return
-    setAllyState('sending')
-
-    const delay = 1000 + Math.random() * 2000
-    setTimeout(() => {
-      const accepted = Math.random() >= 0.5
-      if (accepted) {
-        setAllyState('accepted')
-        onAddAlly({
-          id: player.id,
-          // TODO: fetch revealedUsername from DB once auth is wired up
-          username: player.revealedUsername,
-          overall: player.overall,
-          status: player.status,
-          statusGame: resolvedStatusGame,
-        })
-      } else {
-        setAllyState('declined')
-      }
-    }, delay)
+    router.push(`/chat/${player.id}`)
   }
 
   // Status badge
@@ -321,93 +308,32 @@ export default function MatchCard({
                 Squad Accepted
               </span>
             </div>
+            <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>
+              You are now allies.
+            </p>
 
-            {/* Add as Ally — 50/50 */}
-            {allyState === 'idle' && (
-              <button
-                onClick={handleAddAlly}
-                onMouseEnter={() => setHoverAllyBtn(true)}
-                onMouseLeave={() => setHoverAllyBtn(false)}
-                style={{
-                  width: '100%',
-                  padding: '9px',
-                  borderRadius: '6px',
-                  border: '1px solid #e8a020',
-                  backgroundColor: hoverAllyBtn ? 'rgba(232,160,32,0.12)' : 'transparent',
-                  color: '#e8a020',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  fontFamily: 'var(--font-rajdhani), sans-serif',
-                  letterSpacing: '0.03em',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                + Add as Ally
-              </button>
-            )}
-
-            {allyState === 'sending' && (
-              <div
-                style={{
-                  width: '100%',
-                  padding: '9px',
-                  borderRadius: '6px',
-                  border: '1px solid rgba(232,160,32,0.3)',
-                  backgroundColor: 'rgba(232,160,32,0.05)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                }}
-              >
-                <span
-                  style={{
-                    display: 'inline-block',
-                    width: '10px',
-                    height: '10px',
-                    border: '2px solid rgba(232,160,32,0.3)',
-                    borderTopColor: '#e8a020',
-                    borderRadius: '50%',
-                    animation: 'spin 0.8s linear infinite',
-                  }}
-                />
-                <span style={{ color: '#e8a020', fontSize: '12px', fontWeight: 600, animation: 'subPulse 1.5s ease-in-out infinite' }}>
-                  Sending...
-                </span>
-              </div>
-            )}
-
-            {allyState === 'accepted' && (
-              <div
-                style={{
-                  padding: '9px 14px',
-                  borderRadius: '6px',
-                  border: '1px solid rgba(34,197,94,0.2)',
-                  backgroundColor: 'rgba(34,197,94,0.05)',
-                  display: 'flex', alignItems: 'center', gap: '6px',
-                }}
-              >
-                <span style={{ color: '#22c55e', fontSize: '13px' }}>✓</span>
-                <span style={{ color: '#22c55e', fontSize: '13px', fontWeight: 600, fontFamily: 'var(--font-rajdhani), sans-serif' }}>
-                  Added as Ally
-                </span>
-              </div>
-            )}
-
-            {allyState === 'declined' && (
-              <div
-                style={{
-                  padding: '9px 14px',
-                  borderRadius: '6px',
-                  border: '1px solid rgba(255,255,255,0.06)',
-                  backgroundColor: 'transparent',
-                  display: 'flex', alignItems: 'center', gap: '6px',
-                }}
-              >
-                <span style={{ color: '#4a5568', fontSize: '13px' }}>✗</span>
-                <span style={{ color: '#4a5568', fontSize: '13px', fontFamily: 'var(--font-rajdhani), sans-serif' }}>
-                  Ally Request Declined
-                </span>
-              </div>
-            )}
+            {/* Go to chat — auto-allied, no separate "Add as Ally" step (SPEC_AMENDMENT_11 FIX 1/2) */}
+            <button
+              onClick={handleGoToChat}
+              onMouseEnter={() => setHoverChatBtn(true)}
+              onMouseLeave={() => setHoverChatBtn(false)}
+              style={{
+                width: '100%',
+                padding: '9px',
+                borderRadius: '6px',
+                border: '1px solid #e8a020',
+                backgroundColor: hoverChatBtn ? 'rgba(232,160,32,0.12)' : 'transparent',
+                color: '#e8a020',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'var(--font-rajdhani), sans-serif',
+                letterSpacing: '0.03em',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              Go to chat →
+            </button>
           </div>
         )}
 

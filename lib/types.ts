@@ -18,6 +18,8 @@ export interface Game {
   platformVersions?: Record<string, GameVersion[]>
   /** Audit trail — true once verified to have a team/squad/party invite feature (SPEC_AMENDMENT_06 FIX 1) */
   hasTeamFeature?: boolean
+  /** Set only on games that are their own separate mobile catalogue entry (SPEC_AMENDMENT_11 FIX 4) — distinct from `platforms`, which lists version tabs on a single shared entry like ABI */
+  platform?: 'Mobile'
 }
 
 export type MatchStatus = 'ingame' | 'searching' | 'offline'
@@ -45,6 +47,25 @@ export interface Ally {
   overall: number
   status: MatchStatus
   statusGame: string | null
+}
+
+// ─── Private ally chat (SPEC_AMENDMENT_11 FIX 2/3) ───────────────────────────
+// Prototype only — in-memory in AppContext, no persistence between sessions.
+
+export interface ChatMessage {
+  id: string
+  senderId: 'me' | 'them'
+  content: string
+  sentAt: number
+  /** null if disappearing messages was off when sent; sentAt + 86400000 if on */
+  expiresAt: number | null
+}
+
+export interface AllyChat {
+  allyId: string
+  /** Default false — messages persist until toggled on */
+  disappearingMessages: boolean
+  messages: ChatMessage[]
 }
 
 export interface IncomingRequest {

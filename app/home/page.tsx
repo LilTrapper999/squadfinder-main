@@ -4,9 +4,18 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { MOCK_SQUAD, MOCK_HOMEPAGE_ALLIES } from '@/lib/mockData'
 import AnimatedBackground from '@/components/ui/AnimatedBackground'
+import { useApp } from '@/context/AppContext'
+import { MatchStatus } from '@/lib/types'
 
 type AllyStatus = 'searching' | 'in-squad' | 'offline'
 type InviteState = 'idle' | 'inviting' | 'accepted' | 'declined'
+
+// Homepage cards use their own lightweight status enum ('in-squad' has no MatchStatus
+// equivalent) — mapped to the closest MatchStatus when opening a real ally chat record.
+function toMatchStatus(s: AllyStatus): MatchStatus {
+  if (s === 'in-squad') return 'ingame'
+  return s
+}
 
 interface HomepageAlly {
   id: string
@@ -98,6 +107,14 @@ const CARD_STYLE: React.CSSProperties = {
 
 export default function HomePage() {
   const router = useRouter()
+  const { addAlly } = useApp()
+
+  // Ensures a real AppContext ally + chat record exists before opening the chat page
+  // (this page's squad/allies lists are local mock state, not wired to AppContext).
+  function openChat(id: string, username: string, overall: number, status: AllyStatus) {
+    addAlly({ id, username, overall, status: toMatchStatus(status), statusGame: null })
+    router.push(`/chat/${id}`)
+  }
   const [hoverFindSquad, setHoverFindSquad] = useState(false)
 
   // Squad state — start with mock data, allies can join
@@ -202,9 +219,14 @@ export default function HomePage() {
                 squadMembers.map((member) => (
                   <div
                     key={member.id}
+                    onClick={() => openChat(member.id, member.username, member.overall, 'in-squad')}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter') openChat(member.id, member.username, member.overall, 'in-squad') }}
                     style={{
                       ...CARD_STYLE,
                       borderTop: member.newlyJoined ? '2px solid #e8a020' : '1px solid rgba(255,255,255,0.08)',
+                      cursor: 'pointer',
                       transition: 'border-top 0.5s ease',
                     }}
                   >
@@ -253,7 +275,11 @@ export default function HomePage() {
                   return (
                     <div
                       key={ally.id}
-                      style={CARD_STYLE}
+                      onClick={() => openChat(ally.id, ally.username, ally.overall, ally.status)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === 'Enter') openChat(ally.id, ally.username, ally.overall, ally.status) }}
+                      style={{ ...CARD_STYLE, cursor: 'pointer' }}
                     >
                       <PFP />
                       <div style={{ flex: 1, minWidth: 0 }}>
@@ -271,7 +297,7 @@ export default function HomePage() {
                               </span>
                             ) : invState === 'idle' ? (
                               <button
-                                onClick={() => handleInvite(ally)}
+                                onClick={(e) => { e.stopPropagation(); handleInvite(ally) }}
                                 style={{
                                   flexShrink: 0,
                                   fontSize: '11px',

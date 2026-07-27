@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Ally } from '@/lib/types'
 
 function getScoreColor(value: number): string {
@@ -15,6 +17,8 @@ interface AllyCardProps {
 }
 
 function AllyCard({ ally }: AllyCardProps) {
+  const router = useRouter()
+  const [hovered, setHovered] = useState(false)
   const statusDotColor =
     ally.status === 'ingame' ? '#22c55e' :
     ally.status === 'searching' ? '#e8a020' :
@@ -33,12 +37,18 @@ function AllyCard({ ally }: AllyCardProps) {
   return (
     <div
       className="ally-card"
+      onClick={() => router.push(`/chat/${ally.id}`)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter') router.push(`/chat/${ally.id}`) }}
       style={{
         width: '90%',
         height: 'calc(100vh / 7)',
         margin: '0 auto 8px',
         backgroundColor: '#1a1d26',
-        border: '1px solid rgba(255,255,255,0.08)',
+        border: `1px solid ${hovered ? 'rgba(232,160,32,0.4)' : 'rgba(255,255,255,0.08)'}`,
         borderRadius: '8px',
         display: 'flex',
         alignItems: 'center',
@@ -46,6 +56,8 @@ function AllyCard({ ally }: AllyCardProps) {
         gap: '12px',
         flexShrink: 0,
         overflow: 'hidden',
+        cursor: 'pointer',
+        transition: 'border-color 0.15s ease',
       }}
     >
       {/* PFP placeholder */}
@@ -96,6 +108,11 @@ function AllyCard({ ally }: AllyCardProps) {
         <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: statusDotColor }} />
         <span style={{ fontSize: '11px', color: statusColor, whiteSpace: 'nowrap' }}>{statusText}</span>
       </div>
+
+      {/* Chat affordance */}
+      <span style={{ fontSize: '14px', color: hovered ? '#e8a020' : 'rgba(255,255,255,0.25)', flexShrink: 0, transition: 'color 0.15s ease' }}>
+        💬
+      </span>
     </div>
   )
 }
@@ -162,7 +179,7 @@ export default function AlliesPanel({ allies }: AlliesPanelProps) {
               No allies yet.
             </p>
             <p style={{ margin: 0, fontSize: '13px', color: '#8b95a5', lineHeight: 1.5 }}>
-              Accept a squad request and add them as an ally to see them here.
+              Accept a squad request to add them as an ally — you'll be able to chat right away.
             </p>
           </div>
         ) : (

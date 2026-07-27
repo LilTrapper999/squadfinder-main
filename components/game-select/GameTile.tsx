@@ -59,6 +59,38 @@ export default function GameTile({ game, selected, onSelect }: GameTileProps) {
         />
       )}
 
+      {/* Mobile badge — distinguishes separate mobile catalogue entries (SPEC_AMENDMENT_11 FIX 4) */}
+      {game.platform === 'Mobile' && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '6px',
+            right: '6px',
+            zIndex: 2,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '3px',
+            padding: '2px 6px',
+            borderRadius: '4px',
+            backgroundColor: 'rgba(10,11,15,0.75)',
+            border: '1px solid rgba(232,160,32,0.4)',
+          }}
+        >
+          <span style={{ fontSize: '9px' }}>📱</span>
+          <span
+            className="sub-heading"
+            style={{
+              fontSize: '8px',
+              fontWeight: 700,
+              letterSpacing: '0.06em',
+              color: '#e8a020',
+            }}
+          >
+            MOBILE
+          </span>
+        </div>
+      )}
+
       {/* Logo image — top 70% */}
       <div style={{ flex: '0 0 70%', position: 'relative', overflow: 'hidden' }}>
         {showImg ? (
