@@ -10,8 +10,6 @@ interface VersionSelectorProps {
   closing?: boolean
 }
 
-// Matches Sidebar's fixed min-width — used to keep the game grid at a usable width.
-const SIDEBAR_WIDTH = 180
 const MIN_GRID_WIDTH = 400
 const PANEL_MIN_WIDTH = 180
 const PANEL_MAX_WIDTH = 320
@@ -37,7 +35,7 @@ export default function VersionSelector({ game, closing = false }: VersionSelect
 
   const panelMaxWidth = Math.max(
     PANEL_MIN_WIDTH,
-    Math.min(PANEL_MAX_WIDTH, viewportWidth - SIDEBAR_WIDTH - MIN_GRID_WIDTH)
+    Math.min(PANEL_MAX_WIDTH, viewportWidth - MIN_GRID_WIDTH)
   )
 
   // Reset when game changes

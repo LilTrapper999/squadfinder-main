@@ -4,9 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Game, GameCategory } from '@/lib/types'
 import { useApp } from '@/context/AppContext'
-import Sidebar from '@/components/game-select/Sidebar'
 import GameGrid from '@/components/game-select/GameGrid'
-import VersionSelector from '@/components/game-select/VersionSelector'
 import AnimatedBackground from '@/components/ui/AnimatedBackground'
 
 export default function SelectGamePage() {
@@ -92,22 +90,16 @@ export default function SelectGamePage() {
         </div>
       </div>
 
-      {/* Three-column layout — fit-content sidebar + flex game grid + fit-content version panel */}
+      {/* Single full-width tab panel — category tabs + version panel now live inside GameGrid */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
-        {/* Sidebar — fit-content */}
-        <Sidebar activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
-
-        {/* Game grid — flex 1, takes remaining space */}
         <GameGrid
           category={activeCategory}
+          onCategoryChange={setActiveCategory}
           selectedGame={localGame}
+          closingGame={closingGame}
+          panelClosing={panelClosing}
           onGameSelect={handleGameSelect}
         />
-
-        {/* Version selector — fit-content, only mounted when a game is selected (or animating out) */}
-        {(localGame || closingGame) && (
-          <VersionSelector game={localGame ?? closingGame} closing={panelClosing} />
-        )}
       </div>
     </div>
   )

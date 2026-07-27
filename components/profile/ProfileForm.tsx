@@ -48,13 +48,10 @@ const PERSONALITY_OPTS = [
 function GroupHeader({ label }: { label: string }) {
   return (
     <p
+      className="main-heading"
       style={{
         margin: '0 0 20px',
-        fontSize: '11px',
-        fontWeight: 600,
-        color: '#4a5568',
-        letterSpacing: '0.1em',
-        textTransform: 'uppercase',
+        fontSize: '19.25px',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
         paddingBottom: '10px',
         breakAfter: 'avoid',
@@ -182,8 +179,10 @@ export default function ProfileForm() {
         </p>
       </div>
 
-      {/* 3-column masonry layout */}
-      <div style={{ columnCount: 3, columnGap: '32px' }}>
+      {/* 3-column layout — Gamesmanship / Vibe Check / Comms sit side by side, each top-aligned
+          regardless of content height (a CSS-columns masonry would let taller columns bleed
+          into the next, pushing Comms out of the third column). */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', columnGap: '32px', alignItems: 'start' }}>
 
         {/* ── GROUP 1: Gamesmanship ─────────────────────────────────────────── */}
         <div style={{ breakInside: 'avoid', marginBottom: '28px' }}>
