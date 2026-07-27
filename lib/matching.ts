@@ -114,36 +114,18 @@ function vibeCheckScore(me: Profile, them: Profile): number {
   return (rageScore(me, them) + personalityScore(me, them)) / 2
 }
 
-// ── Comms (3 components × ~33% each) ─────────────────────
+// ── Comms (language-only binary gate, SPEC_AMENDMENT_10 FIX 1) ───────────
 
 /**
- * Chat (text): Binary match.
- * Both willing or both not willing = 100%. Mismatch = 0%.
+ * commsScore
+ *
+ * Binary: 100 if at least one shared language, 0 if none.
+ * willingToChat and willingToSpeak are informational only — not scored,
+ * shown as info badges on the match card instead.
  */
-function chatScore(me: Profile, them: Profile): number {
-  return me.willingToChat === them.willingToChat ? 100 : 0
-}
-
-/**
- * Voice: Binary match.
- * Both on mic or both off mic = 100%. Mismatch = 0%.
- */
-function voiceScore(me: Profile, them: Profile): number {
-  return me.willingToSpeak === them.willingToSpeak ? 100 : 0
-}
-
-/**
- * Languages: Shared language required.
- * 0 shared languages = 0%, 1 shared = 50%, 2+ shared = 100%.
- */
-function languageScore(me: Profile, them: Profile): number {
-  const shared = intersection(me.languages, them.languages).length
-  if (shared === 0) return 0
-  return Math.min(100, shared * 50)
-}
-
 function commsScore(me: Profile, them: Profile): number {
-  return (chatScore(me, them) + voiceScore(me, them) + languageScore(me, them)) / 3
+  const shared = intersection(me.languages, them.languages)
+  return shared.length > 0 ? 100 : 0
 }
 
 // ── Main Export ───────────────────────────────────────────

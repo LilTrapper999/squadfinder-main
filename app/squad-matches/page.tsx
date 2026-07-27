@@ -77,6 +77,9 @@ export default function SquadMatchesPage() {
       gamesmanship: scores.gamesmanship,
       vibe: scores.vibeCheck,
       comms: scores.comms,
+      // Info badges only — not scored (SPEC_AMENDMENT_10)
+      willingToChat: opponent.profile.willingToChat,
+      willingToSpeak: opponent.profile.willingToSpeak,
     }
   })
 

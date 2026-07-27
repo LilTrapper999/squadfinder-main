@@ -413,6 +413,17 @@ export default function ProfileForm() {
         {/* ── GROUP 3: Comms ────────────────────────────────────────────────── */}
         <div style={{ breakInside: 'avoid', marginBottom: '28px' }}>
           <GroupHeader label="Comms" />
+          <p
+            style={{
+              margin: '-14px 0 20px',
+              fontSize: '11px',
+              color: 'rgba(255,255,255,0.35)',
+              fontFamily: 'Inter, sans-serif',
+              lineHeight: 1.4,
+            }}
+          >
+            Languages determine your match score. Chat and mic preferences are shown to potential squadmates.
+          </p>
 
           {/* C1 — Chat */}
           <QuestionBlock>

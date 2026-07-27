@@ -702,10 +702,10 @@ export const GAMES_BY_CATEGORY: Record<GameCategory, Game[]> = {
       steamAppId: 2073620, logoUrl: STEAM(2073620), hasTeamFeature: true,
       platforms: ['PC', 'Mobile'],
       versions: [
-        { id: 'abi-s6', label: 'Season 6: White Nights', date: '2026' },
+        { id: 'abi-s6', label: 'Season 6: White Nights (ABI 2.0)', date: 'June 30, 2026' },
       ],
       platformVersions: {
-        PC:     [{ id: 'abi-s6-pc',     label: 'Season 6: White Nights (PC)', date: '2026' }],
+        PC:     [{ id: 'abi-s6-pc',     label: 'Season 6: White Nights (ABI 2.0)', date: 'June 30, 2026' }],
         Mobile: [{ id: 'abi-s6-mobile', label: 'Season 6: White Nights (Mobile)', date: '2026' }],
       },
     },
@@ -769,11 +769,7 @@ export const GAMES_BY_CATEGORY: Record<GameCategory, Game[]> = {
       id: 'div2', name: 'The Division 2', category: 'extraction', mark: '©',
       steamAppId: 2221490, logoUrl: STEAM(2221490), hasTeamFeature: true,
       versions: [
-        { id: 'div2-y6s3', label: 'Year 6 Season 3: Vanguard', date: '2025' },
-        { id: 'div2-y6s2', label: 'Year 6 Season 2: Descent', date: '2024' },
-        { id: 'div2-y6s1', label: 'Year 6 Season 1: Emergence', date: '2024' },
-        { id: 'div2-y5e4', label: 'Year 5 Episode 4', date: '2023' },
-        { id: 'div2-y5s2', label: 'Year 5 Season 2', date: '2022' },
+        { id: 'div2-y8s2', label: 'Year 8 Season 2: Into the Dark', date: '2026' },
       ],
     },
     {
@@ -781,44 +777,28 @@ export const GAMES_BY_CATEGORY: Record<GameCategory, Game[]> = {
       steamAppId: 1962663, logoUrl: STEAM(1962663), hasTeamFeature: true,
       platforms: ['PC', 'Console'],
       versions: [
-        { id: 'wz-s4', label: 'Season 4: Reloaded', date: '2025' },
-        { id: 'wz-s3', label: 'Season 3: Operation Payback', date: '2025' },
-        { id: 'wz-s2', label: 'Season 2: Underworld', date: '2025' },
-        { id: 'wz-s1', label: 'Season 1: Urzikstan Launch', date: '2024' },
-        { id: 'wz-s6mw3', label: 'Season 6 MW3', date: '2023' },
+        { id: 'wz-s5', label: 'Season 5', date: '2026' },
       ],
     },
     {
       id: 'dl2', name: 'Dying Light 2', category: 'extraction', mark: '©',
       steamAppId: 534380, logoUrl: STEAM(534380), hasTeamFeature: true,
       versions: [
-        { id: 'dl2-ch8', label: 'Chapter 8: Legacy', date: '2025' },
-        { id: 'dl2-ch7', label: 'Chapter 7: Carnage Hall', date: '2024' },
-        { id: 'dl2-ch6', label: 'Chapter 6: Warriors of Chaos', date: '2024' },
-        { id: 'dl2-bt',  label: 'Bloody Ties DLC', date: '2022' },
-        { id: 'dl2-v1',  label: 'Launch v1.0', date: '2022' },
+        { id: 'dl2-breach', label: 'The Breach: Survival Archives (Patch 1.28)', date: '2026' },
       ],
     },
     {
       id: 'ror2', name: 'Risk of Rain 2', category: 'extraction', mark: '©',
       steamAppId: 632360, logoUrl: STEAM(632360), hasTeamFeature: true,
       versions: [
-        { id: 'ror2-sots', label: 'Seekers of the Storm', date: '2024' },
-        { id: 'ror2-sotv', label: 'Survivors of the Void DLC', date: '2022' },
-        { id: 'ror2-ann',  label: 'Anniversary Update', date: '2021' },
-        { id: 'ror2-hr',   label: 'Hidden Realms Update', date: '2020' },
-        { id: 'ror2-ea',   label: 'Early Access v1.0', date: '2019' },
+        { id: 'ror2-sots', label: 'Seekers of the Storm (Current)', date: '2024' },
       ],
     },
     {
       id: 'foreverwinter', name: 'Forever Winter', category: 'extraction', mark: '©',
       steamAppId: 2828860, logoUrl: STEAM(2828860), hasTeamFeature: true,
       versions: [
-        { id: 'fw-03',   label: 'Early Access 0.3 – New Biome', date: '2025' },
-        { id: 'fw-02',   label: 'Early Access 0.2 – Factions', date: '2024' },
-        { id: 'fw-015',  label: 'Early Access 0.1.5 – AI Update', date: '2024' },
-        { id: 'fw-01',   label: 'Early Access Launch 0.1', date: '2024' },
-        { id: 'fw-demo', label: 'Pre-Alpha Demo', date: '2023' },
+        { id: 'fw-092', label: 'Early Access 0.9.2 – Economy Overhaul', date: '2026' },
       ],
     },
     // Note: The Cycle: Frontier removed (shut down 2023)
@@ -839,7 +819,7 @@ export const GAMES_BY_CATEGORY: Record<GameCategory, Game[]> = {
       id: 'cs2', name: 'Counter-Strike 2 (CS2)', category: 'competitive', mark: '© Valve',
       steamAppId: 730, logoUrl: STEAM(730), hasTeamFeature: true,
       versions: [
-        { id: 'cs2-prem4', label: 'Premier Season 4 (Current)', date: '2026' },
+        { id: 'cs2-prem5', label: 'Premier Season 5 (Current)', date: '2026' },
       ],
     },
     // CS:GO removed — not playable on live servers (sunset Sep 2023)
@@ -847,138 +827,90 @@ export const GAMES_BY_CATEGORY: Record<GameCategory, Game[]> = {
       id: 'valorant', name: 'VALORANT', category: 'competitive', mark: '© Riot Games',
       logoUrl: 'https://www.riotgames.com/darkroom/1440/playvalorant_feed_moodpiece_082020.jpg', hasTeamFeature: true,
       versions: [
-        { id: 'val-2026a3', label: 'Season 2026 — Act 3 (Skirmish: Ascension)', date: '2026' },
+        { id: 'val-2026a4', label: 'Season 2026 — Act 4 (Summit)', date: '2026' },
       ],
     },
     {
       id: 'r6siege', name: 'Rainbow Six Siege', category: 'competitive', mark: '© Ubisoft',
       steamAppId: 359550, logoUrl: STEAM(359550), hasTeamFeature: true,
       versions: [
-        { id: 'r6-y10s1', label: 'Year 10 Season 1', date: '2025' },
-        { id: 'r6-y9s4',  label: 'Year 9 Season 4', date: '2024' },
-        { id: 'r6-y9s3',  label: 'Year 9 Season 3', date: '2024' },
-        { id: 'r6-y9s2',  label: 'Year 9 Season 2', date: '2024' },
-        { id: 'r6-y9s1',  label: 'Year 9 Season 1', date: '2024' },
+        { id: 'r6-y11s2', label: 'Year 11 Season 2: System Override', date: '2026' },
       ],
     },
     {
       id: 'r6ext', name: 'Rainbow Six Extraction', category: 'competitive', mark: '© Ubisoft',
       steamAppId: 2379390, logoUrl: STEAM(2379390), hasTeamFeature: true,
       versions: [
-        { id: 'r6e-p4', label: 'Maelstrom Protocol: Phase 4', date: '2024' },
-        { id: 'r6e-p3', label: 'Maelstrom Protocol: Phase 3', date: '2023' },
-        { id: 'r6e-sp', label: 'Spillover Protocol', date: '2023' },
-        { id: 'r6e-y1s2', label: 'Year 1 Season 2', date: '2022' },
-        { id: 'r6e-v1',  label: 'Launch v1.0', date: '2022' },
+        { id: 'r6e-vigil', label: 'Vigil Protean Update (Current Live Build)', date: '2026' },
       ],
     },
     {
       id: 'ow2', name: 'Overwatch 2', category: 'competitive', mark: '© Blizzard', hasTeamFeature: true,
       versions: [
-        { id: 'ow2-s15', label: 'Season 15', date: '2025' },
-        { id: 'ow2-s14', label: 'Season 14', date: '2025' },
-        { id: 'ow2-s13', label: 'Season 13', date: '2024' },
-        { id: 'ow2-s12', label: 'Season 12', date: '2024' },
-        { id: 'ow2-s11', label: 'Season 11', date: '2024' },
+        { id: 'ow2-2026s3', label: "Reign of Talon — Season 3: Into the Tiger's Den", date: '2026' },
       ],
     },
     {
       id: 'apex', name: 'Apex Legends', category: 'competitive', mark: '© EA/Respawn',
       steamAppId: 1172470, logoUrl: STEAM(1172470), hasTeamFeature: true,
       versions: [
-        { id: 'apex-s24', label: 'Season 24: Overtime', date: '2025' },
-        { id: 'apex-s23', label: 'Season 23: Shockwave', date: '2025' },
-        { id: 'apex-s22', label: 'Season 22: Feral Fury', date: '2024' },
-        { id: 'apex-s21', label: 'Season 21: Upheaval', date: '2024' },
-        { id: 'apex-s20', label: 'Season 20: Breakout', date: '2024' },
+        { id: 'apex-s29', label: 'Season 29: Overclocked', date: '2026' },
       ],
     },
     {
       id: 'splitgate2', name: 'Splitgate 2', category: 'competitive', mark: '© 1047 Games',
       steamAppId: 2918300, logoUrl: STEAM(2918300), hasTeamFeature: true,
       versions: [
-        { id: 'sg2-obs2', label: 'Open Beta Season 2', date: '2025' },
-        { id: 'sg2-obs1', label: 'Open Beta Season 1', date: '2025' },
-        { id: 'sg2-cb2',  label: 'Closed Beta Phase 2', date: '2024' },
-        { id: 'sg2-cb1',  label: 'Closed Beta Phase 1', date: '2024' },
-        { id: 'sg2-demo', label: 'Pre-Alpha Demo', date: '2023' },
+        { id: 'sg2-beta26', label: 'Beta Retool (2026 Relaunch In Progress)', date: '2026' },
       ],
     },
     {
       id: 'quakechamps', name: 'Quake Champions', category: 'competitive', mark: '© id Software',
       steamAppId: 611500, logoUrl: STEAM(611500), hasTeamFeature: true,
       versions: [
-        { id: 'qc-spr25',   label: '2025 Spring Update', date: '2025' },
-        { id: 'qc-champs',  label: 'Champions Update', date: '2024' },
-        { id: 'qc-anticheat', label: 'Anti-Cheat Overhaul', date: '2023' },
-        { id: 'qc-doom',    label: 'Doom Slayer Season', date: '2022' },
-        { id: 'qc-strogg',  label: 'Strogg & Penek Update', date: '2021' },
+        { id: 'qc-s30', label: 'Season 30 — 30th Anniversary Update', date: '2026' },
       ],
     },
     {
       id: 'tf2', name: 'Team Fortress 2', category: 'competitive', mark: '© Valve',
       steamAppId: 440, logoUrl: STEAM(440), hasTeamFeature: true,
       versions: [
-        { id: 'tf2-mvm24', label: 'MvM Mecha Update', date: '2024' },
-        { id: 'tf2-sf24',  label: 'Scream Fortress XVI', date: '2024' },
-        { id: 'tf2-sum23', label: 'Summer 2023 Update', date: '2023' },
-        { id: 'tf2-sf23',  label: 'Scream Fortress XV', date: '2023' },
-        { id: 'tf2-sf22',  label: 'Scream Fortress XIV', date: '2022' },
+        { id: 'tf2-sum26', label: 'Summer 2026 Update', date: '2026' },
       ],
     },
     {
       id: 'haloinfinite', name: 'Halo Infinite', category: 'competitive', mark: '© Microsoft',
       steamAppId: 1240440, logoUrl: STEAM(1240440), hasTeamFeature: true,
       versions: [
-        { id: 'hi-s5', label: 'Season 5: Reckoning', date: '2024' },
-        { id: 'hi-s4', label: 'Season 4: Infection', date: '2023' },
-        { id: 'hi-s3', label: 'Season 3: Echoes Within', date: '2023' },
-        { id: 'hi-s2', label: 'Season 2: Lone Wolves', date: '2022' },
-        { id: 'hi-s1', label: 'Launch Season 1', date: '2021' },
+        { id: 'hi-gauntlet', label: 'Firefight: Gauntlet (Current Live Build)', date: '2026' },
       ],
     },
     {
       id: 'bf2042', name: 'Battlefield 2042', category: 'competitive', mark: '© EA DICE',
       steamAppId: 1517290, logoUrl: STEAM(1517290), hasTeamFeature: true,
       versions: [
-        { id: 'bf42-s7', label: 'Season 7: Turning Point', date: '2024' },
-        { id: 'bf42-s6', label: 'Season 6: Dark Creations', date: '2023' },
-        { id: 'bf42-s5', label: 'Season 5: New Dawn', date: '2023' },
-        { id: 'bf42-s4', label: 'Season 4: Eleventh Hour', date: '2023' },
-        { id: 'bf42-s3', label: 'Season 3: Escalation', date: '2022' },
+        { id: 'bf42-s7-final', label: 'Season 7: Turning Point (Final Season — maintenance only)', date: '2024' },
       ],
     },
     {
       id: 'bfv', name: 'Battlefield V', category: 'competitive', mark: '© EA DICE',
       steamAppId: 1238810, logoUrl: STEAM(1238810), hasTeamFeature: true,
       versions: [
-        { id: 'bfv-74', label: 'Final Update v7.4', date: '2020' },
-        { id: 'bfv-72', label: 'v7.2 – Pacific', date: '2020' },
-        { id: 'bfv-66', label: 'v6.6 – Squad Innovation', date: '2019' },
-        { id: 'bfv-62', label: 'v6.2 – Tides of War Ch. 5', date: '2019' },
-        { id: 'bfv-52', label: 'v5.2 – Lightning Strikes', date: '2019' },
+        { id: 'bfv-74-final', label: 'Final Update v7.4 (Summer Update — maintenance only)', date: '2020' },
       ],
     },
     {
       id: 'enlisted', name: 'Enlisted', category: 'competitive', mark: '© Gaijin',
       steamAppId: 1176470, logoUrl: STEAM(1176470), hasTeamFeature: true,
       versions: [
-        { id: 'enl-endgame', label: 'Endgame', date: '2025' },
-        { id: 'enl-aachen',  label: 'Battle for Aachen', date: '2024' },
-        { id: 'enl-remaster', label: 'Remaster Update', date: '2024' },
-        { id: 'enl-pacific', label: 'Pacific Theater', date: '2023' },
-        { id: 'enl-kursk',   label: 'Battle of Kursk', date: '2022' },
+        { id: 'enl-neptune', label: 'Operation Neptune (Current Live Build)', date: '2026' },
       ],
     },
     {
       id: 'roguecompany', name: 'Rogue Company', category: 'competitive', mark: '© Hi-Rez',
       steamAppId: 872200, logoUrl: STEAM(872200), hasTeamFeature: true,
       versions: [
-        { id: 'rc-s7', label: 'Season 7: Payback', date: '2024' },
-        { id: 'rc-s6', label: 'Season 6: Ambitions', date: '2023' },
-        { id: 'rc-s5', label: 'Season 5: Might', date: '2023' },
-        { id: 'rc-s4', label: "Season 4: Viper's Call", date: '2022' },
-        { id: 'rc-s3', label: "Season 3: Vivienne's War", date: '2022' },
+        { id: 'rc-maint', label: 'Season 10 (Maintenance Mode — no new content since 2024)', date: '2024' },
       ],
     },
     // Hyper Scape removed — shut down Jan 2023
@@ -987,66 +919,42 @@ export const GAMES_BY_CATEGORY: Record<GameCategory, Game[]> = {
       // logoUrl intentionally omitted — original Diabotical delisted from Steam; CDN art no longer served
       steamAppId: 749500, hasTeamFeature: true,
       versions: [
-        { id: 'dia-25', label: 'v2.5 – Ranked Season 4', date: '2024' },
-        { id: 'dia-23', label: 'v2.3 – Team Modes', date: '2023' },
-        { id: 'dia-20', label: 'v2.0 – Esports Update', date: '2022' },
-        { id: 'dia-15', label: 'v1.5 – Arenas', date: '2021' },
-        { id: 'dia-10', label: 'Launch v1.0', date: '2020' },
+        { id: 'dia-live', label: 'Final Live Build (servers online, no new content since 2022)', date: '2022' },
       ],
     },
     {
       id: 'fragpunk', name: 'FragPunk', category: 'competitive', mark: '© Bad Guitar Studio',
       steamAppId: 2943650, logoUrl: STEAM(2943650), hasTeamFeature: true,
       versions: [
-        { id: 'fp-s2',  label: 'Season 2', date: '2025' },
-        { id: 'fp-s1',  label: 'Season 1', date: '2025' },
-        { id: 'fp-ob',  label: 'Open Beta', date: '2024' },
-        { id: 'fp-cb',  label: 'Closed Beta', date: '2024' },
-        { id: 'fp-pre', label: 'Pre-Alpha', date: '2023' },
+        { id: 'fp-s5c2', label: 'Season 5 Chapter 2: Darkest Hour', date: '2026' },
       ],
     },
     {
       id: 'battlebit', name: 'BattleBit Remastered', category: 'competitive', mark: '© SgtOkiDoki',
       steamAppId: 671860, logoUrl: STEAM(671860), hasTeamFeature: true,
       versions: [
-        { id: 'bb-240', label: 'v2.4.0 – Night Maps', date: '2025' },
-        { id: 'bb-230', label: 'v2.3.0 – Conquest Overhaul', date: '2024' },
-        { id: 'bb-220', label: 'v2.2.0 – Anti-Cheat', date: '2024' },
-        { id: 'bb-210', label: 'v2.1.0 – New Factions', date: '2024' },
-        { id: 'bb-200', label: 'Launch v2.0 Early Access', date: '2023' },
+        { id: 'bb-224', label: 'v2.2.4 (Current Live Build)', date: '2026' },
       ],
     },
     {
       id: 'prodeus', name: 'Prodeus', category: 'competitive', mark: '© Bounding Box Software',
       steamAppId: 964800, logoUrl: STEAM(964800), hasTeamFeature: true,
       versions: [
-        { id: 'prod-11',   label: 'v1.1 – Community Maps', date: '2024' },
-        { id: 'prod-10',   label: 'v1.0 Launch', date: '2023' },
-        { id: 'prod-ea07', label: 'Early Access v0.7', date: '2022' },
-        { id: 'prod-ea05', label: 'Early Access v0.5', date: '2021' },
-        { id: 'prod-ea03', label: 'Early Access Launch v0.3', date: '2020' },
+        { id: 'prod-turbobundle', label: 'v1.1 (Current — Turbo Prodeus Bundle)', date: '2024' },
       ],
     },
     {
       id: 'turbooverkill', name: 'Turbo Overkill', category: 'competitive', mark: '© Trigger Happy Interactive',
       steamAppId: 1328350, logoUrl: STEAM(1328350), hasTeamFeature: true,
       versions: [
-        { id: 'to-13', label: 'v1.3 – New Episode', date: '2024' },
-        { id: 'to-12', label: 'v1.2 – Challenge Runs', date: '2024' },
-        { id: 'to-11', label: 'v1.1 – New Weapons', date: '2023' },
-        { id: 'to-10', label: 'Launch v1.0', date: '2023' },
-        { id: 'to-ea', label: 'Early Access', date: '2022' },
+        { id: 'to-ultimate', label: 'Ultimate Edition (Arcade Mode & Custom Maps)', date: '2025' },
       ],
     },
     {
       id: 'gunfirereborn', name: 'Gunfire Reborn', category: 'competitive', mark: '© Duoyi Games',
       steamAppId: 1217060, logoUrl: STEAM(1217060), hasTeamFeature: true,
       versions: [
-        { id: 'gfr-s5', label: 'Season 5', date: '2025' },
-        { id: 'gfr-sn', label: 'Spiritual Nexus DLC', date: '2024' },
-        { id: 'gfr-s4', label: 'Season 4', date: '2024' },
-        { id: 'gfr-s3', label: 'Season 3', date: '2023' },
-        { id: 'gfr-10', label: 'v1.0 Launch', date: '2021' },
+        { id: 'gfr-s8', label: 'Season 8: Myriad Souls', date: '2026' },
       ],
     },
   ],
@@ -1062,11 +970,7 @@ export const GAMES_BY_CATEGORY: Record<GameCategory, Game[]> = {
       id: 'mw3', name: 'Call of Duty: Modern Warfare III', category: 'fps', mark: '© Activision',
       steamAppId: 3595270, logoUrl: STEAM_HERO(3595270), hasTeamFeature: true,
       versions: [
-        { id: 'mw3-s4',     label: 'Season 4', date: '2024' },
-        { id: 'mw3-s3',     label: 'Season 3: Interlude', date: '2024' },
-        { id: 'mw3-s2',     label: 'Season 2', date: '2024' },
-        { id: 'mw3-s1',     label: 'Season 1', date: '2024' },
-        { id: 'mw3-launch', label: 'Launch', date: '2023' },
+        { id: 'mw3-s6-final', label: 'Season 6 (Final Season — maintenance only)', date: '2024' },
       ],
     },
     {
@@ -1074,11 +978,7 @@ export const GAMES_BY_CATEGORY: Record<GameCategory, Game[]> = {
       steamAppId: 1962663, logoUrl: STEAM(1962663), hasTeamFeature: true,
       platforms: ['PC', 'Console'],
       versions: [
-        { id: 'wzfps-s4r', label: 'Season 4 Reloaded', date: '2025' },
-        { id: 'wzfps-s4',  label: 'Season 4', date: '2025' },
-        { id: 'wzfps-s3',  label: 'Season 3', date: '2025' },
-        { id: 'wzfps-s2',  label: 'Season 2', date: '2025' },
-        { id: 'wzfps-s1',  label: 'Season 1', date: '2025' },
+        { id: 'wzfps-s5', label: 'Season 5', date: '2026' },
       ],
     },
     {
@@ -1086,224 +986,146 @@ export const GAMES_BY_CATEGORY: Record<GameCategory, Game[]> = {
       // logoUrl intentionally omitted — header/library art for this app id is not populated on the Steam CDN mirror we use
       steamAppId: 4384550, hasTeamFeature: true,
       versions: [
-        { id: 'bo6-s4',  label: 'Season 4', date: '2025' },
-        { id: 'bo6-s3',  label: 'Season 3', date: '2025' },
-        { id: 'bo6-s2',  label: 'Season 2', date: '2025' },
-        { id: 'bo6-s1r', label: 'Season 1 Reloaded', date: '2024' },
-        { id: 'bo6-s1',  label: 'Season 1', date: '2024' },
+        { id: 'bo6-s6-final', label: 'Season 6 (Final Season — maintenance only)', date: '2025' },
       ],
     },
     {
       id: 'destiny2', name: 'Destiny 2', category: 'fps', mark: '© Bungie',
       steamAppId: 1085660, logoUrl: STEAM(1085660), hasTeamFeature: true,
       versions: [
-        { id: 'd2-eof',     label: 'The Edge of Fate DLC', date: '2025' },
-        { id: 'd2-tfs',     label: 'The Final Shape', date: '2024' },
-        { id: 'd2-lf',      label: 'Lightfall', date: '2023' },
-        { id: 'd2-wq',      label: 'The Witch Queen', date: '2022' },
-        { id: 'd2-haunted', label: 'The Haunted', date: '2022' },
+        { id: 'd2-monument', label: 'Monument of Triumph (Final Live-Service Update)', date: '2026' },
       ],
     },
     {
       id: 'farcry6', name: 'Far Cry 6', category: 'fps', mark: '© Ubisoft',
       steamAppId: 2369390, logoUrl: STEAM(2369390), hasTeamFeature: true,
       versions: [
-        { id: 'fc6-lbw',    label: 'Lost Between Worlds DLC', date: '2022' },
-        { id: 'fc6-pagan',  label: 'Pagan Min DLC', date: '2022' },
-        { id: 'fc6-joseph', label: 'Joseph: Collapse DLC', date: '2022' },
-        { id: 'fc6-danny',  label: 'Danny & Dani vs Evil DLC', date: '2022' },
-        { id: 'fc6-v1',     label: 'Launch v1.0', date: '2021' },
+        { id: 'fc6-final', label: 'Complete Edition (Final Update — support ended)', date: '2022' },
       ],
     },
     {
       id: 'bl3', name: 'Borderlands 3', category: 'fps', mark: '© 2K/Gearbox',
       steamAppId: 397540, logoUrl: STEAM(397540), hasTeamFeature: true,
       versions: [
-        { id: 'bl3-dc',  label: "Director's Cut DLC", date: '2021' },
-        { id: 'bl3-des', label: "Designer's Cut DLC", date: '2020' },
-        { id: 'bl3-pk',  label: 'Psycho Krieg DLC', date: '2020' },
-        { id: 'bl3-bob', label: 'Bounty of Blood DLC', date: '2020' },
-        { id: 'bl3-v1',  label: 'Launch v1.0', date: '2019' },
+        { id: 'bl3-final', label: "Complete Edition (all DLC, incl. Director's Cut)", date: '2021' },
       ],
     },
     {
       id: 'ttw', name: "Tiny Tina's Wonderlands", category: 'fps', mark: '© 2K/Gearbox',
       steamAppId: 1286680, logoUrl: STEAM(1286680), hasTeamFeature: true,
       versions: [
-        { id: 'ttw-ss', label: 'Shattering Spectreglass DLC', date: '2022' },
-        { id: 'ttw-gg', label: "Glutton's Gamble DLC", date: '2022' },
-        { id: 'ttw-mm', label: 'Molten Mirrors DLC', date: '2022' },
-        { id: 'ttw-cc', label: 'Coiled Captors DLC', date: '2022' },
-        { id: 'ttw-v1', label: 'Launch v1.0', date: '2022' },
+        { id: 'ttw-final', label: 'Chaotic Great Edition (all DLC)', date: '2022' },
       ],
     },
     {
       id: 'doom-eternal', name: 'Doom Eternal', category: 'fps', mark: '© id Software',
       steamAppId: 782330, logoUrl: STEAM(782330), hasTeamFeature: true,
       versions: [
-        { id: 'de-ag2', label: 'Ancient Gods Part 2 DLC', date: '2021' },
-        { id: 'de-ag1', label: 'Ancient Gods Part 1 DLC', date: '2020' },
-        { id: 'de-666', label: 'Update 6.66', date: '2021' },
-        { id: 'de-v1',  label: 'Launch v1.0', date: '2020' },
+        { id: 'de-final', label: 'Deluxe Edition (all DLC, incl. The Ancient Gods)', date: '2021' },
       ],
     },
     {
       id: 'drg', name: 'Deep Rock Galactic', category: 'fps', mark: '© Ghost Ship',
       steamAppId: 548430, logoUrl: STEAM(548430), hasTeamFeature: true,
       versions: [
-        { id: 'drg-s5', label: 'Season 5: Endgame', date: '2025' },
-        { id: 'drg-s4', label: 'Season 4: Critical Corruption', date: '2024' },
-        { id: 'drg-s3', label: 'Season 3: Plaguefall', date: '2023' },
-        { id: 'drg-s2', label: 'Season 2: Rival Escalation', date: '2022' },
-        { id: 'drg-s1', label: 'Season 1: Rival Incursion', date: '2022' },
+        { id: 'drg-s6', label: 'Season 6: Relics of Hoxxes', date: '2026' },
       ],
     },
     {
       id: 'payday3', name: 'Payday 3', category: 'fps', mark: '© Starbreeze',
       steamAppId: 1272080, logoUrl: STEAM(1272080), hasTeamFeature: true,
       versions: [
-        { id: 'pd3-ch7', label: 'Chapter 7: Boys in Blue', date: '2025' },
-        { id: 'pd3-ch6', label: 'Chapter 6', date: '2025' },
-        { id: 'pd3-ch5', label: 'Chapter 5', date: '2024' },
-        { id: 'pd3-ch4', label: 'Chapter 4: Boys in Blue Prelude', date: '2024' },
-        { id: 'pd3-v1',  label: 'Launch v1.0', date: '2023' },
+        { id: 'pd3-37', label: 'Update 3.7 (Current Live Build)', date: '2026' },
       ],
     },
     {
       id: 'b4b', name: 'Back 4 Blood', category: 'fps', mark: '© Turtle Rock',
       steamAppId: 924970, logoUrl: STEAM(924970), hasTeamFeature: true,
       versions: [
-        { id: 'b4b-cow',  label: 'Children of the Worm DLC', date: '2022' },
-        { id: 'b4b-tot',  label: 'Tunnels of Terror DLC', date: '2022' },
-        { id: 'b4b-nope', label: 'No Hope Difficulty Update', date: '2022' },
-        { id: 'b4b-v1',   label: 'Launch v1.0', date: '2021' },
+        { id: 'b4b-final', label: 'Rivers of Blood (Final DLC — maintenance only)', date: '2022' },
       ],
     },
     {
       id: 'vt2', name: 'Vermintide 2', category: 'fps', mark: '© Fatshark',
       steamAppId: 552500, logoUrl: STEAM(552500), hasTeamFeature: true,
       versions: [
-        { id: 'vt2-sob', label: 'Shadows over Bögenhafen Revisited', date: '2024' },
-        { id: 'vt2-wom', label: 'Winds of Magic Revamped', date: '2023' },
-        { id: 'vt2-cw',  label: 'Chaos Wastes', date: '2021' },
-        { id: 'vt2-btu', label: 'Back to Ubersreik DLC', date: '2019' },
-        { id: 'vt2-v1',  label: 'Launch v1.0', date: '2018' },
+        { id: 'vt2-611', label: 'v6.11 – Verminous Dreams', date: '2026' },
       ],
     },
     {
       id: 'hd2', name: 'Helldivers 2', category: 'fps', mark: '© Arrowhead',
       steamAppId: 553850, logoUrl: STEAM(553850), hasTeamFeature: true,
       versions: [
-        { id: 'hd2-eof', label: 'Escalation of Freedom', date: '2024' },
-        { id: 'hd2-vc',  label: 'Viper Commandos Warbond', date: '2024' },
-        { id: 'hd2-ff',  label: "Freedom's Flame Warbond", date: '2024' },
-        { id: 'hd2-dd',  label: 'Democratic Detonation Warbond', date: '2024' },
-        { id: 'hd2-v1',  label: 'Launch v1.0', date: '2024' },
+        { id: 'hd2-exo', label: 'Exo Experts Warbond (Current Live Build)', date: '2026' },
       ],
     },
     {
       id: 'remnant2', name: 'Remnant II', category: 'fps', mark: '© Gunfire Games',
       steamAppId: 1282100, logoUrl: STEAM(1282100), hasTeamFeature: true,
       versions: [
-        { id: 'rem2-fk',   label: 'The Forgotten Kingdom DLC', date: '2024' },
-        { id: 'rem2-dh',   label: 'The Dark Horizon DLC', date: '2024' },
-        { id: 'rem2-ak',   label: 'The Awakened King DLC', date: '2023' },
-        { id: 'rem2-v1',   label: 'Launch v1.0', date: '2023' },
+        { id: 'rem2-final', label: 'The Dark Horizon (Final DLC)', date: '2024' },
       ],
     },
     {
       id: 'insurgency', name: 'Insurgency: Sandstorm', category: 'fps', mark: '© New World Interactive',
       steamAppId: 581320, logoUrl: STEAM(581320), hasTeamFeature: true,
       versions: [
-        { id: 'ins-spr25', label: '2025 Spring Update', date: '2025' },
-        { id: 'ins-res',   label: 'Operation: Resurgence', date: '2024' },
-        { id: 'ins-ai',    label: 'AI Overhaul Update', date: '2023' },
-        { id: 'ins-war',   label: 'Operation: Warlord', date: '2022' },
-        { id: 'ins-y2',    label: 'Year 2 Pass', date: '2020' },
+        { id: 'ins-breachpoint', label: 'Update 1.21 – Operation: Breachpoint', date: '2026' },
       ],
     },
     {
       id: 'groundbranch', name: 'Ground Branch', category: 'fps', mark: '© BlackFoot Studios',
       steamAppId: 16900, logoUrl: STEAM(16900), hasTeamFeature: true,
       versions: [
-        { id: 'gb-1027', label: 'v1027 – Multiplayer Overhaul', date: '2025' },
-        { id: 'gb-1026', label: 'v1026 – New Missions', date: '2024' },
-        { id: 'gb-1025', label: 'v1025 – Weapon Attachments', date: '2024' },
-        { id: 'gb-1024', label: 'v1024 – AI Update', date: '2023' },
-        { id: 'gb-1023', label: 'v1023 – Quickmatch', date: '2022' },
+        { id: 'gb-10', label: 'v1.0 – Full Release', date: '2026' },
       ],
     },
     {
       id: 'readyornot', name: 'Ready or Not', category: 'fps', mark: '© VOID Interactive',
       steamAppId: 1144200, logoUrl: STEAM(1144200), hasTeamFeature: true,
       versions: [
-        { id: 'ron-20', label: 'v2.0 – Complete Edition', date: '2024' },
-        { id: 'ron-12', label: 'v1.2 – Neon Graves', date: '2024' },
-        { id: 'ron-11', label: 'v1.1 – Conspiracy', date: '2023' },
-        { id: 'ron-10', label: 'v1.0 Launch', date: '2023' },
-        { id: 'ron-ea', label: 'Early Access', date: '2021' },
+        { id: 'ron-boiling', label: 'v1.4 – Boiling Point DLC', date: '2026' },
       ],
     },
     {
       id: 'armareforger', name: 'Arma Reforger', category: 'fps', mark: '© Bohemia Interactive',
       steamAppId: 1874880, logoUrl: STEAM(1874880), hasTeamFeature: true,
       versions: [
-        { id: 'ar-13', label: 'v1.3 – Combined Arms', date: '2025' },
-        { id: 'ar-12', label: 'v1.2 – Workshop', date: '2024' },
-        { id: 'ar-11', label: 'v1.1 – Conflict Overhaul', date: '2024' },
-        { id: 'ar-10', label: 'v1.0 Launch', date: '2023' },
-        { id: 'ar-09', label: 'Experimental v0.9', date: '2023' },
+        { id: 'ar-170', label: 'v1.7 (Current Live Build)', date: '2026' },
       ],
     },
     {
       id: 'squad', name: 'Squad', category: 'fps', mark: '© Offworld Industries',
       steamAppId: 393380, logoUrl: STEAM(393380), hasTeamFeature: true,
       versions: [
-        { id: 'sq-75', label: 'v7.5 – Helicopters', date: '2025' },
-        { id: 'sq-74', label: 'v7.4 – New Maps', date: '2024' },
-        { id: 'sq-73', label: 'v7.3 – Commander Role', date: '2024' },
-        { id: 'sq-72', label: 'v7.2 – Weapon Rework', date: '2023' },
-        { id: 'sq-71', label: 'v7.1 – ICO', date: '2023' },
+        { id: 'sq-1041', label: 'v10.4.1 (Current Live Build)', date: '2026' },
       ],
     },
     {
       id: 'postscriptum', name: 'Post Scriptum', category: 'fps', mark: '© Periscope Games',
       steamAppId: 736220, logoUrl: STEAM(736220), hasTeamFeature: true,
       versions: [
-        { id: 'ps-tbseventh', label: 'The Bloody Seventh', date: '2024' },
-        { id: 'ps-45',        label: 'v4.5 – Map Update', date: '2023' },
-        { id: 'ps-40',        label: 'v4.0 – Beyond Carentan', date: '2022' },
-        { id: 'ps-38',        label: 'v3.8 – New Factions', date: '2021' },
-        { id: 'ps-35',        label: 'v3.5 – Paradox', date: '2020' },
+        { id: 'ps-current', label: 'Current Live Build (under Offworld Industries)', date: '2024' },
       ],
     },
     {
       id: 'hll', name: 'Hell Let Loose', category: 'fps', mark: '© Team17',
       steamAppId: 686810, logoUrl: STEAM(686810), hasTeamFeature: true,
       versions: [
-        { id: 'hll-u18', label: 'Update 18: Mortain', date: '2025' },
-        { id: 'hll-u17', label: 'Update 17: Caen', date: '2024' },
-        { id: 'hll-u16', label: 'Update 16: Nacht', date: '2024' },
-        { id: 'hll-u15', label: 'Update 15: Kharkov', date: '2023' },
-        { id: 'hll-u14', label: 'Update 14: Entrenchment', date: '2023' },
+        { id: 'hll-u20', label: 'Update 20 (Current Live Build)', date: '2026' },
       ],
     },
     {
       id: 'tarkov-arena', name: 'Escape from Tarkov: Arena', category: 'fps', mark: '© Battlestate Games', hasTeamFeature: true,
       versions: [
-        { id: 'ta-04', label: 'v0.4 — Current Live Build', date: '2026' },
-        { id: 'ta-03', label: 'Patch 0.3 – Ranked Mode', date: '2024' },
-        { id: 'ta-02', label: 'Patch 0.2 – New Maps', date: '2024' },
-        { id: 'ta-01', label: 'Early Access Launch 0.1', date: '2023' },
+        { id: 'ta-052', label: 'v0.5.2 — Current Live Build', date: '2026' },
       ],
     },
     {
       id: 'wolfyb', name: 'Wolfenstein: Youngblood', category: 'fps', mark: '© Bethesda',
       steamAppId: 1056960, logoUrl: STEAM(1056960), hasTeamFeature: true,
       versions: [
-        { id: 'wyb-109', label: 'v1.0.9 Final Update', date: '2020' },
-        { id: 'wyb-108', label: 'v1.0.8', date: '2020' },
-        { id: 'wyb-v1',  label: 'Launch v1.0', date: '2019' },
+        { id: 'wyb-final', label: 'v1.0.7 Final Update (support ended)', date: '2019' },
       ],
     },
   ],
@@ -1331,23 +1153,32 @@ const wc = (category: string, weapons: string[]): WeaponCategory => ({ category,
 export const GAME_QUESTIONS: Record<string, GameQuestions> = {
 
   // ── Escape from Tarkov ─────────────────────────────────────────────────────
-  // Source: escapefromtarkov.fandom.com/wiki/Weapons
-  // Researched: June 2026
-  // Count: 74 weapons
+  // Tier 1 cross-ref: https://www.escapefromtarkov.com/news (official patch notes) — checked 2026-07-27
+  // Tier 2 source: https://escapefromtarkov.fandom.com/wiki/Weapons — checked 2026-07-27
+  // Tier 2 cross-ref: https://escapefromtarkov.fandom.com/wiki/Locations — checked 2026-07-27
+  // Latest game update: Patch 1.0.6.5 (July 17, 2026, per official @tarkov X/Twitter announcement)
+  // Source newer than latest update: YES
+  // Weapon count: 173 across 12 categories (live/in-game only — excludes wiki's "Planned" and "Unconfirmed" sections)
+  // Map count: 14 raid-selectable entries (Factory splits into Day/Night queue entries; Arena PvP mode excluded)
   tarkov: {
     weapons: [
-      wc('Assault Rifles', ['AK-74M', 'AK-74N', 'AKS-74', 'AKS-74U', 'AK-101', 'AK-102', 'AK-103', 'AK-104', 'AK-105', 'AKM', 'AKMS', 'AKMN', 'AKMSN', 'Mk47 Mutant', 'VPO-136 "Vepr-KM"', 'HK 416A5', 'HK 433', 'M4A1', 'MCX', 'MCX SPEAR', 'DT MDR', 'TX-15 DML', 'ADAR 2-15', 'SA-58', 'AS VAL', 'VSS Vintorez', 'OP-SKS', 'SKS', 'VPO-101 "Vepr-Hunter"', 'VPO-209', 'G36', 'AUG A1', 'Ash-12']),
-      wc('Marksman Rifles', ['SVD', 'SVDS', 'RSASS', 'SR-25', 'Mk 17 SCAR-H', 'M1A', 'DVL-10', 'HK G28']),
-      wc('Sniper Rifles', ['SV-98', 'Mosin-Nagant', 'ORSIS T-5000M', 'AXMC .338', 'Blaser R93']),
-      wc('Submachine Guns', ['PP-19-01 "Vityaz-SN"', 'PP-9 "Klin"', 'PP-91 "Kedr"', 'PP-91-01 "Kedr-B"', 'MPX', 'MP5', 'MP5K', 'MP5SD', 'MP7A1', 'MP7A2', 'MP9', 'MP9-N', 'SR-2M "Veresk"', 'P90', 'UMP-45', 'PPSh-41']),
-      wc('Shotguns', ['MP-133', 'MP-153', 'MP-155 Ultima', 'MTs-255-12', 'Saiga-12', 'Saiga-12K', 'KS-23M', 'VPO-215 "Vepr-12"', 'M870', 'M590A1']),
-      wc('Light Machine Guns', ['PKP "Pecheneg"', 'PKM', 'RPK-16', 'M249', 'MG5']),
-      wc('Pistols', ['Glock 17', 'Glock 18C', 'Glock 19X', 'M9A3', 'P226R', 'APB', 'APS', 'PM', 'PB', 'TT', 'SR-1MP "Gyurza"', 'PL-15', 'RSh-12']),
-      wc('Melee', ['Red Rebel Ice Pick', 'Cultist Knife', 'Kiba Arms Straight Razor', 'ER Grizzly Boss Axe']),
+      wc('Assault Carbines', ['9A-91', 'ADAR 2-15', 'AS VAL MOD.4', 'AVT-40', 'OP-SKS', 'RFB', 'SAG AK', 'SAG AK Short', 'SKS', 'SR-3M', 'SVT-40', 'TX-15 DML', 'VPO-101', 'VPO-136', 'VPO-209', 'VSK-94']),
+      wc('Assault Rifles', ['AK-12', 'AK-74', 'AK-74M', 'AK-74N', 'AK-101', 'AK-102', 'AK-103', 'AK-104', 'AK-105', 'AK-308', 'AKM', 'AKMN', 'AKMS', 'AKMSN', 'AKS-74', 'AKS-74N', 'AKS-74U', 'AKS-74UB', 'AKS-74UN', 'AS VAL', 'ASh-12', 'AUG A1', 'AUG A3', 'DT MDR 5.56x45', 'DT MDR 7.62x51', 'G36', 'HK 416A5', 'M4A1', 'M16A1', 'M16A2', 'MCX', 'MCX-SPEAR', 'Mk47', 'NL545 DI', 'NL545 GP', 'Radian Model 1', 'RD-704', 'SA58', 'SCAR-H', 'SCAR-L', 'Velociraptor']),
+      wc('Bolt-Action Rifles', ['AXMC', 'DVL-10', 'M700', 'Marlin MXLR', 'Mosin Infantry', 'Mosin Sniper', 'SV-98', 'T-5000M', 'TRG M10', 'VPO-215']),
+      wc('Designated Marksman Rifles', ['AK-50', 'G28', 'M1A', 'Mk-18', 'RSASS', 'SR-25', 'SVDS', 'TKPD', 'VSS Vintorez']),
+      wc('Grenade Launchers', ['FN40GL', 'M32A1']),
+      wc('Light Machine Guns', ['M60E4', 'M60E6', 'PKM', 'PKP', 'RPD', 'RPDN', 'RPK-16']),
+      wc('Rocket Launchers', ['RShG-2']),
+      wc('Shotguns', ['AA-12 Gen 1', 'AA-12 Gen 2', 'KS-23M', 'M3 Super 90', 'M590A1', 'M870', 'MP-18', 'MP-43-1C', 'MP-133', 'MP-153', 'MP-155', 'MTs-255-12', 'Saiga-12K', 'Saiga-12K FA', 'Saiga-12K FA RL', 'TOZ-106', 'MP-43 sawed-off']),
+      wc('Submachine Guns', ['MP5', 'MP5K-N', 'MP7A1', 'MP7A2', 'MP9', 'MP9-N', 'MPX', 'P90', 'PP-9 Klin', 'PP-19-01', 'PP-91 Kedr', 'PP-91-01 Kedr-B', 'PPSh-41', 'Saiga-9', 'SR-2M', 'STM-9', 'UMP 45', 'UZI', 'UZI PRO Pistol', 'UZI PRO SMG', 'Vector .45', 'Vector 9x19']),
+      wc('Pistols', ['APB', 'APS', 'Blicky', 'Desert Eagle L5 .357', 'Desert Eagle L5 .50 AE', 'Desert Eagle L6 .50 AE', 'Desert Eagle L6 .50 AE (WTS)', 'Desert Eagle Mk XIX .50 AE', 'FN 5-7', 'Glock 17', 'Glock 18C', 'Glock 19X', 'M9A3', 'M45A1', 'M1911A1', 'MP-443 Grach', 'P226R', 'PB pistol', 'PL-15', 'PM (t) pistol', 'PM pistol', 'SR-1MP Gyurza', 'TT-33', 'TT-33 (Golden)', 'USP .45']),
+      wc('Revolvers', ['CR 50DS', 'CR 200DS', 'RSh-12']),
+      wc('Melee Weapons', ['6Kh5 Bayonet', 'Akula push dagger', 'Antique axe', 'APOK Tactical Wasteland Gladius', 'Bars A-2607 95Kh18 knife', 'Bars A-2607 Damascus knife', 'Camper axe', 'Crash Axe', 'Cultist knife', 'ER FULCRUM BAYONET', 'Freeman crowbar', 'Kiba Arms Tactical Tomahawk', 'Miller Bros. Blades M-2 Tactical Sword', 'MPL-50 entrenching tool', 'PR-Taran police baton', 'Red Rebel ice pick', 'SOG Voodoo Hawk tactical tomahawk', 'SP-8 Survival Machete', 'Superfors DB 2020 Dead Blow Hammer', 'United Cutlery M48 Tactical Kukri', 'UVSR Taiga-1 survival machete', 'Chained Labrys', 'NKVD Finka knife']),
     ],
     maps: [
       'Customs', 'Interchange', 'Reserve', 'Shoreline', 'Woods',
-      'Streets of Tarkov', 'Lighthouse', 'Ground Zero',
+      'Streets of Tarkov', 'Lighthouse', 'Ground Zero', 'Terminal',
+      'Icebreaker', 'The Labyrinth',
       'Factory (Day)', 'Factory (Night)', 'The Lab',
     ],
     roles: [
@@ -1365,24 +1196,27 @@ export const GAME_QUESTIONS: Record<string, GameQuestions> = {
   },
 
   // ── Hunt: Showdown 1896 ────────────────────────────────────────────────────
-  // Source: huntshowdown.wiki.gg/wiki/Weapons
-  // Researched: June 2026
-  // Count: 56 weapons
+  // Tier 2 source: https://huntshowdown.wiki.gg/wiki/Weapons — checked 2026-07-27
+  // Tier 2 cross-ref: https://huntshowdown.wiki.gg/wiki/Maps — checked 2026-07-27
+  // Latest game update: Update 2.8 (per wiki Update History, 2026)
+  // Source newer than latest update: YES
+  // Note: The wiki explicitly states weapons have no official rifle/pistol/shotgun designation —
+  // the game groups them by Ammo Size (Compact/Medium/Long/Special Long/Shotgun Shells/Special) plus Melee.
+  // This replaces the previous incorrect rifle/pistol split categorisation.
+  // Weapon count: 54 across 7 categories
+  // Map count: 4 (corrected — "Stillwater Bayou" and "Lawson Delta" are the current live map names,
+  // NOT superseded/renamed as the old comment here claimed; "Bayou" is not an in-game map name)
   hunt: {
     weapons: [
-      wc('Long Rifles', ['Berthier 1892', 'Krag', 'Lebel 1886', 'Mako 1895', 'Martini-Henry', 'Mosin Obrez', 'Mosin-Nagant', 'Sparks']),
-      wc('Medium Rifles', ['1865 Carbine', 'Centennial', 'Drilling', 'Maynard Sniper', 'Springfield 1866', 'Vetterli 71', 'Wildland']),
-      wc('Compact Rifles', ['Frontier 73C', 'Infantry 73L', 'Marathon', 'Ranger 73', 'Vandal 73C']),
-      wc('Long Pistols', ['Haymaker', 'Uppercut']),
-      wc('Medium Pistols', ['Pax', 'Scottfield']),
-      wc('Compact Pistols', ['Bornheim No. 3', 'Conversion', 'LeMat Mark II', 'Nagant M1895', 'New Army', 'Officer']),
-      wc('Shotguns', ['Auto-5', 'Homestead 78', 'Rival 78', 'Romero 77', 'Slate', 'Specter 1882', 'Terminus']),
-      wc('Special / Bows', ['Bomb Lance', 'Bomb Launcher', 'Chu Ko Nu', 'Crossbow', 'Dolch 96', 'Hand Crossbow', 'Hunting Bow', 'Nitro Express']),
-      wc('Melee', ['Baseball Bat', 'Cavalry Saber', 'Combat Axe', 'Katana', 'Machete', 'Railroad Hammer']),
+      wc('Compact Ammo', ['Infantry 73L', 'Marathon', 'Ranger 73', 'Frontier 73C', 'Vandal 73C', 'Bornheim No. 3', 'Conversion', 'LeMat', 'Nagant M1895', 'New Army', 'Officer']),
+      wc('Medium Ammo', ['Centennial', 'Drilling', 'Maynard Sniper', 'Springfield 1866', 'Wildland', '1865 Carbine', 'Vetterli 71', 'Pax', 'Scottfield']),
+      wc('Long Ammo', ['Mako 1895', 'Martini-Henry', 'Sparks', '1890 Cavalry', 'Haymaker', 'Uppercut']),
+      wc('Special Long Ammo', ['Krag', 'Lebel 1886', 'Mosin-Nagant', 'Berthier 1892', 'Mosin Obrez']),
+      wc('Shotgun Shells', ['Auto-5', 'Homestead 78', 'Rival 78', 'Romero 77', 'Slate', 'Specter 1882', 'Terminus']),
+      wc('Special Ammo', ['Nitro Express', 'Crossbow', 'Shredder', 'Bomb Lance', 'Hunting Bow', 'Bomb Launcher', 'Chu Ko Nu', 'Dolch 96', 'Flame Rifle', 'Hand Crossbow']),
+      wc('Melee Weapons', ['Combat Axe', 'Katana', 'Railroad Hammer', 'Baseball Bat', 'Cavalry Saber', 'Machete']),
     ],
-    // FIX 4: Bayou and Mammon's Gulch are the current map names in Hunt 1896.
-    // Stillwater Bayou and Lawson Delta are superseded names from before the 1896 relaunch.
-    maps: ["Bayou", "Mammon's Gulch", 'DeSalle'],
+    maps: ['Stillwater Bayou', 'Lawson Delta', 'DeSalle', "Mammon's Gulch"],
     roles: [
       { value: 'frontline',  label: 'Frontline Hunter',   subtitle: 'Close fights, compound entry' },
       { value: 'sniper',     label: 'Long-Range Sniper',  subtitle: 'Controls sightlines from distance' },
@@ -1496,21 +1330,26 @@ export const GAME_QUESTIONS: Record<string, GameQuestions> = {
   },
 
   // ── Arena Breakout: Infinite (PC) ─────────────────────────────────────────
-  // Source: theguidehall.com/arena-breakout-infinite-all-weapons/
-  // Researched: June 2026
-  // Count: 71 weapons
+  // Corrections confirmed by active player, July 2026 — these override website sources (SPEC_AMENDMENT_09_REVISED)
+  // Cross-reference: official ABI patch notes for Season 6: White Nights (June 30, 2026)
+  // WARNING: theguidehall.com list (Sept 2025) is outdated — not used as primary source
+  // T191/T192 corrected to Assault Rifles (were miscategorised as Marksman Rifles)
+  // U191 corrected to Marksman Rifles (was miscategorised as Pistols)
+  // Banshee (SMG) and T88 (Marksman Rifle) added — Season 6 additions
+  // Count: 78 weapons
   abi: {
     weapons: [
-      wc('Assault Rifles', ['AKM', 'M4A1', 'FAL', 'H416', 'MDR', 'AK-102', 'AK-74N', 'AKS-74U', 'AUG', 'F2000', 'AR-57', 'ACE31', 'AEK', 'AN-94', 'SCAR-L', 'T951', 'T03', 'SG550', 'G3', 'AK12', 'MCX', 'PCC-9', 'ZC807']),
-      wc('Submachine Guns', ['MP5', 'MPX', 'P90', 'Uzi', 'UMP 45', 'MAC-10', 'M3A1', 'T79', 'MP 40', 'QC61', 'MPF45', 'T85', 'Vector 45', 'Vector 9', 'PP19']),
+      wc('Assault Rifles', ['AKM', 'M4A1', 'FAL', 'H416', 'MDR', 'AK-102', 'AK-74N', 'AKS-74U', 'AUG', 'F2000', 'AR-57', 'ACE31', 'AEK', 'AN-94', 'SCAR-L', 'T951', 'T03', 'SG550', 'G3', 'AK12', 'MCX', 'PCC-9', 'ZC807', 'T191', 'T192']),
+      wc('Submachine Guns', ['MP5', 'MPX', 'P90', 'Uzi', 'UMP 45', 'MAC-10', 'M3A1', 'T79', 'MP 40', 'QC61', 'MPF45', 'T85', 'Vector 45', 'Vector 9', 'PP19', 'Banshee']),
       wc('Carbines', ['SA85M', 'SKS', 'M14', 'M96', 'Mini 14', 'BM59', 'SVTU', 'M16']),
-      wc('Marksman Rifles', ['SVDS', 'VSS', 'Mk 14', 'M110', 'ML Rifle']),
-      wc('Sniper Rifles', ['Mosin-Nagant', 'SJ16', 'M24']),
+      wc('Marksman Rifles', ['SVDS', 'VSS', 'Mk 14', 'M110', 'ML Rifle', 'T88', 'U191']),
+      wc('Bolt-Action Rifles', ['Mosin-Nagant', 'SJ16', 'M24']),
       wc('Shotguns', ['M870', 'MP-133', 'S12K', 'USAS-12', 'SPR310']),
       wc('Light Machine Guns', ['RPK-16']),
       wc('Pistols', ['G17', 'M9A3', 'G18C', 'Deagle', 'T54', 'M1911', 'MP9', 'G-Deagle', 'T05', 'M45A1', 'CZ 52', 'F57']),
     ],
-    maps: ['Armory', 'Valley', 'Farm', 'Port', 'Operations Base'],
+    // ABI PC Maps (player-confirmed, 6 maps)
+    maps: ['Farm', 'Valley', 'Armory', 'Northridge', 'TV Station', 'Airport'],
     roles: [
       { value: 'rat',       label: 'Rat',              subtitle: 'Extract over fight' },
       { value: 'fighter',   label: 'Fighter',          subtitle: 'Engages everything' },
@@ -1755,9 +1594,16 @@ export const GAME_QUESTIONS: Record<string, GameQuestions> = {
   // ──────────────────────────────────────────────────────────────────────────
 
   // ── Counter-Strike 2 ───────────────────────────────────────────────────────
-  // Source: store.steampowered.com/app/730/CounterStrike_2/ (in-game buy menu)
-  // Researched: June 2026
-  // Count: 34 purchasable weapons + knife
+  // Tier 1 source: https://www.counter-strike.net (official site — no dedicated public weapon list page)
+  // Tier 2 source: https://counterstrike.fandom.com/wiki/Buy_menu — checked 2026-07-27
+  // Tier 2 cross-ref: https://counterstrike.fandom.com/wiki/Weapons — checked 2026-07-27
+  // Latest game update: Premier Season 5 (July 6, 2026 — Cache replaced Overpass in Active Duty)
+  // Source newer than latest update: YES
+  // Weapon names/counts verified unchanged from prior audit; category names (Pistols, SMG/Heavy grouping,
+  // Rifles, Sniper Rifles) reflect in-game weapon-type terminology even though CS2's buy menu UI itself
+  // only shows 3 top-level weapon sections (Pistols, Mid-Tier, Rifles) after the CS2 buy-menu redesign.
+  // Weapon count: 33 purchasable weapons + knife, across 6 categories (+ Utility, not a weapon)
+  // Map count: 7 (current Active Duty / Premier Season 5 pool)
   cs2: {
     weapons: [
       wc('Pistols', ['Glock-18', 'USP-S', 'P2000', 'Dual Berettas', 'P250', 'Five-SeveN', 'Tec-9', 'CZ75-Auto', 'Desert Eagle', 'R8 Revolver']),
@@ -1769,8 +1615,8 @@ export const GAME_QUESTIONS: Record<string, GameQuestions> = {
       wc('Melee', ['Knife']),
     ],
     maps: [
-      // Active Duty pool (2025–2026)
-      'Mirage', 'Inferno', 'Dust2', 'Anubis', 'Nuke', 'Vertigo', 'Ancient', 'Train', 'Overpass',
+      // Active Duty pool — Premier Season 5 (July 2026): Cache replaced Overpass
+      'Mirage', 'Inferno', 'Dust2', 'Anubis', 'Nuke', 'Ancient', 'Cache',
     ],
     roles: [
       { value: 'igl',       label: 'In-Game Leader',     subtitle: 'Calls strats, reads the game' },
@@ -1787,23 +1633,27 @@ export const GAME_QUESTIONS: Record<string, GameQuestions> = {
   },
 
   // ── VALORANT ────────────────────────────────────────────────────────────────
-  // Source: playvalorant.com/en-gb/arsenal/ (official Arsenal page)
-  // Researched: June 2026
-  // Count: 19 weapons
+  // Tier 1 source: https://playvalorant.com/en-gb/arsenal/ (official Arsenal page) — checked 2026-07-27
+  // Tier 1 cross-ref (maps): dotesports.com VALORANT map rotation article, citing Patch 13.00 — checked 2026-07-27
+  // Latest game update: Patch 13.00 / Season V26 Act 4 (Summit added, Sunset returned; Fracture and Pearl rotated out)
+  // Source newer than latest update: YES
+  // Added 'Bandit' (Sidearm) and 'Outlaw' correctly under Snipers — both missing/miscategorised previously.
+  // Category names corrected to Riot's own Arsenal labels (Sidearms / SMGs / Shotguns / Rifles / Snipers / Heavies / Melee).
+  // Weapon count: 20 across 7 categories
+  // Map count: 7 (current competitive pool)
   valorant: {
     weapons: [
-      wc('Sidearms', ['Classic', 'Shorty', 'Frenzy', 'Ghost', 'Sheriff']),
-      wc('Submachine Guns', ['Stinger', 'Spectre']),
-      wc('Rifles', ['Bulldog', 'Guardian', 'Phantom', 'Vandal']),
+      wc('Sidearms', ['Bandit', 'Classic', 'Shorty', 'Frenzy', 'Ghost', 'Sheriff']),
+      wc('SMGs', ['Stinger', 'Spectre']),
       wc('Shotguns', ['Bucky', 'Judge']),
-      wc('Sniper Rifles', ['Marshal', 'Outlaw', 'Operator']),
-      wc('Machine Guns', ['Ares', 'Odin']),
-      wc('Melee', ['Knife']),
+      wc('Rifles', ['Bulldog', 'Guardian', 'Phantom', 'Vandal']),
+      wc('Snipers', ['Marshal', 'Operator', 'Outlaw']),
+      wc('Heavies', ['Ares', 'Odin']),
+      wc('Melee', ['Tactical Knife']),
     ],
     maps: [
-      // Active ranked pool 2026
-      'Abyss', 'Ascent', 'Bind', 'Fracture', 'Haven',
-      'Icebox', 'Lotus', 'Pearl', 'Split', 'Sunset',
+      // Competitive pool — Season V26 Act 4 (Patch 13.00)
+      'Haven', 'Ascent', 'Split', 'Sunset', 'Breeze', 'Lotus', 'Summit',
     ],
     roles: [
       { value: 'duelist',    label: 'Duelist',           subtitle: 'Entry fragger — Jett, Reyna, Neon' },
@@ -2690,14 +2540,14 @@ export const GAME_QUESTIONS: Record<string, GameQuestions> = {
 
 // FIX 1: 4 searching (visible by default), 2 ingame (visible with notifications on), 2 offline (always hidden)
 export const MOCK_MATCHES: MatchPlayer[] = [
-  { id: 'match-01', label: 'MATCH 01', revealedUsername: 'ShadowRook',    overall: 94, gamesmanship: 96, vibe: 91, comms: 93, status: 'searching', statusGame: null },
-  { id: 'match-02', label: 'MATCH 02', revealedUsername: 'GhostDelta7',   overall: 88, gamesmanship: 90, vibe: 85, comms: 89, status: 'searching', statusGame: null },
-  { id: 'match-03', label: 'MATCH 03', revealedUsername: 'IronVeil',      overall: 83, gamesmanship: 80, vibe: 88, comms: 84, status: 'searching', statusGame: null },
-  { id: 'match-04', label: 'MATCH 04', revealedUsername: 'NullTrace',     overall: 79, gamesmanship: 75, vibe: 82, comms: 78, status: 'searching', statusGame: null },
-  { id: 'match-05', label: 'MATCH 05', revealedUsername: 'VoidCaster',    overall: 74, gamesmanship: 78, vibe: 70, comms: 71, status: 'ingame',    statusGame: 'Escape from Tarkov' },
-  { id: 'match-06', label: 'MATCH 06', revealedUsername: 'CryptoFang',    overall: 68, gamesmanship: 65, vibe: 72, comms: 70, status: 'ingame',    statusGame: 'Arena Breakout: Infinite' },
-  { id: 'match-07', label: 'MATCH 07', revealedUsername: 'StormBlind',    overall: 61, gamesmanship: 63, vibe: 58, comms: 60, status: 'offline',   statusGame: null },
-  { id: 'match-08', label: 'MATCH 08', revealedUsername: 'RiftWalker',    overall: 55, gamesmanship: 52, vibe: 58, comms: 57, status: 'offline',   statusGame: null },
+  { id: 'match-01', label: 'MATCH 01', revealedUsername: 'ShadowRook',    overall: 94, gamesmanship: 96, vibe: 91, comms: 93, willingToChat: true,  willingToSpeak: true,  status: 'searching', statusGame: null },
+  { id: 'match-02', label: 'MATCH 02', revealedUsername: 'GhostDelta7',   overall: 88, gamesmanship: 90, vibe: 85, comms: 89, willingToChat: true,  willingToSpeak: true,  status: 'searching', statusGame: null },
+  { id: 'match-03', label: 'MATCH 03', revealedUsername: 'IronVeil',      overall: 83, gamesmanship: 80, vibe: 88, comms: 84, willingToChat: false, willingToSpeak: false, status: 'searching', statusGame: null },
+  { id: 'match-04', label: 'MATCH 04', revealedUsername: 'NullTrace',     overall: 79, gamesmanship: 75, vibe: 82, comms: 78, willingToChat: true,  willingToSpeak: true,  status: 'searching', statusGame: null },
+  { id: 'match-05', label: 'MATCH 05', revealedUsername: 'VoidCaster',    overall: 74, gamesmanship: 78, vibe: 70, comms: 71, willingToChat: true,  willingToSpeak: true,  status: 'ingame',    statusGame: 'Escape from Tarkov' },
+  { id: 'match-06', label: 'MATCH 06', revealedUsername: 'CryptoFang',    overall: 68, gamesmanship: 65, vibe: 72, comms: 70, willingToChat: false, willingToSpeak: true,  status: 'ingame',    statusGame: 'Arena Breakout: Infinite' },
+  { id: 'match-07', label: 'MATCH 07', revealedUsername: 'StormBlind',    overall: 61, gamesmanship: 63, vibe: 58, comms: 60, willingToChat: false, willingToSpeak: false, status: 'offline',   statusGame: null },
+  { id: 'match-08', label: 'MATCH 08', revealedUsername: 'RiftWalker',    overall: 55, gamesmanship: 52, vibe: 58, comms: 57, willingToChat: true,  willingToSpeak: false, status: 'offline',   statusGame: null },
 ]
 
 // ─── MOCK OPPONENT PROFILES (MATCHING_LOGIC_SPEC.md) ────────────────────────
@@ -2811,7 +2661,8 @@ export const MOCK_OPPONENT_PROFILES: Array<{
       personality: ['Blames the game, never themselves', 'Rage quit curious'],
       willingToChat: false,
       willingToSpeak: true,
-      languages: ['English', 'Polish'],
+      // No English — demonstrates the binary comms gate (SPEC_AMENDMENT_10 FIX 4) against an English-speaking user
+      languages: ['Polish'],
     },
   },
   {
@@ -2828,6 +2679,7 @@ export const MOCK_OPPONENT_PROFILES: Array<{
       personality: ['Quiet but deadly'],
       willingToChat: false,
       willingToSpeak: false,
+      // No English — second zero-comms demo opponent (SPEC_AMENDMENT_10 FIX 4)
       languages: ['French'],
     },
   },

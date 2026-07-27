@@ -31,6 +31,10 @@ export interface MatchPlayer {
   gamesmanship: number
   vibe: number
   comms: number
+  /** Info badge only — not scored (SPEC_AMENDMENT_10) */
+  willingToChat: boolean
+  /** Info badge only — not scored (SPEC_AMENDMENT_10) */
+  willingToSpeak: boolean
   status: MatchStatus
   statusGame: string | null
 }

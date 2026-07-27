@@ -192,6 +192,47 @@ export default function MatchCard({
         ))}
       </div>
 
+      {/* Comms info — plain badges, not a score (SPEC_AMENDMENT_10 FIX 2) */}
+      <div
+        className="comms-info-row"
+        style={{
+          display: 'flex',
+          gap: '16px',
+          alignItems: 'center',
+          padding: '4px 0',
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+          marginTop: '4px',
+          marginBottom: '14px',
+        }}
+      >
+        <span
+          className={`comms-badge ${player.willingToSpeak ? 'active' : 'inactive'}`}
+          style={{
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            color: player.willingToSpeak ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.28)',
+          }}
+        >
+          🎙 {player.willingToSpeak ? 'Mic on' : 'Mic off'}
+        </span>
+        <span
+          className={`comms-badge ${player.willingToChat ? 'active' : 'inactive'}`}
+          style={{
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            color: player.willingToChat ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.28)',
+          }}
+        >
+          💬 {player.willingToChat ? 'Types' : 'No text'}
+        </span>
+      </div>
+
       {/* CTA area */}
       <div style={{ marginTop: 'auto' }}>
 
