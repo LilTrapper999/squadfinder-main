@@ -79,7 +79,7 @@ export default function BuildProfilePage() {
       >
         {/* Page heading */}
         <div style={{ marginBottom: '24px' }}>
-          <h1 className="main-heading" style={{ fontSize: '28px', margin: 0 }}>
+          <h1 className="main-heading" style={{ fontSize: '40px', margin: 0 }}>
             HELP US FIND YOUR SQUAD
           </h1>
         </div>

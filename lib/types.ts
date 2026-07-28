@@ -20,6 +20,12 @@ export interface Game {
   hasTeamFeature?: boolean
   /** Set only on games that are their own separate mobile catalogue entry (SPEC_AMENDMENT_11 FIX 4) — distinct from `platforms`, which lists version tabs on a single shared entry like ABI */
   platform?: 'Mobile'
+  /**
+   * Original catalogue id before each version became its own selectable entry — every version
+   * of a game is now its own tile (e.g. "Escape from Tarkov: Patch 1.0.6 — PvP"), but weapons/
+   * maps/roles are still keyed by the base game in GAME_QUESTIONS, not per version.
+   */
+  baseId?: string
 }
 
 export type MatchStatus = 'ingame' | 'searching' | 'offline'
@@ -47,6 +53,9 @@ export interface Ally {
   overall: number
   status: MatchStatus
   statusGame: string | null
+  /** Which selected game/version tile this ally relationship was formed under — scopes the
+   *  per-game "Your Allies" panel on select-game. */
+  gameId?: string
 }
 
 // ─── Private ally chat (SPEC_AMENDMENT_11 FIX 2/3) ───────────────────────────

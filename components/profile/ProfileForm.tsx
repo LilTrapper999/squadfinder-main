@@ -229,10 +229,11 @@ function CommsSlider({ chat, voice, onChange }: {
 
 export default function ProfileForm() {
   const router = useRouter()
-  const { selectedGame, selectedVersion, profileAnswers, updateProfileAnswer } = useApp()
+  const { selectedGame, profileAnswers, updateProfileAnswer } = useApp()
 
-  const gameId = selectedGame?.id ?? ''
-  const gq = GAME_QUESTIONS[gameId]
+  // Weapons/maps/roles are keyed by the base game in GAME_QUESTIONS, not per version —
+  // each version is its own selectable tile now, but they all share the same question set.
+  const gq = GAME_QUESTIONS[selectedGame?.baseId ?? selectedGame?.id ?? '']
 
   // Weapon categories unfold on click rather than living behind a native <select> dropdown.
   const [openWeaponCats, setOpenWeaponCats] = useState<Record<string, boolean>>({})
@@ -287,6 +288,34 @@ export default function ProfileForm() {
     updateProfileAnswer('comms', { ...existing, willingToChat: chat, willingToSpeak: voice })
   }
 
+  // In-game username is per-game, not a single flat field — keyed by gameId so switching
+  // games (or coming back to build a profile for a different one) doesn't overwrite it.
+  function getGameUsername(): string {
+    const g = profileAnswers['comms']
+    if (g && typeof g === 'object' && !Array.isArray(g)) {
+      const usernames = (g as Record<string, unknown>).usernames
+      if (usernames && typeof usernames === 'object') {
+        const val = (usernames as Record<string, unknown>)[selectedGame?.id ?? '']
+        return typeof val === 'string' ? val : ''
+      }
+    }
+    return ''
+  }
+
+  function updateGameUsername(value: string) {
+    const g = profileAnswers['comms']
+    const existing = (g && typeof g === 'object' && !Array.isArray(g))
+      ? (g as Record<string, unknown>)
+      : {}
+    const existingUsernames = (existing.usernames && typeof existing.usernames === 'object')
+      ? (existing.usernames as Record<string, string>)
+      : {}
+    updateProfileAnswer('comms', {
+      ...existing,
+      usernames: { ...existingUsernames, [selectedGame?.id ?? '']: value },
+    })
+  }
+
   // ── validation ────────────────────────────────────────────────────────────────
   const canSubmit =
     nestedArr('gamesmanship', 'weapons').length > 0 ||
@@ -328,12 +357,6 @@ export default function ProfileForm() {
             <>
               Building your profile for{' '}
               <span style={{ color: '#e8a020' }}>{selectedGame.name}</span>
-              {selectedVersion && (
-                <>
-                  {' '}—{' '}
-                  <span style={{ color: '#e8a020' }}>{selectedVersion.label}</span>
-                </>
-              )}
               . Answer honestly — this is how we find your perfect squad.
             </>
           ) : (
@@ -604,6 +627,34 @@ export default function ProfileForm() {
           >
             Languages determine your match score. Chat and mic preferences are shown to potential squadmates.
           </p>
+
+          {/* C0 — In-game username: per-game, not a single flat profile field */}
+          <QuestionBlock>
+            <QuestionLabel>
+              In-game username{selectedGame ? ` for ${selectedGame.name}` : ''}
+            </QuestionLabel>
+            <input
+              type="text"
+              value={getGameUsername()}
+              onChange={(e) => updateGameUsername(e.target.value)}
+              placeholder="e.g. ShadowRook"
+              style={{
+                width: '100%',
+                padding: '11px 14px',
+                borderRadius: '6px',
+                border: '1px solid rgba(255,255,255,0.1)',
+                backgroundColor: 'rgba(255,255,255,0.03)',
+                color: '#ffffff',
+                fontSize: '14px',
+                fontFamily: 'inherit',
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+            <p style={{ margin: '6px 0 0', fontSize: '10px', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>
+              This is specific to this game — build a profile for another game and you&apos;ll set a different username.
+            </p>
+          </QuestionBlock>
 
           {/* C1 — Comms style (replaces separate chat/voice yes-no toggles) */}
           <QuestionBlock>

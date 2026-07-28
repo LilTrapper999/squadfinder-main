@@ -1163,6 +1163,32 @@ export const GAMES_BY_CATEGORY: Record<GameCategory, Game[]> = {
   GAMES_BY_CATEGORY.fps          = sort(GAMES_BY_CATEGORY.fps)
 })()
 
+// ─── FLATTEN VERSIONS INTO SEPARATE TILES ────────────────────────────────────
+// Every version of a game is now its own selectable entry (e.g. "Escape from Tarkov:
+// Patch 1.0.6 — PvP (Live Wipe)" and "...— PvE (Persistent)" as two tiles) instead of a
+// single tile with a version picker. Reuses the same logo — versions don't need distinct
+// art. Runs after the A→Z sort above so a multi-version game's tiles stay adjacent in the
+// grid rather than being re-sorted by their (now much longer) combined name.
+;(function flattenVersions() {
+  function flatten(games: Game[]): Game[] {
+    return games.flatMap((game) => {
+      const multi = game.versions.length > 1
+      return game.versions.map((version) => ({
+        ...game,
+        id: multi ? `${game.id}-${version.id}` : game.id,
+        name: `${game.name}: ${version.label}`,
+        baseId: game.id,
+        versions: [version],
+        platforms: undefined,
+        platformVersions: undefined,
+      }))
+    })
+  }
+  GAMES_BY_CATEGORY.extraction   = flatten(GAMES_BY_CATEGORY.extraction)
+  GAMES_BY_CATEGORY.competitive  = flatten(GAMES_BY_CATEGORY.competitive)
+  GAMES_BY_CATEGORY.fps          = flatten(GAMES_BY_CATEGORY.fps)
+})()
+
 // ─── GAME QUESTIONS: weapons, maps, roles per game ───────────────────────────
 // Weapons are categorised per SPEC_AMENDMENT_04 FIX 3.
 // Maps are selectable lobby maps only — no sub-areas or callouts (FIX 4).

@@ -11,22 +11,16 @@ export default function LoginCard() {
   const [hoveredGoogle, setHoveredGoogle] = useState(false)
   const [hoveredSkip, setHoveredSkip] = useState(false)
 
+  // Both new and returning users start at select-game — isReturningUser only changes what
+  // happens *after* a game is picked (skip build-profile straight to squad-matches or not).
   // Demo only — replace with real OAuth + DB user lookup in Phase 2
   function handleGoogleClick() {
-    if (isReturningUser) {
-      router.push('/home')
-    } else {
-      router.push('/select-game')
-    }
+    router.push('/select-game')
   }
 
   function handleDevSkip() {
     // Dev bypass — skips auth entirely, goes straight to the app
-    if (isReturningUser) {
-      router.push('/home')
-    } else {
-      router.push('/select-game')
-    }
+    router.push('/select-game')
   }
 
   return (

@@ -153,12 +153,18 @@ export default function GameTile({ game, selected, onSelect }: GameTileProps) {
           className="sub-heading game-tile-name"
           style={{
             margin: 0,
-            fontSize: '11px',
+            fontSize: '10px',
             textAlign: 'center',
-            lineHeight: 1.2,
-            letterSpacing: '0.03em',
+            lineHeight: 1.25,
+            letterSpacing: '0.02em',
             transition: 'color 0.15s',
             color: selected ? '#e8a020' : undefined,
+            // Version info is now baked into the name (e.g. "Game: Patch 1.0 — Mode"), so
+            // names run much longer — clamp instead of letting them overflow the tile.
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
           }}
         >
           {game.name}{' '}

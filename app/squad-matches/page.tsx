@@ -46,7 +46,7 @@ function buildProfileFromAnswers(gameId: string, answers: ProfileAnswers): Profi
 export default function SquadMatchesPage() {
   const router = useRouter()
   const {
-    selectedGame, selectedVersion,
+    selectedGame,
     profileAnswers,
     allies, addAlly,
     incomingRequests, shiftIncomingRequest,
@@ -60,6 +60,8 @@ export default function SquadMatchesPage() {
 
   // Hover state for Return to Homepage button
   const [hoverReturn, setHoverReturn] = useState(false)
+  // Hover state for the Change Details button
+  const [hoverChangeDetails, setHoverChangeDetails] = useState(false)
 
   // Live-calculated matches: pair each mock display identity (username/label/status)
   // with the corresponding opponent profile and run the real matching algorithm.
@@ -103,6 +105,7 @@ export default function SquadMatchesPage() {
         overall: currentRequest.overallMatch,
         status: currentRequest.senderStatus,
         statusGame: currentRequest.senderStatusGame,
+        gameId: selectedGame?.id,
       })
     }
     shiftIncomingRequest()
@@ -197,7 +200,7 @@ export default function SquadMatchesPage() {
           </div>
         </div>
 
-        {/* Game + version badge */}
+        {/* Game badge — version is already baked into the game name */}
         {selectedGame && (
           <div style={{
             display: 'flex', alignItems: 'center', gap: '6px',
@@ -207,11 +210,15 @@ export default function SquadMatchesPage() {
             borderRadius: '20px',
           }}>
             <span style={{ fontSize: '12px', color: '#e8a020', fontWeight: 500 }}>{selectedGame.name}</span>
-            {selectedVersion && (
-              <span style={{ fontSize: '11px', color: '#8b95a5' }}>· {selectedVersion.label}</span>
-            )}
           </div>
         )}
+      </div>
+
+      {/* Page heading — at the very top of the page, matching the other pages' heading size */}
+      <div style={{ padding: '20px 28px 0', flexShrink: 0 }}>
+        <h1 className="main-heading" style={{ fontSize: '40px', margin: 0 }}>
+          YOUR SQUAD AWAITS
+        </h1>
       </div>
 
       {/* Two-panel body */}
@@ -233,11 +240,54 @@ export default function SquadMatchesPage() {
             color: '#ffffff',
           }}
         >
-          {/* Panel heading */}
-          <div style={{ padding: '24px 28px 0', flexShrink: 0 }}>
-            <h1 className="main-heading" style={{ fontSize: '26px', marginBottom: '24px' }}>
-              YOUR SQUAD AWAITS
-            </h1>
+          {/* Instructions + Change Details — where the heading used to sit */}
+          <div style={{ padding: '24px 28px 0', flexShrink: 0, display: 'flex', alignItems: 'stretch', gap: '16px' }}>
+            <div
+              style={{
+                flex: 1,
+                padding: '20px 24px',
+                backgroundColor: 'rgba(232,160,32,0.05)',
+                border: '1px solid rgba(232,160,32,0.15)',
+                borderRadius: '10px',
+              }}
+            >
+              <p
+                style={{
+                  margin: '0 0 6px',
+                  fontSize: '18px',
+                  fontWeight: 600,
+                  color: '#ffffff',
+                  fontFamily: 'var(--font-rajdhani), sans-serif',
+                }}
+              >
+                Ready to squad up
+              </p>
+              <p style={{ margin: 0, fontSize: '13px', color: '#8b95a5', lineHeight: 1.5 }}>
+                Once a squadmate accepts your request, their card reveals the exact username you&apos;ll enter in-game to send them a squad invite.
+              </p>
+            </div>
+            <button
+              onClick={() => router.push('/build-profile')}
+              onMouseEnter={() => setHoverChangeDetails(true)}
+              onMouseLeave={() => setHoverChangeDetails(false)}
+              style={{
+                flexShrink: 0,
+                padding: '0 24px',
+                borderRadius: '10px',
+                border: `1px solid ${hoverChangeDetails ? '#e8a020' : 'rgba(232,160,32,0.3)'}`,
+                backgroundColor: hoverChangeDetails ? 'rgba(232,160,32,0.1)' : 'transparent',
+                color: '#e8a020',
+                fontSize: '14px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'var(--font-rajdhani), sans-serif',
+                letterSpacing: '0.04em',
+                transition: 'all 0.15s ease',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Change Details
+            </button>
           </div>
 
           {/* 3-column grid */}

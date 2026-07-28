@@ -31,7 +31,7 @@ export default function MatchCard({
   onAccepted,
 }: MatchCardProps) {
   const router = useRouter()
-  const { addAlly } = useApp()
+  const { addAlly, selectedGame } = useApp()
   const [cardState, setCardState] = useState<CardState>('default')
   const [hoverBtn, setHoverBtn] = useState(false)
   const [hoverChatBtn, setHoverChatBtn] = useState(false)
@@ -63,6 +63,7 @@ export default function MatchCard({
           overall: player.overall,
           status: player.status,
           statusGame: resolvedStatusGame,
+          gameId: selectedGame?.id,
         })
       } else {
         // Declined cards stay visible permanently — no ally added, no chat access.

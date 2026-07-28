@@ -7,11 +7,11 @@
 
 import { useRef, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Game, GameCategory, GameVersion } from '@/lib/types'
+import { Game, GameCategory } from '@/lib/types'
 import { GAMES_BY_CATEGORY } from '@/lib/mockData'
 import { useApp } from '@/context/AppContext'
 import GameTile from './GameTile'
-import VersionSelector from './VersionSelector'
+import GameAlliesPanel from './GameAlliesPanel'
 
 interface GameGridProps {
   category: GameCategory
@@ -36,19 +36,6 @@ function computeCols(width: number): number {
   return Math.min(Math.max(cols, 2), 6)
 }
 
-// A version choice is only needed when there's more than one to pick between —
-// either multiple listed versions, or multiple platforms with differing versions.
-function needsVersionChoice(game: Game): boolean {
-  return game.versions.length > 1 || !!(game.platforms && game.platforms.length > 1)
-}
-
-function defaultVersionFor(game: Game): GameVersion | null {
-  if (game.platforms && game.platforms.length > 0) {
-    return game.platformVersions?.[game.platforms[0]]?.[0] ?? game.versions[0] ?? null
-  }
-  return game.versions[0] ?? null
-}
-
 export default function GameGrid({
   category,
   onCategoryChange,
@@ -58,7 +45,7 @@ export default function GameGrid({
   onGameSelect,
 }: GameGridProps) {
   const router = useRouter()
-  const { setSelectedVersion } = useApp()
+  const { setSelectedVersion, isReturningUser } = useApp()
   const games = GAMES_BY_CATEGORY[category] ?? []
   const gridRef = useRef<HTMLDivElement>(null)
   const [cols, setCols] = useState(3)
@@ -78,13 +65,9 @@ export default function GameGrid({
     return () => observer.disconnect()
   }, [])
 
-  // Single-version games skip the picker entirely — lock in the only option automatically.
+  // Every game now has exactly one version (each version is its own tile) — lock it in.
   useEffect(() => {
-    if (selectedGame && !needsVersionChoice(selectedGame)) {
-      setSelectedVersion(defaultVersionFor(selectedGame))
-    } else if (!selectedGame) {
-      setSelectedVersion(null)
-    }
+    setSelectedVersion(selectedGame ? selectedGame.versions[0] ?? null : null)
   }, [selectedGame?.id])
 
   // Keep the selected tile in view — picking a game further down the grid shouldn't leave it
@@ -96,13 +79,9 @@ export default function GameGrid({
       ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [selectedGame?.id])
 
-  const showVersionPanel =
-    !!(selectedGame && needsVersionChoice(selectedGame)) ||
-    !!(closingGame && needsVersionChoice(closingGame))
-  const showDirectCta = !!selectedGame && !needsVersionChoice(selectedGame)
-
   function handleFindSquad() {
-    router.push('/build-profile')
+    // Returning users already have a profile on file — skip straight to matches.
+    router.push(isReturningUser ? '/squad-matches' : '/build-profile')
   }
 
   return (
@@ -206,15 +185,14 @@ export default function GameGrid({
           </div>
         </div>
 
-        {/* RH version panel — only when the selected tile has multiple versions to choose from */}
-        {showVersionPanel && (
-          <VersionSelector game={selectedGame ?? closingGame} closing={panelClosing} />
+        {/* RH panel — this game's allies, replacing the old version picker */}
+        {(selectedGame || closingGame) && (
+          <GameAlliesPanel game={selectedGame ?? closingGame} closing={panelClosing} />
         )}
       </div>
 
-      {/* Footer — a strip dedicated solely to the CTA, only present for single-version tiles
-          that skipped the version picker */}
-      {showDirectCta && (
+      {/* Footer — a strip dedicated solely to the CTA */}
+      {selectedGame && (
         <div
           style={{
             flexShrink: 0,

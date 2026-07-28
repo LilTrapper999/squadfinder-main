@@ -16,7 +16,7 @@ interface AllyCardProps {
   ally: Ally
 }
 
-function AllyCard({ ally }: AllyCardProps) {
+export function AllyCard({ ally }: AllyCardProps) {
   const router = useRouter()
   const [hovered, setHovered] = useState(false)
   const statusDotColor =
