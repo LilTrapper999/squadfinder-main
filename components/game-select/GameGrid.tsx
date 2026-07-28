@@ -10,8 +10,11 @@ import { useRouter } from 'next/navigation'
 import { Game, GameCategory } from '@/lib/types'
 import { GAMES_BY_CATEGORY } from '@/lib/mockData'
 import { useApp } from '@/context/AppContext'
+import { useWindowWidth } from '@/lib/useWindowWidth'
 import GameTile from './GameTile'
 import GameAlliesPanel from './GameAlliesPanel'
+
+const MOBILE_BREAKPOINT = 768
 
 interface GameGridProps {
   category: GameCategory
@@ -51,6 +54,8 @@ export default function GameGrid({
   const [cols, setCols] = useState(3)
   const [hoverTab, setHoverTab] = useState<GameCategory | null>(null)
   const [hoverBtn, setHoverBtn] = useState(false)
+  const width = useWindowWidth()
+  const isMobile = width < MOBILE_BREAKPOINT
 
   useEffect(() => {
     if (!gridRef.current) return
@@ -106,19 +111,19 @@ export default function GameGrid({
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'flex-start',
-          padding: '20px 24px 0',
+          padding: isMobile ? '16px 16px 0' : '20px 24px 0',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
           flexShrink: 0,
         }}
       >
         <h2
           className="main-heading"
-          style={{ fontSize: '40px', alignSelf: 'flex-start', verticalAlign: 'top', margin: 0 }}
+          style={{ fontSize: 'clamp(24px, 6vw, 40px)', alignSelf: 'flex-start', verticalAlign: 'top', margin: 0 }}
         >
           CHOOSE YOUR BATTLEFIELD
         </h2>
 
-        <div style={{ display: 'flex', gap: '4px', marginTop: '16px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '16px' }}>
           {CATEGORIES.map((cat) => {
             const isActive = cat.id === category
             const isHovered = cat.id === hoverTab
@@ -130,7 +135,7 @@ export default function GameGrid({
                 onMouseEnter={() => setHoverTab(cat.id)}
                 onMouseLeave={() => setHoverTab(null)}
                 style={{
-                  padding: '12px 20px',
+                  padding: isMobile ? '8px 12px' : '12px 20px',
                   backgroundColor: isActive
                     ? 'rgba(232,160,32,0.08)'
                     : isHovered
@@ -139,7 +144,7 @@ export default function GameGrid({
                   border: 'none',
                   borderBottom: `2px solid ${isActive ? '#e8a020' : 'transparent'}`,
                   color: isActive ? '#e8a020' : isHovered ? '#d0d8e4' : '#8b95a5',
-                  fontSize: '26px',
+                  fontSize: 'clamp(14px, 3.2vw, 26px)',
                   fontWeight: 600,
                   cursor: 'pointer',
                   fontFamily: 'var(--font-rajdhani), sans-serif',
@@ -155,14 +160,16 @@ export default function GameGrid({
         </div>
       </div>
 
-      {/* Body — scrollable grid + (optional) version panel, both live inside this tab */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
+      {/* Body — scrollable grid + allies panel; stacks vertically on narrow viewports since the
+          panel's fixed width would otherwise crush the grid down to almost nothing */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', overflow: isMobile ? 'auto' : 'hidden', position: 'relative' }}>
         <div
           ref={gridRef}
           style={{
-            flex: 1,
+            flex: isMobile ? '0 0 auto' : 1,
             minWidth: 0,
             overflowY: 'auto',
+            maxHeight: isMobile ? '55vh' : undefined,
             padding: '16px',
           }}
         >
@@ -196,7 +203,7 @@ export default function GameGrid({
         <div
           style={{
             flexShrink: 0,
-            padding: '16px 24px',
+            padding: isMobile ? '12px 16px' : '16px 24px',
             borderTop: '1px solid rgba(255,255,255,0.06)',
             display: 'flex',
             justifyContent: 'flex-end',

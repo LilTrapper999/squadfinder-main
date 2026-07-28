@@ -14,6 +14,8 @@ export default function LoginPage() {
         overflow: 'hidden',
         backgroundColor: '#0a0b0f',
         color: '#ffffff',
+        padding: '20px',
+        boxSizing: 'border-box',
       }}
     >
       <AnimatedBackground />

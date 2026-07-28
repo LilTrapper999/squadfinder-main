@@ -2,6 +2,7 @@
 
 import { Game } from '@/lib/types'
 import { useApp } from '@/context/AppContext'
+import { useWindowWidth } from '@/lib/useWindowWidth'
 import { AllyCard } from '@/components/matches/AlliesPanel'
 
 interface GameAlliesPanelProps {
@@ -10,13 +11,51 @@ interface GameAlliesPanelProps {
 }
 
 const PANEL_WIDTH = 280
+const MOBILE_BREAKPOINT = 768
 
 export default function GameAlliesPanel({ game, closing = false }: GameAlliesPanelProps) {
   const { allies } = useApp()
+  const isMobile = useWindowWidth() < MOBILE_BREAKPOINT
 
   if (!game) return null
 
   const gameAllies = allies.filter((a) => a.gameId === game.id)
+
+  // Below the breakpoint this panel stacks under the grid instead of sitting beside it —
+  // full width, capped height, border moves from left to top to match the new edge.
+  const openStyle: React.CSSProperties = isMobile
+    ? {
+        width: '100%',
+        minWidth: 0,
+        maxHeight: '35vh',
+        backgroundColor: '#111318',
+        color: '#ffffff',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        flexShrink: 0,
+        position: 'relative',
+        zIndex: 2,
+        opacity: 1,
+        transition: 'opacity 200ms ease',
+      }
+    : {
+        width: `${PANEL_WIDTH}px`,
+        minWidth: `${PANEL_WIDTH}px`,
+        height: '100%',
+        backgroundColor: '#111318',
+        color: '#ffffff',
+        borderLeft: '1px solid rgba(255,255,255,0.08)',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        flexShrink: 0,
+        position: 'relative',
+        zIndex: 2,
+        opacity: 1,
+        transition: 'width 200ms ease, opacity 200ms ease',
+      }
 
   return (
     <div
@@ -26,7 +65,7 @@ export default function GameAlliesPanel({ game, closing = false }: GameAlliesPan
               width: 0,
               minWidth: 0,
               maxWidth: 0,
-              height: '100%',
+              height: isMobile ? 0 : '100%',
               backgroundColor: '#111318',
               color: '#ffffff',
               display: 'flex',
@@ -39,22 +78,7 @@ export default function GameAlliesPanel({ game, closing = false }: GameAlliesPan
               zIndex: 2,
               transition: 'width 200ms ease, opacity 200ms ease',
             }
-          : {
-              width: `${PANEL_WIDTH}px`,
-              minWidth: `${PANEL_WIDTH}px`,
-              height: '100%',
-              backgroundColor: '#111318',
-              color: '#ffffff',
-              borderLeft: '1px solid rgba(255,255,255,0.08)',
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden',
-              flexShrink: 0,
-              position: 'relative',
-              zIndex: 2,
-              opacity: 1,
-              transition: 'width 200ms ease, opacity 200ms ease',
-            }
+          : openStyle
       }
     >
       {/* Header */}

@@ -6,6 +6,9 @@ import { MOCK_SQUAD, MOCK_HOMEPAGE_ALLIES } from '@/lib/mockData'
 import AnimatedBackground from '@/components/ui/AnimatedBackground'
 import { useApp } from '@/context/AppContext'
 import { MatchStatus } from '@/lib/types'
+import { useWindowWidth } from '@/lib/useWindowWidth'
+
+const MOBILE_BREAKPOINT = 768
 
 type AllyStatus = 'searching' | 'in-squad' | 'offline'
 type InviteState = 'idle' | 'inviting' | 'accepted' | 'declined'
@@ -110,6 +113,7 @@ export default function HomePage() {
     router.push(`/chat/${id}`)
   }
   const [hoverFindSquad, setHoverFindSquad] = useState(false)
+  const isMobile = useWindowWidth() < MOBILE_BREAKPOINT
 
   // Squad state — start with mock data, allies can join
   const [squadMembers, setSquadMembers] = useState<SquadMember[]>(
@@ -164,14 +168,16 @@ export default function HomePage() {
 
       {/* Top nav is provided by the global TopNav in layout.tsx */}
 
-      {/* ── Main layout: sidebar + feed ──────────────────────────────────────── */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+      {/* ── Main layout: sidebar + feed — stacks vertically on narrow viewports ── */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', overflow: isMobile ? 'auto' : 'hidden' }}>
 
-        {/* ── LEFT SIDEBAR (25%) ──────────────────────────────────────────────── */}
+        {/* ── LEFT SIDEBAR (25% desktop / full-width capped-height on mobile) ── */}
         <div style={{
-          width: '25%',
+          width: isMobile ? '100%' : '25%',
+          maxHeight: isMobile ? '45vh' : undefined,
           flexShrink: 0,
-          borderRight: '1px solid rgba(255,255,255,0.08)',
+          borderRight: isMobile ? 'none' : '1px solid rgba(255,255,255,0.08)',
+          borderBottom: isMobile ? '1px solid rgba(255,255,255,0.08)' : 'none',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
@@ -371,8 +377,11 @@ export default function HomePage() {
           alignItems: 'center',
           justifyContent: 'center',
           gap: '16px',
+          padding: '24px',
+          boxSizing: 'border-box',
+          minHeight: isMobile ? '40vh' : undefined,
         }}>
-          <h1 className="main-heading" style={{ fontSize: '36px' }}>
+          <h1 className="main-heading" style={{ fontSize: 'clamp(24px, 6vw, 36px)' }}>
             COMING SOON
           </h1>
           <p

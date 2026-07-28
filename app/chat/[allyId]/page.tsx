@@ -5,12 +5,16 @@ import { useParams, useRouter } from 'next/navigation'
 import { useApp } from '@/context/AppContext'
 import { scoreToColour } from '@/lib/matchColour'
 import ToggleSwitch from '@/components/ui/ToggleSwitch'
+import { useWindowWidth } from '@/lib/useWindowWidth'
+
+const MOBILE_BREAKPOINT = 480
 
 export default function ChatPage() {
   const params = useParams<{ allyId: string }>()
   const allyId = params.allyId
   const router = useRouter()
   const { allies, getChat, sendMessage, toggleDisappearingMessages, pruneExpiredMessages } = useApp()
+  const isMobile = useWindowWidth() < MOBILE_BREAKPOINT
 
   const ally = allies.find(a => a.id === allyId)
   const chat = getChat(allyId)
@@ -149,7 +153,7 @@ export default function ChatPage() {
               whiteSpace: 'nowrap',
             }}
           >
-            ⏱ Disappearing messages
+            {isMobile ? '⏱' : '⏱ Disappearing messages'}
           </span>
           <ToggleSwitch
             checked={disappearing}
@@ -196,7 +200,7 @@ export default function ChatPage() {
                   alignItems: isMe ? 'flex-end' : 'flex-start',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', maxWidth: '70%' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', maxWidth: isMobile ? '85%' : '70%' }}>
                   {disappearing && !isMe && <span style={{ fontSize: '11px', color: '#e8a020' }}>⏱</span>}
                   <div
                     style={{

@@ -14,9 +14,6 @@ interface SliderProps {
   tickLabels?: [string, string, string]
 }
 
-// The 3 anchor indices out of the 11 major ticks (0–10)
-const ANCHOR_INDICES = new Set([0, 5, 10])
-
 export default function Slider({ value, onChange, sliderMinLabel, sliderMaxLabel, tickLabels }: SliderProps) {
   const pct = (value / 100) * 100
   const display = (value / 10).toFixed(1)
@@ -57,7 +54,7 @@ export default function Slider({ value, onChange, sliderMinLabel, sliderMaxLabel
           }} />
         </div>
 
-        {/* Major tick marks (0–10, 11 total) + 3-anchor labels */}
+        {/* Major tick marks (0–10, 11 total) — plain flex row, purely visual indents */}
         <div style={{
           position: 'absolute',
           top: '8px',
@@ -66,37 +63,35 @@ export default function Slider({ value, onChange, sliderMinLabel, sliderMaxLabel
           justifyContent: 'space-between',
           pointerEvents: 'none',
         }}>
-          {Array.from({ length: 11 }, (_, i) => {
-            const isAnchor = ANCHOR_INDICES.has(i)
-            // Map anchor index to tickLabels position: 0→[0], 5→[1], 10→[2]
-            const labelIndex = i === 0 ? 0 : i === 5 ? 1 : 2
-            return (
-              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '1px' }}>
-                <div style={{ width: '1px', height: '6px', backgroundColor: 'rgba(255,255,255,0.25)' }} />
-                {tickLabels && isAnchor ? (
-                  <span style={{
-                    fontSize: '11px',
-                    color: 'rgba(255,255,255,0.45)',
-                    marginTop: '4px',
-                    whiteSpace: 'nowrap',
-                    // Centering every label on its tick pushes the first label's left half (and the
-                    // last label's right half) past the track edge — into the neighbouring column in
-                    // a multi-column layout, or off-screen entirely for an edge column. Anchor the
-                    // first/last labels to the inside instead; only the middle one stays centered.
-                    transform: i === 0 ? 'none' : i === 10 ? 'translateX(-100%)' : 'translateX(-50%)',
-                    userSelect: 'none',
-                    textAlign: i === 0 ? 'left' : i === 10 ? 'right' : 'center',
-                  }}>
-                    {tickLabels[labelIndex]}
-                  </span>
-                ) : (
-                  /* Non-anchor ticks: no label, just the indent mark */
-                  <span style={{ display: 'block', height: '4px' }} />
-                )}
-              </div>
-            )
-          })}
+          {Array.from({ length: 11 }, (_, i) => (
+            <div key={i} style={{ width: '1px', height: '6px', backgroundColor: 'rgba(255,255,255,0.25)' }} />
+          ))}
         </div>
+
+        {/* 3-anchor labels — positioned independently of the tick marks above. Nesting a label
+            inside a 1px-wide flex tick item forces flexbox to center it there regardless of any
+            transform, which pushes the first/last labels off the track edge; positioning each by
+            `left: X%` against this full-width row avoids that entirely. */}
+        {tickLabels && (
+          <div style={{ position: 'absolute', top: '18px', left: 0, right: 0, height: 0, pointerEvents: 'none' }}>
+            {[0, 5, 10].map((i, labelIndex) => (
+              <span
+                key={i}
+                style={{
+                  position: 'absolute',
+                  left: `${(i / 10) * 100}%`,
+                  transform: i === 0 ? 'none' : i === 10 ? 'translateX(-100%)' : 'translateX(-50%)',
+                  fontSize: '11px',
+                  color: 'rgba(255,255,255,0.45)',
+                  whiteSpace: 'nowrap',
+                  userSelect: 'none',
+                }}
+              >
+                {tickLabels[labelIndex]}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* Invisible native range input */}
         <input

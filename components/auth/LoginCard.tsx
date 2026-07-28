@@ -30,9 +30,10 @@ export default function LoginCard() {
         backgroundColor: '#111318',
         border: '1px solid rgba(255,255,255,0.08)',
         borderRadius: '16px',
-        padding: '48px 40px',
+        padding: 'clamp(28px, 6vw, 48px) clamp(20px, 5vw, 40px)',
         width: '100%',
         maxWidth: '420px',
+        boxSizing: 'border-box',
         position: 'relative',
         zIndex: 1,
       }}

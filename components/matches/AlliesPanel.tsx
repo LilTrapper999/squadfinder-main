@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Ally } from '@/lib/types'
+import { useWindowWidth } from '@/lib/useWindowWidth'
 
 function getScoreColor(value: number): string {
   if (value >= 90) return '#22c55e'
@@ -121,22 +122,41 @@ interface AlliesPanelProps {
   allies: Ally[]
 }
 
+const MOBILE_BREAKPOINT = 768
+
 export default function AlliesPanel({ allies }: AlliesPanelProps) {
+  const isMobile = useWindowWidth() < MOBILE_BREAKPOINT
+
   return (
     <div
       className="allies-panel"
-      style={{
-        width: '18%',
-        minWidth: '200px',
-        height: '100%',
-        backgroundColor: '#111318',
-        color: '#ffffff',
-        borderRight: '1px solid rgba(255,255,255,0.08)',
-        display: 'flex',
-        flexDirection: 'column',
-        flexShrink: 0,
-        overflow: 'hidden',
-      }}
+      style={
+        isMobile
+          ? {
+              width: '100%',
+              maxHeight: '35vh',
+              backgroundColor: '#111318',
+              color: '#ffffff',
+              borderRight: 'none',
+              borderBottom: '1px solid rgba(255,255,255,0.08)',
+              display: 'flex',
+              flexDirection: 'column',
+              flexShrink: 0,
+              overflow: 'hidden',
+            }
+          : {
+              width: '18%',
+              minWidth: '200px',
+              height: '100%',
+              backgroundColor: '#111318',
+              color: '#ffffff',
+              borderRight: '1px solid rgba(255,255,255,0.08)',
+              display: 'flex',
+              flexDirection: 'column',
+              flexShrink: 0,
+              overflow: 'hidden',
+            }
+      }
     >
       {/* Panel header */}
       <div

@@ -1,6 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import { useWindowWidth } from '@/lib/useWindowWidth'
+
+const MOBILE_BREAKPOINT = 480
+const TABLET_BREAKPOINT = 900
 
 const LANGUAGES = [
   'English', 'Mandarin Chinese', 'Hindi', 'Spanish', 'Arabic',
@@ -19,6 +23,8 @@ interface LanguagePickerProps {
 export default function LanguagePicker({ selected, onChange }: LanguagePickerProps) {
   const [otherChecked, setOtherChecked] = useState(false)
   const [otherText, setOtherText] = useState('')
+  const width = useWindowWidth()
+  const columns = width < MOBILE_BREAKPOINT ? 1 : width < TABLET_BREAKPOINT ? 2 : 3
 
   function toggle(lang: string) {
     if (selected.includes(lang)) {
@@ -57,7 +63,7 @@ export default function LanguagePicker({ selected, onChange }: LanguagePickerPro
       {/* 3-column grid for predefined languages */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
+        gridTemplateColumns: `repeat(${columns}, 1fr)`,
         gap: '6px',
         marginBottom: '6px',
       }}>

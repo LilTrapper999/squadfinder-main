@@ -1,5 +1,9 @@
 'use client'
 
+import { useWindowWidth } from '@/lib/useWindowWidth'
+
+const MOBILE_BREAKPOINT = 480
+
 interface CheckboxGridProps {
   options: string[]
   selected: string[]
@@ -8,6 +12,8 @@ interface CheckboxGridProps {
 }
 
 export default function CheckboxGrid({ options, selected, onChange, columns = 2 }: CheckboxGridProps) {
+  const isMobile = useWindowWidth() < MOBILE_BREAKPOINT
+
   function toggle(opt: string) {
     if (selected.includes(opt)) {
       onChange(selected.filter((v) => v !== opt))
@@ -19,7 +25,7 @@ export default function CheckboxGrid({ options, selected, onChange, columns = 2 
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: `repeat(${columns}, 1fr)`,
+      gridTemplateColumns: `repeat(${isMobile ? 1 : columns}, 1fr)`,
       gap: '6px',
     }}>
       {options.map((opt) => {

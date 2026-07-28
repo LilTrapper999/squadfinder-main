@@ -6,10 +6,14 @@ import { useApp } from '@/context/AppContext'
 import { MOCK_MATCHES, MOCK_OPPONENT_PROFILES } from '@/lib/mockData'
 import { MatchPlayer, Profile, ProfileAnswers } from '@/lib/types'
 import { calculateMatch } from '@/lib/matching'
+import { useWindowWidth } from '@/lib/useWindowWidth'
 import MatchCard from '@/components/matches/MatchCard'
 import AlliesPanel from '@/components/matches/AlliesPanel'
 import IncomingRequestPopup from '@/components/matches/IncomingRequestPopup'
 import AnimatedBackground from '@/components/ui/AnimatedBackground'
+
+const MOBILE_BREAKPOINT = 768
+const TABLET_BREAKPOINT = 1100
 
 // Reads a nested answer group (e.g. answers.gamesmanship.weapons) written by ProfileForm's updateNested()
 function nestedGroup(answers: ProfileAnswers, group: string): Record<string, unknown> {
@@ -62,6 +66,11 @@ export default function SquadMatchesPage() {
   const [hoverReturn, setHoverReturn] = useState(false)
   // Hover state for the Change Details button
   const [hoverChangeDetails, setHoverChangeDetails] = useState(false)
+
+  const width = useWindowWidth()
+  const isMobile = width < MOBILE_BREAKPOINT
+  const isTablet = width < TABLET_BREAKPOINT
+  const matchColumns = isMobile ? 1 : isTablet ? 2 : 3
 
   // Live-calculated matches: pair each mock display identity (username/label/status)
   // with the corresponding opponent profile and run the real matching algorithm.
@@ -174,66 +183,74 @@ export default function SquadMatchesPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 24px',
+          padding: isMobile ? '0 16px' : '0 24px',
+          gap: '10px',
           flexShrink: 0,
+          overflow: 'hidden',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <span style={{
-            fontFamily: 'var(--font-rajdhani), sans-serif',
-            fontSize: '16px',
-            fontWeight: 700,
-            color: '#e8a020',
-            letterSpacing: '0.05em',
-          }}>
-            SQUADFINDER
-          </span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '10px' : '16px', minWidth: 0, overflow: 'hidden' }}>
+          {!isMobile && (
+            <span style={{
+              fontFamily: 'var(--font-rajdhani), sans-serif',
+              fontSize: '16px',
+              fontWeight: 700,
+              color: '#e8a020',
+              letterSpacing: '0.05em',
+              flexShrink: 0,
+            }}>
+              SQUADFINDER
+            </span>
+          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
             <button
               onClick={() => router.push('/build-profile')}
-              style={{ background: 'none', border: 'none', color: '#4a5568', fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{ background: 'none', border: 'none', color: '#4a5568', fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
             >
               ← Back
             </button>
-            <span style={{ color: '#4a5568', fontSize: '12px' }}>/</span>
-            <span style={{ color: '#8b95a5', fontSize: '13px' }}>Squad Matches</span>
+            <span style={{ color: '#4a5568', fontSize: '12px', flexShrink: 0 }}>/</span>
+            <span style={{ color: '#8b95a5', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Squad Matches</span>
           </div>
         </div>
 
-        {/* Game badge — version is already baked into the game name */}
-        {selectedGame && (
+        {/* Game badge — version is already baked into the game name; hidden on mobile since the
+            name is long and the page heading below already gives full context */}
+        {selectedGame && !isMobile && (
           <div style={{
             display: 'flex', alignItems: 'center', gap: '6px',
             padding: '4px 12px',
             backgroundColor: 'rgba(232,160,32,0.08)',
             border: '1px solid rgba(232,160,32,0.2)',
             borderRadius: '20px',
+            minWidth: 0,
+            overflow: 'hidden',
           }}>
-            <span style={{ fontSize: '12px', color: '#e8a020', fontWeight: 500 }}>{selectedGame.name}</span>
+            <span style={{ fontSize: '12px', color: '#e8a020', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{selectedGame.name}</span>
           </div>
         )}
       </div>
 
       {/* Page heading — at the very top of the page, matching the other pages' heading size */}
-      <div style={{ padding: '20px 28px 0', flexShrink: 0 }}>
-        <h1 className="main-heading" style={{ fontSize: '40px', margin: 0 }}>
+      <div style={{ padding: isMobile ? '16px 16px 0' : '20px 28px 0', flexShrink: 0 }}>
+        <h1 className="main-heading" style={{ fontSize: 'clamp(24px, 6vw, 40px)', margin: 0 }}>
           YOUR SQUAD AWAITS
         </h1>
       </div>
 
-      {/* Two-panel body */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative', zIndex: 1, backgroundColor: '#0a0b0f' }}>
+      {/* Two-panel body — stacks vertically on narrow viewports */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', overflow: isMobile ? 'auto' : 'hidden', position: 'relative', zIndex: 1, backgroundColor: '#0a0b0f' }}>
 
-        {/* ── LEFT: Allies panel (40%) ── */}
+        {/* ── LEFT: Allies panel ── */}
         <AlliesPanel allies={allies} />
 
-        {/* ── RIGHT: Match cards (60%) ── */}
+        {/* ── RIGHT: Match cards ── */}
         <div
           className="matches-grid-panel"
           style={{
-            width: '82%',
-            height: '100%',
-            overflowY: 'auto',
+            width: isMobile ? '100%' : '82%',
+            height: isMobile ? 'auto' : '100%',
+            overflowY: isMobile ? 'visible' : 'auto',
             display: 'flex',
             flexDirection: 'column',
             backgroundColor: '#0d0f14',
@@ -241,7 +258,7 @@ export default function SquadMatchesPage() {
           }}
         >
           {/* Instructions + Change Details — where the heading used to sit */}
-          <div style={{ padding: '24px 28px 0', flexShrink: 0, display: 'flex', alignItems: 'stretch', gap: '16px' }}>
+          <div style={{ padding: isMobile ? '16px 16px 0' : '24px 28px 0', flexShrink: 0, display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'stretch', gap: '16px' }}>
             <div
               style={{
                 flex: 1,
@@ -272,7 +289,7 @@ export default function SquadMatchesPage() {
               onMouseLeave={() => setHoverChangeDetails(false)}
               style={{
                 flexShrink: 0,
-                padding: '0 24px',
+                padding: isMobile ? '13px 24px' : '0 24px',
                 borderRadius: '10px',
                 border: `1px solid ${hoverChangeDetails ? '#e8a020' : 'rgba(232,160,32,0.3)'}`,
                 backgroundColor: hoverChangeDetails ? 'rgba(232,160,32,0.1)' : 'transparent',
@@ -290,12 +307,12 @@ export default function SquadMatchesPage() {
             </button>
           </div>
 
-          {/* 3-column grid */}
-          <div style={{ padding: '0 28px', flex: 1 }}>
+          {/* Match grid — 3 columns on desktop, fewer as the viewport narrows */}
+          <div style={{ padding: isMobile ? '0 16px' : '0 28px', flex: 1 }}>
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
+                gridTemplateColumns: `repeat(${matchColumns}, 1fr)`,
                 gap: '14px',
                 marginBottom: '40px',
               }}

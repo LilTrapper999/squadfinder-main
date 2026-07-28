@@ -7,6 +7,10 @@ import { GAME_QUESTIONS } from '@/lib/mockData'
 import CheckboxGrid from '@/components/ui/CheckboxGrid'
 import LanguagePicker from '@/components/ui/LanguagePicker'
 import Slider from '@/components/ui/Slider'
+import { useWindowWidth } from '@/lib/useWindowWidth'
+
+const TABLET_BREAKPOINT = 1024
+const MOBILE_BREAKPOINT = 640
 
 // ─── Tick labels — 3 anchors only: [0.0, 5.0, 10.0] (SPEC_AMENDMENT_02 FIX 1) ──
 
@@ -160,28 +164,33 @@ function CommsSlider({ chat, voice, onChange }: {
           />
         </div>
 
-        {/* Tick marks + labels */}
+        {/* Tick marks — plain flex row, purely visual indents */}
         <div style={{ position: 'absolute', top: '8px', left: 0, right: 0, display: 'flex', justifyContent: 'space-between', pointerEvents: 'none' }}>
+          {COMMS_STYLE_LABELS.map((_, i) => (
+            <div key={i} style={{ width: '1px', height: '6px', backgroundColor: 'rgba(255,255,255,0.25)' }} />
+          ))}
+        </div>
+
+        {/* Labels — positioned independently of the tick marks above. Nesting a label inside a
+            1px-wide flex tick item forces flexbox to center it there regardless of any transform,
+            which pushes the first/last labels off the track edge; positioning each by `left: X%`
+            against this full-width row avoids that entirely. */}
+        <div style={{ position: 'absolute', top: '18px', left: 0, right: 0, height: 0, pointerEvents: 'none' }}>
           {COMMS_STYLE_LABELS.map((label, i) => (
-            <div key={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '1px' }}>
-              <div style={{ width: '1px', height: '6px', backgroundColor: 'rgba(255,255,255,0.25)' }} />
-              <span
-                style={{
-                  fontSize: '9px',
-                  color: i === activeIndex ? '#e8a020' : 'rgba(255,255,255,0.4)',
-                  fontWeight: i === activeIndex ? 600 : 400,
-                  marginTop: '4px',
-                  whiteSpace: 'nowrap',
-                  // Centering every label on its tick pushes the first label's left half (and the
-                  // last label's right half) past the track edge — off-screen in the rightmost
-                  // column here. Anchor the first/last labels inward instead.
-                  transform: i === 0 ? 'none' : i === maxIndex ? 'translateX(-100%)' : 'translateX(-50%)',
-                  textAlign: i === 0 ? 'left' : i === maxIndex ? 'right' : 'center',
-                }}
-              >
-                {label}
-              </span>
-            </div>
+            <span
+              key={label}
+              style={{
+                position: 'absolute',
+                left: `${(i / maxIndex) * 100}%`,
+                transform: i === 0 ? 'none' : i === maxIndex ? 'translateX(-100%)' : 'translateX(-50%)',
+                fontSize: '9px',
+                color: i === activeIndex ? '#e8a020' : 'rgba(255,255,255,0.4)',
+                fontWeight: i === activeIndex ? 600 : 400,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {label}
+            </span>
           ))}
         </div>
 
@@ -230,6 +239,10 @@ function CommsSlider({ chat, voice, onChange }: {
 export default function ProfileForm() {
   const router = useRouter()
   const { selectedGame, profileAnswers, updateProfileAnswer } = useApp()
+  const width = useWindowWidth()
+  const isTablet = width < TABLET_BREAKPOINT
+  const isMobile = width < MOBILE_BREAKPOINT
+  const columnCount = isMobile ? 1 : isTablet ? 2 : 3
 
   // Weapons/maps/roles are keyed by the base game in GAME_QUESTIONS, not per version —
   // each version is its own selectable tile now, but they all share the same question set.
@@ -368,7 +381,7 @@ export default function ProfileForm() {
       {/* 3-column layout — Gamesmanship / Vibe Check / Comms sit side by side, each top-aligned
           regardless of content height (a CSS-columns masonry would let taller columns bleed
           into the next, pushing Comms out of the third column). */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', columnGap: '32px', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columnCount}, 1fr)`, columnGap: '32px', alignItems: 'start' }}>
 
         {/* ── GROUP 1: Gamesmanship ─────────────────────────────────────────── */}
         <div style={{ breakInside: 'avoid', marginBottom: '28px' }}>
@@ -406,7 +419,7 @@ export default function ProfileForm() {
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
                   gap: '6px',
                 }}
               >
@@ -568,7 +581,7 @@ export default function ProfileForm() {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
+                gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
                 gap: '6px',
               }}
             >
