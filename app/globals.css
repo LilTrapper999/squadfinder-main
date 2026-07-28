@@ -160,19 +160,6 @@ html, body {
   cursor: default;
 }
 
-/* ── Sidebar (select-game) ── */
-.game-sidebar {
-  background-color: #111318;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  height: 100vh;
-  padding: 72px 12px 24px;
-  width: fit-content;
-  min-width: 0;
-  white-space: nowrap;
-  flex-shrink: 0;
-  overflow-y: auto;
-}
-
 .sidebar-category {
   display: block;
   color: rgba(255, 255, 255, 0.65);
@@ -209,7 +196,6 @@ html, body {
   flex: 1;
   height: 100vh;
   overflow-y: auto;
-  padding: 72px 20px 24px;
   background-color: #0d0f14;
   min-width: 0;
 }
@@ -306,7 +292,6 @@ html, body {
   background-color: #111318;
   border-left: 1px solid rgba(255, 255, 255, 0.08);
   height: 100vh;
-  padding: 72px 20px 24px;
   width: fit-content;
   min-width: 180px;
   max-width: 320px;
@@ -669,13 +654,10 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 .allies-panel {
-  width: 40%;
-  min-width: 280px;
   background-color: #111318;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   height: 100%;
   overflow-y: auto;
-  padding: 24px 16px;
   flex-shrink: 0;
 }
 
@@ -724,7 +706,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
   flex: 1;
   height: 100%;
   overflow-y: auto;
-  padding: 24px;
   background-color: #0d0f14;
 }
 

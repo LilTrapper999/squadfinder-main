@@ -79,9 +79,13 @@ export default function Slider({ value, onChange, sliderMinLabel, sliderMaxLabel
                     color: 'rgba(255,255,255,0.45)',
                     marginTop: '4px',
                     whiteSpace: 'nowrap',
-                    transform: 'translateX(-50%)',
+                    // Centering every label on its tick pushes the first label's left half (and the
+                    // last label's right half) past the track edge — into the neighbouring column in
+                    // a multi-column layout, or off-screen entirely for an edge column. Anchor the
+                    // first/last labels to the inside instead; only the middle one stays centered.
+                    transform: i === 0 ? 'none' : i === 10 ? 'translateX(-100%)' : 'translateX(-50%)',
                     userSelect: 'none',
-                    textAlign: 'center',
+                    textAlign: i === 0 ? 'left' : i === 10 ? 'right' : 'center',
                   }}>
                     {tickLabels[labelIndex]}
                   </span>

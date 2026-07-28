@@ -126,7 +126,8 @@ export default function AlliesPanel({ allies }: AlliesPanelProps) {
     <div
       className="allies-panel"
       style={{
-        width: '40%',
+        width: '18%',
+        minWidth: '200px',
         height: '100%',
         backgroundColor: '#111318',
         color: '#ffffff',

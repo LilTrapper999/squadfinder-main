@@ -151,7 +151,7 @@ export default function GameGrid({
                 onMouseEnter={() => setHoverTab(cat.id)}
                 onMouseLeave={() => setHoverTab(null)}
                 style={{
-                  padding: '10px 18px',
+                  padding: '12px 20px',
                   backgroundColor: isActive
                     ? 'rgba(232,160,32,0.08)'
                     : isHovered
@@ -160,7 +160,7 @@ export default function GameGrid({
                   border: 'none',
                   borderBottom: `2px solid ${isActive ? '#e8a020' : 'transparent'}`,
                   color: isActive ? '#e8a020' : isHovered ? '#d0d8e4' : '#8b95a5',
-                  fontSize: '13px',
+                  fontSize: '26px',
                   fontWeight: 600,
                   cursor: 'pointer',
                   fontFamily: 'var(--font-rajdhani), sans-serif',

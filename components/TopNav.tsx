@@ -14,8 +14,11 @@ export default function TopNav() {
   const pathname = usePathname()
   const [hoverHome, setHoverHome] = useState(false)
 
-  // Hide the entire nav on the login page
-  if (pathname === '/') return null
+  // Hide the entire nav on the login page and through the first-time onboarding
+  // funnel (select game → build profile → squad matches) — the Home button there
+  // points at a hub that assumes onboarding is already done and glitches otherwise.
+  const ONBOARDING_ROUTES = ['/', '/select-game', '/build-profile', '/squad-matches']
+  if (ONBOARDING_ROUTES.includes(pathname)) return null
 
   return (
     <div

@@ -52,12 +52,9 @@ export default function SquadMatchesPage() {
     incomingRequests, shiftIncomingRequest,
     blockUser,
     notificationsEnabled, setNotificationsEnabled,
-    squadAccepted, acceptedMatchId, setSquadAccepted,
+    squadAccepted, setSquadAccepted,
   } = useApp()
 
-  // Cards declined by the 50/50 are hidden for the full session
-  // TODO: persist 1hr cooldown in DB
-  const [hiddenIds, setHiddenIds] = useState<string[]>([])
   // Cards blocked via popup Decline & Block
   const [blockedMatchIds, setBlockedMatchIds] = useState<string[]>([])
 
@@ -87,7 +84,7 @@ export default function SquadMatchesPage() {
   const visibleMatches = [...computedMatches]
     .sort((a, b) => b.overall - a.overall)
     .filter((p) => {
-      if (blockedMatchIds.includes(p.id) || hiddenIds.includes(p.id)) return false
+      if (blockedMatchIds.includes(p.id)) return false
       if (p.status === 'offline') return false
       if (p.status === 'ingame' && !notificationsEnabled) return false
       return true
@@ -130,15 +127,10 @@ export default function SquadMatchesPage() {
   }
 
   // ── Match card callbacks ──────────────────────────────────────────────────
-  // FIX 2: use shared AppContext squadAccepted so all cards see it immediately
+  // Accepting one match no longer locks the rest — you can keep sending requests
+  // to build out a bigger squad, so this only drives the "in a squad" banner/CTA.
   function handleCardAccepted(playerId: string) {
     setSquadAccepted(playerId)
-  }
-
-  function handleCardDeclined(playerId: string) {
-    // Remove card from DOM for the session (1hr hide in production)
-    // TODO: persist 1hr cooldown in DB
-    setHiddenIds((prev) => [...prev, playerId])
   }
 
   return (
@@ -232,7 +224,7 @@ export default function SquadMatchesPage() {
         <div
           className="matches-grid-panel"
           style={{
-            width: '60%',
+            width: '82%',
             height: '100%',
             overflowY: 'auto',
             display: 'flex',
@@ -259,10 +251,6 @@ export default function SquadMatchesPage() {
               }}
             >
               {visibleMatches.map((player) => {
-                // FIX 2: use shared context — first acceptance locks all other cards
-                const isAccepted = acceptedMatchId === player.id
-                const isLocked = squadAccepted && !isAccepted
-
                 const resolvedStatusGame =
                   player.status === 'ingame'
                     ? (selectedGame?.name ?? player.statusGame)
@@ -273,9 +261,7 @@ export default function SquadMatchesPage() {
                     key={player.id}
                     player={player}
                     resolvedStatusGame={resolvedStatusGame}
-                    isLocked={isLocked}
                     onAccepted={handleCardAccepted}
-                    onDeclined={handleCardDeclined}
                   />
                 )
               })}

@@ -70,7 +70,7 @@ export default function BuildProfilePage() {
         style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '40px 48px',
+          padding: '20px 48px 40px',
           backgroundColor: '#0a0b0f',
           color: '#ffffff',
           position: 'relative',
@@ -78,13 +78,10 @@ export default function BuildProfilePage() {
         }}
       >
         {/* Page heading */}
-        <div style={{ marginBottom: '32px' }}>
-          <h1 className="main-heading" style={{ fontSize: '28px', marginBottom: '8px' }}>
-            BUILD YOUR LEGEND
+        <div style={{ marginBottom: '24px' }}>
+          <h1 className="main-heading" style={{ fontSize: '28px', margin: 0 }}>
+            HELP US FIND YOUR SQUAD
           </h1>
-          <p className="sub-heading" style={{ margin: 0, fontSize: '14px' }}>
-            Answer honestly — this is how we find squadmates who actually match your playstyle.
-          </p>
         </div>
 
         <ProfileForm />

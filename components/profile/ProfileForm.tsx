@@ -45,27 +45,58 @@ const PERSONALITY_OPTS = [
 
 // ─── Section header ────────────────────────────────────────────────────────────
 
-function GroupHeader({ label }: { label: string }) {
+function GroupHeader({ label, subtext }: { label: string; subtext?: string }) {
   return (
-    <p
-      className="main-heading"
+    <div
       style={{
-        margin: '0 0 20px',
-        fontSize: '19.25px',
+        marginBottom: '20px',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
         paddingBottom: '10px',
         breakAfter: 'avoid',
       }}
     >
-      {label}
-    </p>
+      <p className="main-heading" style={{ margin: 0, fontSize: '19.25px' }}>
+        {label}
+      </p>
+      {subtext && (
+        <p style={{ margin: '4px 0 0', fontSize: '10px', fontWeight: 400, color: 'rgba(255,255,255,0.3)' }}>
+          {subtext}
+        </p>
+      )}
+    </div>
   )
 }
 
-function QuestionLabel({ children }: { children: React.ReactNode }) {
+function QuestionLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
-    <p style={{ margin: '0 0 10px', fontSize: '14px', fontWeight: 500, color: '#d0d8e4' }}>
-      {children}
+    <p
+      style={{
+        margin: '0 0 10px',
+        fontSize: '14px',
+        fontWeight: 500,
+        color: '#d0d8e4',
+        display: 'flex',
+        alignItems: 'baseline',
+        flexWrap: 'wrap',
+        columnGap: '8px',
+        rowGap: '2px',
+      }}
+    >
+      <span>{children}</span>
+      {required !== undefined && (
+        <span
+          style={{
+            fontSize: '10px',
+            fontWeight: 400,
+            color: 'rgba(255,255,255,0.3)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.04em',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {required ? 'Required' : 'Optional'}
+        </span>
+      )}
     </p>
   )
 }
@@ -141,8 +172,11 @@ function CommsSlider({ chat, voice, onChange }: {
                   fontWeight: i === activeIndex ? 600 : 400,
                   marginTop: '4px',
                   whiteSpace: 'nowrap',
-                  transform: 'translateX(-50%)',
-                  textAlign: 'center',
+                  // Centering every label on its tick pushes the first label's left half (and the
+                  // last label's right half) past the track edge — off-screen in the rightmost
+                  // column here. Anchor the first/last labels inward instead.
+                  transform: i === 0 ? 'none' : i === maxIndex ? 'translateX(-100%)' : 'translateX(-50%)',
+                  textAlign: i === 0 ? 'left' : i === maxIndex ? 'right' : 'center',
                 }}
               >
                 {label}
@@ -280,8 +314,8 @@ export default function ProfileForm() {
       >
         <p
           style={{
-            margin: '0 0 6px',
-            fontSize: '16px',
+            margin: '0 0 8px',
+            fontSize: '24px',
             fontWeight: 600,
             color: '#ffffff',
             fontFamily: 'var(--font-rajdhani), sans-serif',
@@ -315,11 +349,11 @@ export default function ProfileForm() {
 
         {/* ── GROUP 1: Gamesmanship ─────────────────────────────────────────── */}
         <div style={{ breakInside: 'avoid', marginBottom: '28px' }}>
-          <GroupHeader label="Gamesmanship" />
+          <GroupHeader label="Gamesmanship" subtext="Specific for all games" />
 
           {/* G1 — Role matching style (SPEC_AMENDMENT_08 FIX 2) */}
           <QuestionBlock>
-            <QuestionLabel>Role matching style</QuestionLabel>
+            <QuestionLabel required={false}>Role matching style</QuestionLabel>
             <Slider
               value={(() => {
                 const raw = nestedNum('gamesmanship', 'roleMatchPreference')
@@ -334,7 +368,7 @@ export default function ProfileForm() {
 
           {/* G2 — Skill */}
           <QuestionBlock>
-            <QuestionLabel>Skill level</QuestionLabel>
+            <QuestionLabel required={false}>Skill level</QuestionLabel>
             <Slider
               value={nestedNum('gamesmanship', 'skill')}
               onChange={(v) => updateNested('gamesmanship', 'skill', v)}
@@ -345,7 +379,7 @@ export default function ProfileForm() {
           {/* G3 — Roles */}
           {gq?.roles && gq.roles.length > 0 && (
             <QuestionBlock>
-              <QuestionLabel>What&apos;s your role?</QuestionLabel>
+              <QuestionLabel required={true}>What&apos;s your role?</QuestionLabel>
               <div
                 style={{
                   display: 'grid',
@@ -427,7 +461,7 @@ export default function ProfileForm() {
           {/* G4 — Maps */}
           {gq?.maps && gq.maps.length > 0 && (
             <QuestionBlock>
-              <QuestionLabel>Which maps do you know well?</QuestionLabel>
+              <QuestionLabel required={true}>Which maps do you know well?</QuestionLabel>
               <CheckboxGrid
                 options={gq.maps}
                 selected={nestedArr('gamesmanship', 'maps')}
@@ -440,7 +474,7 @@ export default function ProfileForm() {
           {/* G5 — Weapons: each category unfolds on click instead of a native <select> */}
           {gq?.weapons && gq.weapons.length > 0 && (
             <QuestionBlock>
-              <QuestionLabel>Which weapons do you run?</QuestionLabel>
+              <QuestionLabel required={true}>Which weapons do you run?</QuestionLabel>
               {gq.weapons.map((cat) => {
                 const isOpen = !!openWeaponCats[cat.category]
                 return (
@@ -493,11 +527,11 @@ export default function ProfileForm() {
 
         {/* ── GROUP 2: Vibe Check ───────────────────────────────────────────── */}
         <div style={{ breakInside: 'avoid', marginBottom: '28px' }}>
-          <GroupHeader label="Vibe Check" />
+          <GroupHeader label="Vibe Check" subtext="Applies to every game" />
 
           {/* V1 — Rage level */}
           <QuestionBlock>
-            <QuestionLabel>Rage level</QuestionLabel>
+            <QuestionLabel required={false}>Rage level</QuestionLabel>
             <Slider
               value={nestedNum('vibeCheck', 'rageLevel')}
               onChange={(v) => updateNested('vibeCheck', 'rageLevel', v)}
@@ -507,7 +541,7 @@ export default function ProfileForm() {
 
           {/* V2 — Personality */}
           <QuestionBlock>
-            <QuestionLabel>Personality vibe <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>(pick all that apply)</span></QuestionLabel>
+            <QuestionLabel required={true}>Personality vibe <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>(pick all that apply)</span></QuestionLabel>
             <div
               style={{
                 display: 'grid',
@@ -558,10 +592,10 @@ export default function ProfileForm() {
 
         {/* ── GROUP 3: Comms ────────────────────────────────────────────────── */}
         <div style={{ breakInside: 'avoid', marginBottom: '28px' }}>
-          <GroupHeader label="Comms" />
+          <GroupHeader label="Comms" subtext="Applies to every game" />
           <p
             style={{
-              margin: '-14px 0 20px',
+              margin: '0 0 20px',
               fontSize: '11px',
               color: 'rgba(255,255,255,0.35)',
               fontFamily: 'Inter, sans-serif',
@@ -573,7 +607,7 @@ export default function ProfileForm() {
 
           {/* C1 — Comms style (replaces separate chat/voice yes-no toggles) */}
           <QuestionBlock>
-            <QuestionLabel>Comms style</QuestionLabel>
+            <QuestionLabel required={false}>Comms style</QuestionLabel>
             <CommsSlider
               chat={nestedStr('comms', 'willingToChat')}
               voice={nestedStr('comms', 'willingToSpeak')}
@@ -583,7 +617,7 @@ export default function ProfileForm() {
 
           {/* C2 — Languages */}
           <QuestionBlock>
-            <QuestionLabel>Languages you play in</QuestionLabel>
+            <QuestionLabel required={true}>Languages you play in</QuestionLabel>
             <LanguagePicker
               selected={nestedArr('comms', 'languages')}
               onChange={(v) => updateNested('comms', 'languages', v)}

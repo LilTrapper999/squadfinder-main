@@ -1,19 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { MatchPlayer } from '@/lib/types'
 import { useApp } from '@/context/AppContext'
 import { scoreToColour } from '@/lib/matchColour'
 
-type CardState = 'default' | 'waiting' | 'accepted' | 'declined' | 'locked'
+type CardState = 'default' | 'waiting' | 'accepted' | 'declined'
 
 interface MatchCardProps {
   player: MatchPlayer
   resolvedStatusGame: string | null
-  isLocked: boolean
   onAccepted: (playerId: string) => void
-  onDeclined: (playerId: string) => void
 }
 
 const getBarColor = scoreToColour
@@ -30,36 +28,24 @@ function Bar({ value }: { value: number }) {
 export default function MatchCard({
   player,
   resolvedStatusGame,
-  isLocked,
   onAccepted,
-  onDeclined,
 }: MatchCardProps) {
   const router = useRouter()
-  const { squadAccepted, acceptedMatchId, addAlly } = useApp()
+  const { addAlly } = useApp()
   const [cardState, setCardState] = useState<CardState>('default')
   const [hoverBtn, setHoverBtn] = useState(false)
   const [hoverChatBtn, setHoverChatBtn] = useState(false)
 
-  // FIX 2: If another card was accepted while this one is still waiting, lock it immediately
-  useEffect(() => {
-    if (squadAccepted && acceptedMatchId !== player.id && cardState === 'waiting') {
-      setCardState('locked')
-    }
-  }, [squadAccepted, acceptedMatchId, player.id, cardState])
-
-  const effectiveState: CardState = isLocked && cardState !== 'accepted' ? 'locked' : cardState
-
   const isOffline = player.status === 'offline'
-  const isWaiting = effectiveState === 'waiting'
-  const isAccepted = effectiveState === 'accepted'
-  const isDeclined = effectiveState === 'declined'
-  const isLockedState = effectiveState === 'locked'
+  const isWaiting = cardState === 'waiting'
+  const isAccepted = cardState === 'accepted'
+  const isDeclined = cardState === 'declined'
 
   // ── 50/50 Request mechanic ────────────────────────────────────────────────
+  // Accepting elsewhere doesn't block this card — you can keep requesting more squadmates.
   function handleRequest(e: React.MouseEvent) {
     e.stopPropagation()
-    // FIX 2: Allow sending to multiple cards simultaneously — only block if already waiting/resolved
-    if (isOffline || cardState !== 'default' || squadAccepted) return
+    if (isOffline || cardState !== 'default') return
     setCardState('waiting')
 
     // 2–4 second delay simulates real response
@@ -79,10 +65,8 @@ export default function MatchCard({
           statusGame: resolvedStatusGame,
         })
       } else {
+        // Declined cards stay visible permanently — no ally added, no chat access.
         setCardState('declined')
-        // TODO: persist 1hr cooldown in DB
-        // For prototype: remove from DOM entirely for the session
-        setTimeout(() => onDeclined(player.id), 600) // short fade before removal
       }
     }, delay)
   }
@@ -127,7 +111,7 @@ export default function MatchCard({
         transition: 'border-color 0.2s ease, opacity 0.3s ease',
         display: 'flex',
         flexDirection: 'column',
-        opacity: isOffline ? 0.5 : isLockedState ? 0.4 : isDeclined ? 0.3 : 1,
+        opacity: isOffline ? 0.5 : 1,
       }}
     >
       {/* Card header: label (or revealed username) left, status right */}
@@ -224,7 +208,7 @@ export default function MatchCard({
       <div style={{ marginTop: 'auto' }}>
 
         {/* Default: Request to Squad */}
-        {effectiveState === 'default' && (
+        {cardState === 'default' && (
           <button
             onClick={handleRequest}
             onMouseEnter={() => setHoverBtn(true)}
@@ -339,35 +323,24 @@ export default function MatchCard({
 
         {/* Declined — brief visual before parent removes from DOM */}
         {isDeclined && (
-          <div
-            style={{
-              padding: '9px 14px',
-              borderRadius: '6px',
-              border: '1px solid rgba(239,68,68,0.3)',
-              backgroundColor: 'rgba(239,68,68,0.08)',
-              display: 'flex', alignItems: 'center', gap: '6px',
-            }}
-          >
-            <span style={{ color: '#ef4444', fontSize: '14px' }}>✗</span>
-            <span style={{ color: '#ef4444', fontSize: '14px', fontWeight: 700, fontFamily: 'var(--font-rajdhani), sans-serif' }}>
-              Declined
-            </span>
-          </div>
-        )}
-
-        {/* Locked */}
-        {isLockedState && (
-          <div
-            style={{
-              padding: '9px 14px',
-              borderRadius: '6px',
-              backgroundColor: 'rgba(255,255,255,0.03)',
-              textAlign: 'center',
-            }}
-          >
-            <span style={{ color: '#4a5568', fontSize: '13px', fontFamily: 'var(--font-rajdhani), sans-serif', letterSpacing: '0.04em' }}>
-              Already Squadded Up
-            </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div
+              style={{
+                padding: '9px 14px',
+                borderRadius: '6px',
+                border: '1px solid rgba(239,68,68,0.3)',
+                backgroundColor: 'rgba(239,68,68,0.08)',
+                display: 'flex', alignItems: 'center', gap: '6px',
+              }}
+            >
+              <span style={{ color: '#ef4444', fontSize: '14px' }}>✗</span>
+              <span style={{ color: '#ef4444', fontSize: '14px', fontWeight: 700, fontFamily: 'var(--font-rajdhani), sans-serif' }}>
+                Squad Declined
+              </span>
+            </div>
+            <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>
+              This player declined your request.
+            </p>
           </div>
         )}
       </div>
