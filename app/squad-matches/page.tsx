@@ -4,48 +4,18 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useApp } from '@/context/AppContext'
 import { MOCK_MATCHES, MOCK_OPPONENT_PROFILES } from '@/lib/mockData'
-import { MatchPlayer, Profile, ProfileAnswers } from '@/lib/types'
+import { MatchPlayer } from '@/lib/types'
 import { calculateMatch } from '@/lib/matching'
+import { buildProfileFromAnswers } from '@/lib/profileAnswers'
 import { useWindowWidth } from '@/lib/useWindowWidth'
 import MatchCard from '@/components/matches/MatchCard'
 import AlliesPanel from '@/components/matches/AlliesPanel'
 import IncomingRequestPopup from '@/components/matches/IncomingRequestPopup'
 import AnimatedBackground from '@/components/ui/AnimatedBackground'
+import NotificationBell from '@/components/ui/NotificationBell'
 
 const MOBILE_BREAKPOINT = 768
 const TABLET_BREAKPOINT = 1100
-
-// Reads a nested answer group (e.g. answers.gamesmanship.weapons) written by ProfileForm's updateNested()
-function nestedGroup(answers: ProfileAnswers, group: string): Record<string, unknown> {
-  const g = answers[group]
-  return g && typeof g === 'object' && !Array.isArray(g) ? (g as Record<string, unknown>) : {}
-}
-function arr(v: unknown): string[] {
-  return Array.isArray(v) ? v as string[] : []
-}
-function num(v: unknown, fallback: number): number {
-  return typeof v === 'number' ? v / 10 : fallback // stored 0–100 internally, Profile scale is 0.0–10.0
-}
-
-/** Builds the current user's Profile (for calculateMatch) from their /build-profile answers. */
-function buildProfileFromAnswers(gameId: string, answers: ProfileAnswers): Profile {
-  const gamesmanship = nestedGroup(answers, 'gamesmanship')
-  const vibeCheck = nestedGroup(answers, 'vibeCheck')
-  const comms = nestedGroup(answers, 'comms')
-  return {
-    gameId,
-    weapons: arr(gamesmanship.weapons),
-    maps: arr(gamesmanship.maps),
-    roles: arr(gamesmanship.roles),
-    skill: num(gamesmanship.skill, 5),
-    roleMatchPreference: num(gamesmanship.roleMatchPreference, 5),
-    rage: num(vibeCheck.rageLevel, 5),
-    personality: arr(vibeCheck.personality),
-    willingToChat: comms.willingToChat === 'yes',
-    willingToSpeak: comms.willingToSpeak === 'yes',
-    languages: arr(comms.languages),
-  }
-}
 
 export default function SquadMatchesPage() {
   const router = useRouter()
@@ -214,21 +184,27 @@ export default function SquadMatchesPage() {
           </div>
         </div>
 
-        {/* Game badge — version is already baked into the game name; hidden on mobile since the
-            name is long and the page heading below already gives full context */}
-        {selectedGame && !isMobile && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '6px',
-            padding: '4px 12px',
-            backgroundColor: 'rgba(232,160,32,0.08)',
-            border: '1px solid rgba(232,160,32,0.2)',
-            borderRadius: '20px',
-            minWidth: 0,
-            overflow: 'hidden',
-          }}>
-            <span style={{ fontSize: '12px', color: '#e8a020', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{selectedGame.name}</span>
-          </div>
-        )}
+        {/* Right side: game badge + notifications bell. The bell is the entry point to the
+            squad requests other players have sent — badge count comes from AppContext. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '14px' : '18px', minWidth: 0, flexShrink: 0 }}>
+          {/* Game badge — version is already baked into the game name; hidden on mobile since the
+              name is long and the page heading below already gives full context */}
+          {selectedGame && !isMobile && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '4px 12px',
+              backgroundColor: 'rgba(232,160,32,0.08)',
+              border: '1px solid rgba(232,160,32,0.2)',
+              borderRadius: '20px',
+              minWidth: 0,
+              overflow: 'hidden',
+            }}>
+              <span style={{ fontSize: '12px', color: '#e8a020', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{selectedGame.name}</span>
+            </div>
+          )}
+
+          <NotificationBell />
+        </div>
       </div>
 
       {/* Page heading — at the very top of the page, matching the other pages' heading size */}

@@ -3,7 +3,7 @@
 // This sort must be applied to the data array itself, not in the render layer.
 // DO NOT render games in any other order.
 
-import { Game, MatchPlayer, Question, RoleOption, GameCategory, Ally, IncomingRequest, GameQuestions, WeaponCategory, Profile } from './types'
+import { Game, MatchPlayer, Question, RoleOption, GameCategory, Ally, IncomingRequest, SquadRequest, GameQuestions, WeaponCategory, Profile } from './types'
 
 const STEAM = (id: number) =>
   `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/header.jpg`
@@ -2928,6 +2928,92 @@ export function createMockIncomingRequests(): IncomingRequest[] {
     },
   ]
 }
+
+// ─── MOCK SQUAD REQUESTS (notifications bell) ───────────────────────────────
+// Requests other players have sent to the current user. These persist until answered,
+// unlike the 20-second IncomingRequest popup. Each carries the sender's full profile so
+// /notifications can score them live and show their answers per category.
+// In Phase 2 these come from the database, filtered by the selected game.
+
+export const MOCK_SQUAD_REQUESTS: SquadRequest[] = [
+  {
+    id: 'sqreq-01',
+    senderUsername: 'PhantomSix',
+    senderStatus: 'searching',
+    senderStatusGame: null,
+    profile: {
+      gameId: 'tarkov',
+      weapons: ['AK-74M', 'MP5', 'Glock 17'],
+      maps: ['Customs', 'Interchange', 'Reserve'],
+      roles: ['Quest Grinder', 'Loot Goblin'],
+      skill: 6.0,
+      roleMatchPreference: 7.0,
+      rage: 2.5,
+      personality: ['Teaches newer players', 'Quiet but deadly'],
+      willingToChat: true,
+      willingToSpeak: true,
+      languages: ['English', 'German'],
+    },
+  },
+  {
+    id: 'sqreq-02',
+    senderUsername: 'BlitzHavoc',
+    senderStatus: 'ingame',
+    senderStatusGame: 'Escape from Tarkov',
+    profile: {
+      gameId: 'tarkov',
+      weapons: ['M4A1', 'HK 416A5', 'Remington 870'],
+      maps: ['Streets of Tarkov', 'Factory (Day)', 'The Lab'],
+      roles: ['Chad Rusher', 'Factory Psycho'],
+      skill: 8.5,
+      roleMatchPreference: 9.0,
+      rage: 7.5,
+      personality: ['Calls out every enemy', 'Hypes the team', 'Clutch merchant'],
+      willingToChat: true,
+      willingToSpeak: true,
+      languages: ['English'],
+    },
+  },
+  {
+    id: 'sqreq-03',
+    senderUsername: 'EmberWraith',
+    senderStatus: 'searching',
+    senderStatusGame: null,
+    profile: {
+      gameId: 'tarkov',
+      weapons: ['SV-98', 'RSASS', 'M9A3'],
+      maps: ['Woods', 'Lighthouse', 'Shoreline'],
+      roles: ['Sniper Scav', 'Camp & Count'],
+      skill: 4.5,
+      roleMatchPreference: 2.0,
+      rage: 1.0,
+      personality: ['Strategist / Over-thinker'],
+      willingToChat: false,
+      willingToSpeak: true,
+      languages: ['English', 'Spanish'],
+    },
+  },
+  {
+    id: 'sqreq-04',
+    senderUsername: 'SableNine',
+    senderStatus: 'searching',
+    senderStatusGame: null,
+    profile: {
+      gameId: 'tarkov',
+      weapons: ['PP-19 Bizon', 'Mosin-Nagant'],
+      maps: ['Ground Zero', 'Customs'],
+      roles: ['The Rat', 'Friendly Scav'],
+      skill: 3.0,
+      roleMatchPreference: 5.0,
+      rage: 4.0,
+      personality: ['Meme lord', 'Comedian / Banter'],
+      willingToChat: true,
+      willingToSpeak: false,
+      // No English — demonstrates the binary comms gate (SPEC_AMENDMENT_10 FIX 1)
+      languages: ['Polish'],
+    },
+  },
+]
 
 // ─── MOCK ALLIES ─────────────────────────────────────────────────────────────
 // Allies panel starts empty in prototype — user adds allies via "Add as Ally".

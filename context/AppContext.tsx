@@ -1,7 +1,10 @@
 'use client'
 
 import React, { createContext, useContext, useState, ReactNode } from 'react'
-import { Game, GameVersion, ProfileAnswers, Ally, IncomingRequest, AllyChat, ChatMessage } from '@/lib/types'
+import { Game, GameVersion, ProfileAnswers, Ally, IncomingRequest, SquadRequest, AllyChat, ChatMessage } from '@/lib/types'
+import { MOCK_SQUAD_REQUESTS } from '@/lib/mockData'
+import { buildProfileFromAnswers } from '@/lib/profileAnswers'
+import { calculateMatch } from '@/lib/matching'
 
 interface AppContextValue {
   // Game selection
@@ -25,6 +28,13 @@ interface AppContextValue {
   shiftIncomingRequest: () => void
   blockUser: (userId: string) => void
   setSquadStatus: (s: 'searching' | 'in-squad' | null) => void
+
+  // Squad requests sent *to* the user — the bell badge count and /notifications list
+  squadRequests: SquadRequest[]
+  /** Accepting auto-allies, same as the incoming-request popup (SPEC_AMENDMENT_11 FIX 1) */
+  acceptSquadRequest: (id: string) => void
+  declineSquadRequest: (id: string) => void
+  declineAndBlockSquadRequest: (id: string) => void
 
   // FIX 1 — notification gate for showing in-game players
   // Prototype only — replace with real Web Notifications permission in Phase 2
@@ -57,6 +67,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [incomingRequests, setIncomingRequests] = useState<IncomingRequest[]>([])
   const [blockedUsers, setBlockedUsers] = useState<string[]>([])
   const [squadStatus, setSquadStatus] = useState<'searching' | 'in-squad' | null>(null)
+
+  // Requests sent to the user — prototype: seeded from mock data so the bell has a badge
+  const [squadRequests, setSquadRequests] = useState<SquadRequest[]>(MOCK_SQUAD_REQUESTS)
 
   // Notification gate (FIX 1)
   const [notificationsEnabled, setNotificationsEnabled] = useState(false)
@@ -140,6 +153,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setBlockedUsers(prev => prev.includes(userId) ? prev : [...prev, userId])
   }
 
+  // ── Squad requests (bell / notifications) ──────────────────────────────────
+  function removeSquadRequest(id: string) {
+    setSquadRequests(prev => prev.filter(r => r.id !== id))
+  }
+
+  function acceptSquadRequest(id: string) {
+    const request = squadRequests.find(r => r.id === id)
+    if (request) {
+      const myProfile = buildProfileFromAnswers(selectedGame?.id ?? '', profileAnswers)
+      addAlly({
+        id: request.id,
+        username: request.senderUsername,
+        overall: calculateMatch(myProfile, request.profile).overall,
+        status: request.senderStatus,
+        statusGame: request.senderStatusGame,
+        gameId: selectedGame?.id,
+      })
+    }
+    removeSquadRequest(id)
+  }
+
+  function declineSquadRequest(id: string) {
+    removeSquadRequest(id)
+  }
+
+  function declineAndBlockSquadRequest(id: string) {
+    blockUser(id)
+    removeSquadRequest(id)
+  }
+
   function setSquadAccepted(id: string) {
     setSquadAcceptedState(true)
     setAcceptedMatchId(id)
@@ -165,6 +208,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       shiftIncomingRequest,
       blockUser,
       setSquadStatus,
+      squadRequests,
+      acceptSquadRequest,
+      declineSquadRequest,
+      declineAndBlockSquadRequest,
       notificationsEnabled,
       setNotificationsEnabled,
       squadAccepted,

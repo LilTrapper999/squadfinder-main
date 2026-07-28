@@ -77,6 +77,22 @@ export interface AllyChat {
   messages: ChatMessage[]
 }
 
+/**
+ * A squad request another player has sent to the current user (SPEC_AMENDMENT_12).
+ * Surfaced behind the bell icon and listed on /notifications. Unlike IncomingRequest —
+ * the 20-second popup — these persist until the user answers them, and they carry the
+ * sender's full profile so the notification card can show live match scores plus the
+ * per-category answer breakdown.
+ */
+export interface SquadRequest {
+  id: string
+  senderUsername: string
+  senderStatus: MatchStatus
+  senderStatusGame: string | null
+  /** Sender's build-profile answers — drives both the match scores and the answers popup */
+  profile: Profile
+}
+
 export interface IncomingRequest {
   id: string
   /** Which MOCK_MATCHES entry to remove on Decline & Block */

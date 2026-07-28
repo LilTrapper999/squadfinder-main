@@ -8,29 +8,12 @@ import CheckboxGrid from '@/components/ui/CheckboxGrid'
 import LanguagePicker from '@/components/ui/LanguagePicker'
 import Slider from '@/components/ui/Slider'
 import { useWindowWidth } from '@/lib/useWindowWidth'
+// Tick labels — 3 anchors only: [0.0, 5.0, 10.0] (SPEC_AMENDMENT_02 FIX 1). Shared with the
+// notifications answers popup, which renders the same sliders back as readable text.
+import { SKILL_LABELS, RAGE_LABELS, ROLE_MATCH_LABELS } from '@/lib/profileAnswers'
 
 const TABLET_BREAKPOINT = 1024
 const MOBILE_BREAKPOINT = 640
-
-// ─── Tick labels — 3 anchors only: [0.0, 5.0, 10.0] (SPEC_AMENDMENT_02 FIX 1) ──
-
-const SKILL_LABELS: [string, string, string] = [
-  'Noob',
-  'Mid (Respectfully)',
-  "We Don't Deserve You",
-]
-
-const RAGE_LABELS: [string, string, string] = [
-  'Zen Monk',
-  'Full Blame Rotation',
-  'Keyboard Through Wall',
-]
-
-const ROLE_MATCH_LABELS: [string, string, string] = [
-  'Complement me',
-  'Either works',
-  'Match me',
-]
 
 // ─── Vibe Check — personality options ────────────────────────────────────────
 
@@ -330,10 +313,26 @@ export default function ProfileForm() {
   }
 
   // ── validation ────────────────────────────────────────────────────────────────
-  const canSubmit =
-    nestedArr('gamesmanship', 'weapons').length > 0 ||
-    nestedArr('gamesmanship', 'maps').length > 0 ||
-    nestedArr('gamesmanship', 'roles').length > 0
+  // Every question labelled "Required" must be answered before FIND MY SQUAD unlocks.
+  // The three Gamesmanship lists only count when the selected game actually has that
+  // question set — games without a GAME_QUESTIONS entry don't render them at all.
+  const missingRequired: string[] = []
+  if (gq?.roles?.length && nestedArr('gamesmanship', 'roles').length === 0) {
+    missingRequired.push('Your role')
+  }
+  if (gq?.maps?.length && nestedArr('gamesmanship', 'maps').length === 0) {
+    missingRequired.push('Maps you know well')
+  }
+  if (gq?.weapons?.length && nestedArr('gamesmanship', 'weapons').length === 0) {
+    missingRequired.push('Weapons you run')
+  }
+  if (nestedArr('vibeCheck', 'personality').length === 0) {
+    missingRequired.push('Personality vibe')
+  }
+  if (nestedArr('comms', 'languages').length === 0) {
+    missingRequired.push('Languages you play in')
+  }
+  const canSubmit = missingRequired.length === 0
 
   function handleSubmit() {
     if (!canSubmit) return
@@ -698,8 +697,43 @@ export default function ProfileForm() {
           bottom: '24px',
           right: '24px',
           zIndex: 100,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          gap: '8px',
         }}
       >
+        {/* Names what's still blocking submission — the button alone can't say why it's dead */}
+        {!canSubmit && (
+          <div
+            style={{
+              maxWidth: '260px',
+              padding: '10px 14px',
+              borderRadius: '8px',
+              backgroundColor: '#111318',
+              border: '1px solid rgba(232,160,32,0.25)',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+            }}
+          >
+            <p
+              style={{
+                margin: '0 0 4px',
+                fontFamily: 'var(--font-rajdhani), sans-serif',
+                fontSize: '12px',
+                fontWeight: 700,
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                color: '#e8a020',
+              }}
+            >
+              Still required
+            </p>
+            <p style={{ margin: 0, fontSize: '11px', color: '#8b95a5', lineHeight: 1.5 }}>
+              {missingRequired.join(' · ')}
+            </p>
+          </div>
+        )}
+
         <button
           onClick={handleSubmit}
           disabled={!canSubmit}
