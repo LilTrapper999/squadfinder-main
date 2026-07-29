@@ -6,13 +6,14 @@ import { useApp } from '@/context/AppContext'
 import { MOCK_MATCHES, MOCK_OPPONENT_PROFILES } from '@/lib/mockData'
 import { MatchPlayer } from '@/lib/types'
 import { calculateMatch } from '@/lib/matching'
-import { buildProfileFromAnswers } from '@/lib/profileAnswers'
+import { buildProfileFromAnswers, gameKey } from '@/lib/profileAnswers'
 import { useWindowWidth } from '@/lib/useWindowWidth'
 import MatchCard from '@/components/matches/MatchCard'
 import AlliesPanel from '@/components/matches/AlliesPanel'
 import IncomingRequestPopup from '@/components/matches/IncomingRequestPopup'
 import AnimatedBackground from '@/components/ui/AnimatedBackground'
 import NotificationBell from '@/components/ui/NotificationBell'
+import WelcomeBanner from '@/components/ui/WelcomeBanner'
 
 const MOBILE_BREAKPOINT = 768
 const TABLET_BREAKPOINT = 1100
@@ -44,7 +45,7 @@ export default function SquadMatchesPage() {
 
   // Live-calculated matches: pair each mock display identity (username/label/status)
   // with the corresponding opponent profile and run the real matching algorithm.
-  const myProfile = buildProfileFromAnswers(selectedGame?.id ?? '', profileAnswers)
+  const myProfile = buildProfileFromAnswers(gameKey(selectedGame), profileAnswers)
   const computedMatches: MatchPlayer[] = MOCK_MATCHES.map((match, i) => {
     const opponent = MOCK_OPPONENT_PROFILES[i]
     if (!opponent) return match
@@ -214,13 +215,10 @@ export default function SquadMatchesPage() {
         </h1>
       </div>
 
-      {/* Two-panel body — stacks vertically on narrow viewports */}
+      {/* Two-panel body — stacks vertically on narrow viewports. Allies sit on the right. */}
       <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', overflow: isMobile ? 'auto' : 'hidden', position: 'relative', zIndex: 1, backgroundColor: '#0a0b0f' }}>
 
-        {/* ── LEFT: Allies panel ── */}
-        <AlliesPanel allies={allies} />
-
-        {/* ── RIGHT: Match cards ── */}
+        {/* ── LEFT: Match cards ── */}
         <div
           className="matches-grid-panel"
           style={{
@@ -235,29 +233,12 @@ export default function SquadMatchesPage() {
         >
           {/* Instructions + Change Details — where the heading used to sit */}
           <div style={{ padding: isMobile ? '16px 16px 0' : '24px 28px 0', flexShrink: 0, display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'stretch', gap: '16px' }}>
-            <div
-              style={{
-                flex: 1,
-                padding: '20px 24px',
-                backgroundColor: 'rgba(232,160,32,0.05)',
-                border: '1px solid rgba(232,160,32,0.15)',
-                borderRadius: '10px',
-              }}
-            >
-              <p
-                style={{
-                  margin: '0 0 6px',
-                  fontSize: '18px',
-                  fontWeight: 600,
-                  color: '#ffffff',
-                  fontFamily: 'var(--font-rajdhani), sans-serif',
-                }}
-              >
-                Ready to squad up
-              </p>
-              <p style={{ margin: 0, fontSize: '13px', color: '#8b95a5', lineHeight: 1.5 }}>
-                Once a squadmate accepts your request, their card reveals the exact username you&apos;ll enter in-game to send them a squad invite.
-              </p>
+            {/* Same letterbox as build-profile — only the subtext differs */}
+            <div style={{ flex: 1 }}>
+              <WelcomeBanner
+                game={selectedGame}
+                subtext={`Find more allies for ${selectedGame?.name ?? 'your game'}.`}
+              />
             </div>
             <button
               onClick={() => router.push('/build-profile')}
@@ -328,12 +309,12 @@ export default function SquadMatchesPage() {
               </label>
             </div>
 
-            {/* Return to Homepage — appears after squad acceptance */}
+            {/* Post-acceptance CTA — the homepage is gone, so this loops back to the catalogue */}
             {squadAccepted && (
               <div style={{ textAlign: 'center', paddingBottom: '40px' }}>
                 <button
                   className="main-heading"
-                  onClick={() => router.push('/home')}
+                  onClick={() => router.push('/select-game')}
                   onMouseEnter={() => setHoverReturn(true)}
                   onMouseLeave={() => setHoverReturn(false)}
                   style={{
@@ -355,12 +336,15 @@ export default function SquadMatchesPage() {
                     // animation comes from .main-heading class
                   }}
                 >
-                  RETURN TO HOMEPAGE
+                  PICK ANOTHER GAME
                 </button>
               </div>
             )}
           </div>
         </div>
+
+        {/* ── RIGHT: Allies panel ── */}
+        <AlliesPanel allies={allies} />
       </div>
 
       {/* Incoming request popup */}

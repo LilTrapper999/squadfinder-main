@@ -6,6 +6,7 @@ import { Game, GameCategory } from '@/lib/types'
 import { useApp } from '@/context/AppContext'
 import GameGrid from '@/components/game-select/GameGrid'
 import AnimatedBackground from '@/components/ui/AnimatedBackground'
+import NotificationBell from '@/components/ui/NotificationBell'
 
 export default function SelectGamePage() {
   const router = useRouter()
@@ -76,6 +77,7 @@ export default function SelectGamePage() {
           flexShrink: 0,
         }}
       >
+        {/* Bell lives on every page — see TopNav for the pages that don't draw their own bar */}
         <span
           style={{
             fontFamily: 'var(--font-rajdhani), sans-serif',
@@ -103,6 +105,10 @@ export default function SelectGamePage() {
           </button>
           <span style={{ color: '#4a5568', fontSize: '12px' }}>/</span>
           <span style={{ color: '#8b95a5', fontSize: '13px' }}>Select Game</span>
+        </div>
+
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
+          <NotificationBell />
         </div>
       </div>
 

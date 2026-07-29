@@ -52,14 +52,14 @@ export default function ChatPage() {
       >
         <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.5)' }}>Ally not found.</p>
         <button
-          onClick={() => router.push('/home')}
+          onClick={() => router.push('/squad-matches')}
           style={{
             padding: '10px 20px', borderRadius: '6px', border: '1px solid #e8a020',
             backgroundColor: 'transparent', color: '#e8a020', fontSize: '13px', fontWeight: 600,
             cursor: 'pointer', fontFamily: 'var(--font-rajdhani), sans-serif',
           }}
         >
-          ← Back to Home
+          ← Back to Squad Matches
         </button>
       </div>
     )

@@ -56,6 +56,15 @@ export interface Ally {
   /** Which selected game/version tile this ally relationship was formed under — scopes the
    *  per-game "Your Allies" panel on select-game. */
   gameId?: string
+  /** Favourited via the pin button — pinned allies sort to the top of every allies list */
+  pinned?: boolean
+  /**
+   * Blocked via the dislike button. Deliberately NOT the same as removing them: the ally stays
+   * on the list so you can see you already decided against them, and can be unblocked.
+   */
+  blocked?: boolean
+  /** They blocked you — surfaced on the card so the dead chat isn't a mystery */
+  blockedYou?: boolean
 }
 
 // ─── Private ally chat (SPEC_AMENDMENT_11 FIX 2/3) ───────────────────────────
@@ -86,6 +95,8 @@ export interface AllyChat {
  */
 export interface SquadRequest {
   id: string
+  /** Catalogue id of the game this request is for — groups the /notifications game cards */
+  gameId: string
   senderUsername: string
   senderStatus: MatchStatus
   senderStatusGame: string | null

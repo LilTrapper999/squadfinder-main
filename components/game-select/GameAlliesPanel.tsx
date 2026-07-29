@@ -3,7 +3,7 @@
 import { Game } from '@/lib/types'
 import { useApp } from '@/context/AppContext'
 import { useWindowWidth } from '@/lib/useWindowWidth'
-import { AllyCard } from '@/components/matches/AlliesPanel'
+import { AllyCard, sortAllies } from '@/components/matches/AlliesPanel'
 
 interface GameAlliesPanelProps {
   game: Game | null
@@ -92,7 +92,7 @@ export default function GameAlliesPanel({ game, closing = false }: GameAlliesPan
         <p
           className="sub-heading"
           style={{
-            margin: '0 0 4px',
+            margin: 0,
             fontFamily: 'var(--font-rajdhani), sans-serif',
             fontWeight: 700,
             fontSize: '16px',
@@ -101,17 +101,6 @@ export default function GameAlliesPanel({ game, closing = false }: GameAlliesPan
           }}
         >
           Your Allies ({gameAllies.length})
-        </p>
-        <p
-          style={{
-            margin: 0,
-            fontSize: '11px',
-            color: 'rgba(255,255,255,0.35)',
-            lineHeight: 1.3,
-            overflowWrap: 'break-word',
-          }}
-        >
-          {game.name}
         </p>
       </div>
 
@@ -138,7 +127,7 @@ export default function GameAlliesPanel({ game, closing = false }: GameAlliesPan
             </p>
           </div>
         ) : (
-          gameAllies.map((ally) => <AllyCard key={ally.id} ally={ally} />)
+          sortAllies(gameAllies).map((ally) => <AllyCard key={ally.id} ally={ally} />)
         )}
       </div>
     </div>

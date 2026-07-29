@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import ProfileForm from '@/components/profile/ProfileForm'
 import AnimatedBackground from '@/components/ui/AnimatedBackground'
+import NotificationBell from '@/components/ui/NotificationBell'
 import { useWindowWidth } from '@/lib/useWindowWidth'
 
 const MOBILE_BREAKPOINT = 768
@@ -75,6 +76,10 @@ export default function BuildProfilePage() {
           )}
           <span style={{ color: '#4a5568', fontSize: '12px' }}>/</span>
           <span style={{ color: '#8b95a5', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Build Profile</span>
+        </div>
+
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+          <NotificationBell />
         </div>
       </div>
 

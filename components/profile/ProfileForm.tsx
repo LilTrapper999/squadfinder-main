@@ -8,9 +8,19 @@ import CheckboxGrid from '@/components/ui/CheckboxGrid'
 import LanguagePicker from '@/components/ui/LanguagePicker'
 import Slider from '@/components/ui/Slider'
 import { useWindowWidth } from '@/lib/useWindowWidth'
+import WelcomeBanner from '@/components/ui/WelcomeBanner'
 // Tick labels — 3 anchors only: [0.0, 5.0, 10.0] (SPEC_AMENDMENT_02 FIX 1). Shared with the
 // notifications answers popup, which renders the same sliders back as readable text.
-import { SKILL_LABELS, RAGE_LABELS, ROLE_MATCH_LABELS } from '@/lib/profileAnswers'
+import {
+  SKILL_LABELS,
+  RAGE_LABELS,
+  ROLE_MATCH_LABELS,
+  gameKey,
+  gamesmanshipGroupFor,
+  missingRequiredAnswers,
+  nestedGroup,
+  usernameFor,
+} from '@/lib/profileAnswers'
 
 const TABLET_BREAKPOINT = 1024
 const MOBILE_BREAKPOINT = 640
@@ -46,7 +56,7 @@ function GroupHeader({ label, subtext }: { label: string; subtext?: string }) {
         {label}
       </p>
       {subtext && (
-        <p style={{ margin: '4px 0 0', fontSize: '10px', fontWeight: 400, color: 'rgba(255,255,255,0.3)' }}>
+        <p style={{ margin: '5px 0 0', fontSize: '14px', fontWeight: 500, color: 'rgba(255,255,255,0.75)' }}>
           {subtext}
         </p>
       )}
@@ -73,12 +83,14 @@ function QuestionLabel({ children, required }: { children: React.ReactNode; requ
       {required !== undefined && (
         <span
           style={{
-            fontSize: '10px',
-            fontWeight: 400,
-            color: 'rgba(255,255,255,0.3)',
+            // Required reads as a warning, Optional stays quiet background text
+            fontSize: required ? '11px' : '10px',
+            fontWeight: required ? 700 : 400,
+            color: required ? '#ff3b3b' : 'rgba(255,255,255,0.3)',
             textTransform: 'uppercase',
-            letterSpacing: '0.04em',
+            letterSpacing: '0.06em',
             whiteSpace: 'nowrap',
+            textShadow: required ? '0 0 8px rgba(255,59,59,0.5)' : 'none',
           }}
         >
           {required ? 'Required' : 'Optional'}
@@ -217,6 +229,62 @@ function CommsSlider({ chat, voice, onChange }: {
   )
 }
 
+// ─── Role matching — a radio row, not a slider ───────────────────────────────
+// The three anchors were the only meaningful stops on the old 0–100 slider, so they're
+// stored as 0 / 50 / 100 and the matching engine still reads one number.
+
+const ROLE_MATCH_OPTIONS: { value: number; label: string; subtitle: string }[] = [
+  { value: 0,   label: ROLE_MATCH_LABELS[0], subtitle: 'Favour squadmates who fill different roles' },
+  { value: 50,  label: ROLE_MATCH_LABELS[1], subtitle: 'No preference either way' },
+  { value: 100, label: ROLE_MATCH_LABELS[2], subtitle: 'Favour squadmates who play like me' },
+]
+
+function RoleMatchRadioRow({ value, onChange, columns }: {
+  value: number
+  onChange: (v: number) => void
+  columns: number
+}) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: '6px' }}>
+      {ROLE_MATCH_OPTIONS.map((opt) => {
+        const isSelected = value === opt.value
+        return (
+          <label
+            key={opt.value}
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '8px',
+              padding: '8px 10px',
+              borderRadius: '5px',
+              border: `1px solid ${isSelected ? '#e8a020' : 'rgba(255,255,255,0.06)'}`,
+              backgroundColor: isSelected ? 'rgba(232,160,32,0.07)' : 'transparent',
+              cursor: 'pointer',
+              transition: 'all 0.12s ease',
+            }}
+          >
+            <input
+              type="radio"
+              name="roleMatchPreference"
+              checked={isSelected}
+              onChange={() => onChange(opt.value)}
+              style={{ accentColor: '#e8a020', width: '13px', height: '13px', flexShrink: 0, marginTop: '2px', cursor: 'pointer' }}
+            />
+            <span>
+              <span style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: isSelected ? '#e8a020' : 'rgba(255,255,255,0.8)', userSelect: 'none' }}>
+                {opt.label}
+              </span>
+              <span style={{ display: 'block', fontSize: '10px', color: 'rgba(255,255,255,0.35)', userSelect: 'none', marginTop: '1px' }}>
+                {opt.subtitle}
+              </span>
+            </span>
+          </label>
+        )
+      })}
+    </div>
+  )
+}
+
 // ─── Main component ────────────────────────────────────────────────────────────
 
 export default function ProfileForm() {
@@ -229,7 +297,9 @@ export default function ProfileForm() {
 
   // Weapons/maps/roles are keyed by the base game in GAME_QUESTIONS, not per version —
   // each version is its own selectable tile now, but they all share the same question set.
-  const gq = GAME_QUESTIONS[selectedGame?.baseId ?? selectedGame?.id ?? '']
+  // Answers are filed under the same key so one game's picks can't satisfy another's.
+  const key = gameKey(selectedGame)
+  const gq = GAME_QUESTIONS[key]
 
   // Weapon categories unfold on click rather than living behind a native <select> dropdown.
   const [openWeaponCats, setOpenWeaponCats] = useState<Record<string, boolean>>({})
@@ -238,40 +308,42 @@ export default function ProfileForm() {
   }
 
   // ── helpers ──────────────────────────────────────────────────────────────────
-  // Nested key helpers  (e.g. 'gamesmanship.weapons')
+  // Nested key helpers for the game-agnostic groups (e.g. 'vibeCheck.personality')
   function nestedArr(group: string, field: string): string[] {
-    const g = profileAnswers[group]
-    if (g && typeof g === 'object' && !Array.isArray(g)) {
-      const val = (g as Record<string, unknown>)[field]
-      return Array.isArray(val) ? val : []
-    }
-    return []
+    const val = nestedGroup(profileAnswers, group)[field]
+    return Array.isArray(val) ? val : []
   }
 
   function nestedNum(group: string, field: string): number {
-    const g = profileAnswers[group]
-    if (g && typeof g === 'object' && !Array.isArray(g)) {
-      const val = (g as Record<string, unknown>)[field]
-      return typeof val === 'number' ? val : 0
-    }
-    return 0
+    const val = nestedGroup(profileAnswers, group)[field]
+    return typeof val === 'number' ? val : 0
   }
 
   function nestedStr(group: string, field: string): string {
-    const g = profileAnswers[group]
-    if (g && typeof g === 'object' && !Array.isArray(g)) {
-      const val = (g as Record<string, unknown>)[field]
-      return typeof val === 'string' ? val : ''
-    }
-    return ''
+    const val = nestedGroup(profileAnswers, group)[field]
+    return typeof val === 'string' ? val : ''
   }
 
   function updateNested(group: string, field: string, value: unknown) {
-    const g = profileAnswers[group]
-    const existing = (g && typeof g === 'object' && !Array.isArray(g))
-      ? (g as Record<string, unknown>)
-      : {}
-    updateProfileAnswer(group, { ...existing, [field]: value })
+    updateProfileAnswer(group, { ...nestedGroup(profileAnswers, group), [field]: value })
+  }
+
+  // Gamesmanship is per game — weapons, maps and roles only mean anything within one title,
+  // so they live under gamesmanship[key] rather than in one shared blob.
+  function gamesArr(field: string): string[] {
+    const val = gamesmanshipGroupFor(profileAnswers, key)[field]
+    return Array.isArray(val) ? val : []
+  }
+
+  function gamesNum(field: string, fallback = 0): number {
+    const val = gamesmanshipGroupFor(profileAnswers, key)[field]
+    return typeof val === 'number' ? val : fallback
+  }
+
+  function updateGamesmanship(field: string, value: unknown) {
+    const allGames = nestedGroup(profileAnswers, 'gamesmanship')
+    const thisGame = gamesmanshipGroupFor(profileAnswers, key)
+    updateProfileAnswer('gamesmanship', { ...allGames, [key]: { ...thisGame, [field]: value } })
   }
 
   // Both fields must land in the same update — two sequential updateNested calls would each
@@ -284,54 +356,23 @@ export default function ProfileForm() {
     updateProfileAnswer('comms', { ...existing, willingToChat: chat, willingToSpeak: voice })
   }
 
-  // In-game username is per-game, not a single flat field — keyed by gameId so switching
-  // games (or coming back to build a profile for a different one) doesn't overwrite it.
-  function getGameUsername(): string {
-    const g = profileAnswers['comms']
-    if (g && typeof g === 'object' && !Array.isArray(g)) {
-      const usernames = (g as Record<string, unknown>).usernames
-      if (usernames && typeof usernames === 'object') {
-        const val = (usernames as Record<string, unknown>)[selectedGame?.id ?? '']
-        return typeof val === 'string' ? val : ''
-      }
-    }
-    return ''
-  }
-
+  // In-game username is per-game, not a single flat field — keyed the same way as the rest of
+  // the game-specific answers so switching games doesn't overwrite it.
   function updateGameUsername(value: string) {
-    const g = profileAnswers['comms']
-    const existing = (g && typeof g === 'object' && !Array.isArray(g))
-      ? (g as Record<string, unknown>)
-      : {}
+    const existing = nestedGroup(profileAnswers, 'comms')
     const existingUsernames = (existing.usernames && typeof existing.usernames === 'object')
       ? (existing.usernames as Record<string, string>)
       : {}
     updateProfileAnswer('comms', {
       ...existing,
-      usernames: { ...existingUsernames, [selectedGame?.id ?? '']: value },
+      usernames: { ...existingUsernames, [key]: value },
     })
   }
 
   // ── validation ────────────────────────────────────────────────────────────────
-  // Every question labelled "Required" must be answered before FIND MY SQUAD unlocks.
-  // The three Gamesmanship lists only count when the selected game actually has that
-  // question set — games without a GAME_QUESTIONS entry don't render them at all.
-  const missingRequired: string[] = []
-  if (gq?.roles?.length && nestedArr('gamesmanship', 'roles').length === 0) {
-    missingRequired.push('Your role')
-  }
-  if (gq?.maps?.length && nestedArr('gamesmanship', 'maps').length === 0) {
-    missingRequired.push('Maps you know well')
-  }
-  if (gq?.weapons?.length && nestedArr('gamesmanship', 'weapons').length === 0) {
-    missingRequired.push('Weapons you run')
-  }
-  if (nestedArr('vibeCheck', 'personality').length === 0) {
-    missingRequired.push('Personality vibe')
-  }
-  if (nestedArr('comms', 'languages').length === 0) {
-    missingRequired.push('Languages you play in')
-  }
+  // Shared with the select-game CTA, so no route can reach /squad-matches with an
+  // incomplete profile for the selected game.
+  const missingRequired = missingRequiredAnswers(key, profileAnswers, gq)
   const canSubmit = missingRequired.length === 0
 
   function handleSubmit() {
@@ -343,38 +384,12 @@ export default function ProfileForm() {
   return (
     <div style={{ paddingBottom: '80px' }}>
 
-      {/* Welcome banner */}
-      <div
-        style={{
-          marginBottom: '32px',
-          padding: '20px 24px',
-          backgroundColor: 'rgba(232,160,32,0.05)',
-          border: '1px solid rgba(232,160,32,0.15)',
-          borderRadius: '10px',
-        }}
-      >
-        <p
-          style={{
-            margin: '0 0 8px',
-            fontSize: '24px',
-            fontWeight: 600,
-            color: '#ffffff',
-            fontFamily: 'var(--font-rajdhani), sans-serif',
-          }}
-        >
-          Welcome, Commander
-        </p>
-        <p style={{ margin: 0, fontSize: '13px', color: '#8b95a5', lineHeight: 1.5 }}>
-          {selectedGame ? (
-            <>
-              Building your profile for{' '}
-              <span style={{ color: '#e8a020' }}>{selectedGame.name}</span>
-              . Answer honestly — this is how we find your perfect squad.
-            </>
-          ) : (
-            'Answer honestly — this is how we find your perfect squad.'
-          )}
-        </p>
+      {/* Welcome banner — the selected game is shown as its logo rather than named in prose */}
+      <div style={{ marginBottom: '32px' }}>
+        <WelcomeBanner
+          game={selectedGame}
+          subtext="Answer honestly — this is how we find your perfect squad."
+        />
       </div>
 
       {/* 3-column layout — Gamesmanship / Vibe Check / Comms sit side by side, each top-aligned
@@ -386,32 +401,58 @@ export default function ProfileForm() {
         <div style={{ breakInside: 'avoid', marginBottom: '28px' }}>
           <GroupHeader label="Gamesmanship" subtext="Specific for all games" />
 
-          {/* G1 — Role matching style (SPEC_AMENDMENT_08 FIX 2) */}
-          <QuestionBlock>
-            <QuestionLabel required={false}>Role matching style</QuestionLabel>
-            <Slider
-              value={(() => {
-                const raw = nestedNum('gamesmanship', 'roleMatchPreference')
-                const g = profileAnswers['gamesmanship']
-                const isSet = g && typeof g === 'object' && !Array.isArray(g) && 'roleMatchPreference' in g
-                return isSet ? raw : 50
-              })()}
-              onChange={(v) => updateNested('gamesmanship', 'roleMatchPreference', v)}
-              tickLabels={ROLE_MATCH_LABELS}
-            />
-          </QuestionBlock>
-
-          {/* G2 — Skill */}
+          {/* G1 — Skill */}
           <QuestionBlock>
             <QuestionLabel required={false}>Skill level</QuestionLabel>
             <Slider
-              value={nestedNum('gamesmanship', 'skill')}
-              onChange={(v) => updateNested('gamesmanship', 'skill', v)}
+              value={gamesNum('skill')}
+              onChange={(v) => updateGamesmanship('skill', v)}
               tickLabels={SKILL_LABELS}
             />
           </QuestionBlock>
 
-          {/* G3 — Roles */}
+          {/* G2 — In-game username: per-game, and required — squadmates can't invite you without it */}
+          <QuestionBlock>
+            <QuestionLabel required={true}>
+              In-game username{selectedGame ? ` for ${selectedGame.name}` : ''}
+            </QuestionLabel>
+            <input
+              type="text"
+              value={usernameFor(profileAnswers, key)}
+              onChange={(e) => updateGameUsername(e.target.value)}
+              placeholder="e.g. ShadowRook"
+              style={{
+                width: '100%',
+                padding: '11px 14px',
+                borderRadius: '6px',
+                border: '1px solid rgba(255,255,255,0.1)',
+                backgroundColor: 'rgba(255,255,255,0.03)',
+                color: '#ffffff',
+                fontSize: '14px',
+                fontFamily: 'inherit',
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+            <p style={{ margin: '6px 0 0', fontSize: '10px', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>
+              This is specific to this game — build a profile for another game and you&apos;ll set a different username.
+            </p>
+          </QuestionBlock>
+
+          {/* G3 — Role matching style (SPEC_AMENDMENT_08 FIX 2) */}
+          <QuestionBlock>
+            <QuestionLabel required={false}>Role matching style</QuestionLabel>
+            <RoleMatchRadioRow
+              value={(() => {
+                const group = gamesmanshipGroupFor(profileAnswers, key)
+                return 'roleMatchPreference' in group ? gamesNum('roleMatchPreference', 50) : 50
+              })()}
+              onChange={(v) => updateGamesmanship('roleMatchPreference', v)}
+              columns={isMobile ? 1 : 3}
+            />
+          </QuestionBlock>
+
+          {/* G4 — Roles */}
           {gq?.roles && gq.roles.length > 0 && (
             <QuestionBlock>
               <QuestionLabel required={true}>What&apos;s your role?</QuestionLabel>
@@ -423,7 +464,7 @@ export default function ProfileForm() {
                 }}
               >
                 {gq.roles.map((role) => {
-                  const selected = nestedArr('gamesmanship', 'roles')
+                  const selected = gamesArr('roles')
                   const isSelected = selected.includes(role.value)
                   return (
                     <label
@@ -444,9 +485,8 @@ export default function ProfileForm() {
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => {
-                          const cur = nestedArr('gamesmanship', 'roles')
-                          updateNested(
-                            'gamesmanship',
+                          const cur = gamesArr('roles')
+                          updateGamesmanship(
                             'roles',
                             isSelected ? cur.filter((v) => v !== role.value) : [...cur, role.value],
                           )
@@ -493,20 +533,20 @@ export default function ProfileForm() {
             </QuestionBlock>
           )}
 
-          {/* G4 — Maps */}
+          {/* G5 — Maps */}
           {gq?.maps && gq.maps.length > 0 && (
             <QuestionBlock>
               <QuestionLabel required={true}>Which maps do you know well?</QuestionLabel>
               <CheckboxGrid
                 options={gq.maps}
-                selected={nestedArr('gamesmanship', 'maps')}
-                onChange={(v) => updateNested('gamesmanship', 'maps', v)}
+                selected={gamesArr('maps')}
+                onChange={(v) => updateGamesmanship('maps', v)}
                 columns={gq.maps.length > 12 ? 3 : 2}
               />
             </QuestionBlock>
           )}
 
-          {/* G5 — Weapons: each category unfolds on click instead of a native <select> */}
+          {/* G6 — Weapons: each category unfolds on click instead of a native <select> */}
           {gq?.weapons && gq.weapons.length > 0 && (
             <QuestionBlock>
               <QuestionLabel required={true}>Which weapons do you run?</QuestionLabel>
@@ -533,23 +573,24 @@ export default function ProfileForm() {
                       }}
                     >
                       <span className="sub-heading weapon-category-title">{cat.category}</span>
+                      {/* Points right when collapsed, down when expanded */}
                       <span
                         style={{
                           display: 'inline-block',
                           color: '#e8a020',
                           fontSize: '10px',
                           transition: 'transform 0.15s ease',
-                          transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                          transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)',
                         }}
                       >
-                        ▼
+                        ▶
                       </span>
                     </button>
                     {isOpen && (
                       <CheckboxGrid
                         options={cat.weapons}
-                        selected={nestedArr('gamesmanship', 'weapons')}
-                        onChange={(v) => updateNested('gamesmanship', 'weapons', v)}
+                        selected={gamesArr('weapons')}
+                        onChange={(v) => updateGamesmanship('weapons', v)}
                         columns={cat.weapons.length > 8 ? 3 : 2}
                       />
                     )}
@@ -640,37 +681,9 @@ export default function ProfileForm() {
             Languages determine your match score. Chat and mic preferences are shown to potential squadmates.
           </p>
 
-          {/* C0 — In-game username: per-game, not a single flat profile field */}
-          <QuestionBlock>
-            <QuestionLabel>
-              In-game username{selectedGame ? ` for ${selectedGame.name}` : ''}
-            </QuestionLabel>
-            <input
-              type="text"
-              value={getGameUsername()}
-              onChange={(e) => updateGameUsername(e.target.value)}
-              placeholder="e.g. ShadowRook"
-              style={{
-                width: '100%',
-                padding: '11px 14px',
-                borderRadius: '6px',
-                border: '1px solid rgba(255,255,255,0.1)',
-                backgroundColor: 'rgba(255,255,255,0.03)',
-                color: '#ffffff',
-                fontSize: '14px',
-                fontFamily: 'inherit',
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
-            />
-            <p style={{ margin: '6px 0 0', fontSize: '10px', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>
-              This is specific to this game — build a profile for another game and you&apos;ll set a different username.
-            </p>
-          </QuestionBlock>
-
           {/* C1 — Comms style (replaces separate chat/voice yes-no toggles) */}
           <QuestionBlock>
-            <QuestionLabel required={false}>Comms style</QuestionLabel>
+            <QuestionLabel required={false}>In-game Comms Style</QuestionLabel>
             <CommsSlider
               chat={nestedStr('comms', 'willingToChat')}
               voice={nestedStr('comms', 'willingToSpeak')}

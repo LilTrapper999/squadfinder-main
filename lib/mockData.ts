@@ -2935,17 +2935,25 @@ export function createMockIncomingRequests(): IncomingRequest[] {
 // /notifications can score them live and show their answers per category.
 // In Phase 2 these come from the database, filtered by the selected game.
 
+// Delivered only to returning users — a brand-new account has no requests, since nobody
+// could have sent one yet. Tick "Returning user (demo)" on the login card to receive them.
+// Simulation data: exactly one game per catalogue category has requests, so /notifications
+// shows all three categories in the rail with one game card under each.
+//   Extraction  → Escape from Tarkov (PvP)   — 3 requests
+//   Competitive → Counter-Strike 2           — 2 requests
+//   FPS         → Call of Duty: Warzone      — 2 requests
 export const MOCK_SQUAD_REQUESTS: SquadRequest[] = [
   {
     id: 'sqreq-01',
+    gameId: 'tarkov-eft-pvp',
     senderUsername: 'PhantomSix',
     senderStatus: 'searching',
     senderStatusGame: null,
     profile: {
       gameId: 'tarkov',
-      weapons: ['AK-74M', 'MP5', 'Glock 17'],
+      weapons: ['ADAR 2-15', 'OP-SKS', 'SAG AK'],
       maps: ['Customs', 'Interchange', 'Reserve'],
-      roles: ['Quest Grinder', 'Loot Goblin'],
+      roles: ['PvE Farmer', 'Scav Runner'],
       skill: 6.0,
       roleMatchPreference: 7.0,
       rage: 2.5,
@@ -2957,14 +2965,15 @@ export const MOCK_SQUAD_REQUESTS: SquadRequest[] = [
   },
   {
     id: 'sqreq-02',
+    gameId: 'tarkov-eft-pvp',
     senderUsername: 'BlitzHavoc',
     senderStatus: 'ingame',
     senderStatusGame: 'Escape from Tarkov',
     profile: {
       gameId: 'tarkov',
-      weapons: ['M4A1', 'HK 416A5', 'Remington 870'],
-      maps: ['Streets of Tarkov', 'Factory (Day)', 'The Lab'],
-      roles: ['Chad Rusher', 'Factory Psycho'],
+      weapons: ['AS VAL MOD.4', 'RFB', '9A-91'],
+      maps: ['Streets of Tarkov', 'Reserve', 'Woods'],
+      roles: ['The Chad', 'PvP Hunter'],
       skill: 8.5,
       roleMatchPreference: 9.0,
       rage: 7.5,
@@ -2976,14 +2985,15 @@ export const MOCK_SQUAD_REQUESTS: SquadRequest[] = [
   },
   {
     id: 'sqreq-03',
+    gameId: 'tarkov-eft-pvp',
     senderUsername: 'EmberWraith',
     senderStatus: 'searching',
     senderStatusGame: null,
     profile: {
       gameId: 'tarkov',
-      weapons: ['SV-98', 'RSASS', 'M9A3'],
-      maps: ['Woods', 'Lighthouse', 'Shoreline'],
-      roles: ['Sniper Scav', 'Camp & Count'],
+      weapons: ['AVT-40', 'SAG AK Short'],
+      maps: ['Woods', 'Shoreline', 'Customs'],
+      roles: ['The Rat', 'PvE Farmer'],
       skill: 4.5,
       roleMatchPreference: 2.0,
       rage: 1.0,
@@ -2995,14 +3005,15 @@ export const MOCK_SQUAD_REQUESTS: SquadRequest[] = [
   },
   {
     id: 'sqreq-04',
+    gameId: 'cs2',
     senderUsername: 'SableNine',
     senderStatus: 'searching',
     senderStatusGame: null,
     profile: {
-      gameId: 'tarkov',
-      weapons: ['PP-19 Bizon', 'Mosin-Nagant'],
-      maps: ['Ground Zero', 'Customs'],
-      roles: ['The Rat', 'Friendly Scav'],
+      gameId: 'cs2',
+      weapons: ['Glock-18', 'USP-S', 'Tec-9'],
+      maps: ['Mirage', 'Inferno', 'Nuke'],
+      roles: ['Lurker', 'Support'],
       skill: 3.0,
       roleMatchPreference: 5.0,
       rage: 4.0,
@@ -3013,7 +3024,86 @@ export const MOCK_SQUAD_REQUESTS: SquadRequest[] = [
       languages: ['Polish'],
     },
   },
+  {
+    id: 'sqreq-05',
+    gameId: 'cs2',
+    senderUsername: 'HollowJet',
+    senderStatus: 'searching',
+    senderStatusGame: null,
+    profile: {
+      gameId: 'cs2',
+      weapons: ['USP-S', 'Five-SeveN', 'P250'],
+      maps: ['Mirage', 'Dust2', 'Anubis'],
+      roles: ['AWPer', 'In-Game Leader'],
+      skill: 7.5,
+      roleMatchPreference: 8.0,
+      rage: 5.5,
+      personality: ['Calls out every enemy', 'Main character energy'],
+      willingToChat: true,
+      willingToSpeak: true,
+      languages: ['English', 'Portuguese'],
+    },
+  },
+  {
+    id: 'sqreq-06',
+    gameId: 'wz-fps',
+    senderUsername: 'RustCollar',
+    senderStatus: 'ingame',
+    senderStatusGame: 'Call of Duty: Warzone',
+    profile: {
+      gameId: 'wz-fps',
+      weapons: ['M15 MOD 0', 'Peacekeeper MK1', 'AK-27'],
+      maps: ['Verdansk', 'Rebirth Island'],
+      roles: ['Rusher / Entry Fragger', 'Assaulter'],
+      skill: 9.0,
+      roleMatchPreference: 6.0,
+      rage: 6.5,
+      personality: ['Hypes the team', 'Results-only focused'],
+      willingToChat: false,
+      willingToSpeak: true,
+      languages: ['English'],
+    },
+  },
+  {
+    id: 'sqreq-07',
+    gameId: 'wz-fps',
+    senderUsername: 'GlassPatriot',
+    senderStatus: 'searching',
+    senderStatusGame: null,
+    profile: {
+      gameId: 'wz-fps',
+      weapons: ['MXR-17', 'DS20 Mirage', 'MK35 ISR'],
+      maps: ['Avalon', 'Verdansk'],
+      roles: ['Sniper / Marksman', 'Recon / Scout'],
+      skill: 5.5,
+      roleMatchPreference: 3.0,
+      rage: 3.5,
+      personality: ['Strategist / Over-thinker', 'Quiet but deadly'],
+      willingToChat: true,
+      willingToSpeak: false,
+      languages: ['English', 'French'],
+    },
+  },
 ]
+
+// ─── PLAYERS WHO HAVE BLOCKED THE USER ───────────────────────────────────────
+// Prototype stand-in for a real "they blocked you" flag on the relationship record. Any ally
+// added with one of these usernames is marked so every allies list can say so on the card.
+
+export const MOCK_BLOCKED_BY: string[] = ['CryptoFang', 'EmberWraith']
+
+// ─── GAME LOOKUP ─────────────────────────────────────────────────────────────
+// Flat view of the catalogue — /notifications resolves a request's gameId back to the tile.
+
+export const ALL_GAMES: Game[] = [
+  ...GAMES_BY_CATEGORY.extraction,
+  ...GAMES_BY_CATEGORY.competitive,
+  ...GAMES_BY_CATEGORY.fps,
+]
+
+export function findGameById(id: string): Game | undefined {
+  return ALL_GAMES.find((g) => g.id === id)
+}
 
 // ─── MOCK ALLIES ─────────────────────────────────────────────────────────────
 // Allies panel starts empty in prototype — user adds allies via "Add as Ally".
@@ -3025,15 +3115,4 @@ export const MOCK_ALLIES: Ally[] = [
   { id: 'ally-03', username: 'IronVeil',    overall: 76, status: 'offline',   statusGame: null },
 ]
 
-// ─── HOMEPAGE MOCK DATA (SPEC_UPDATE_05 Section D5) ──────────────────────────
-
-export const MOCK_SQUAD = [
-  { id: 'squad-01', username: 'NovaTrigger', overall: 94 },
-  { id: 'squad-02', username: 'IronVeil',    overall: 88 },
-]
-
-export const MOCK_HOMEPAGE_ALLIES = [
-  { id: 'ally-01', username: 'ShadowRook',  overall: 91, status: 'searching' as const },
-  { id: 'ally-02', username: 'GhostDelta7', overall: 85, status: 'in-squad'  as const },
-  { id: 'ally-03', username: 'CopperEdge',  overall: 76, status: 'offline'   as const },
-]
+// MOCK_SQUAD / MOCK_HOMEPAGE_ALLIES removed with the homepage — nothing else consumed them.

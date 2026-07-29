@@ -8,8 +8,9 @@
 import { useRef, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Game, GameCategory } from '@/lib/types'
-import { GAMES_BY_CATEGORY } from '@/lib/mockData'
+import { GAMES_BY_CATEGORY, GAME_QUESTIONS } from '@/lib/mockData'
 import { useApp } from '@/context/AppContext'
+import { gameKey, isProfileComplete } from '@/lib/profileAnswers'
 import { useWindowWidth } from '@/lib/useWindowWidth'
 import GameTile from './GameTile'
 import GameAlliesPanel from './GameAlliesPanel'
@@ -48,7 +49,7 @@ export default function GameGrid({
   onGameSelect,
 }: GameGridProps) {
   const router = useRouter()
-  const { setSelectedVersion, isReturningUser } = useApp()
+  const { setSelectedVersion, isReturningUser, profileAnswers } = useApp()
   const games = GAMES_BY_CATEGORY[category] ?? []
   const gridRef = useRef<HTMLDivElement>(null)
   const [cols, setCols] = useState(3)
@@ -85,8 +86,12 @@ export default function GameGrid({
   }, [selectedGame?.id])
 
   function handleFindSquad() {
-    // Returning users already have a profile on file — skip straight to matches.
-    router.push(isReturningUser ? '/squad-matches' : '/build-profile')
+    // Returning users skip build-profile only when they actually have a complete profile for
+    // THIS game. "Returning" says nothing about the game just picked — sending them straight
+    // to matches was letting them match on required answers they had never given.
+    const key = gameKey(selectedGame)
+    const complete = isProfileComplete(key, profileAnswers, GAME_QUESTIONS[key])
+    router.push(isReturningUser && complete ? '/squad-matches' : '/build-profile')
   }
 
   return (
