@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { MatchPlayer } from '@/lib/types'
 import { useApp } from '@/context/AppContext'
+import { useT } from '@/context/I18nContext'
 import { scoreToColour } from '@/lib/matchColour'
 
 type CardState = 'default' | 'waiting' | 'accepted' | 'declined'
@@ -31,6 +32,7 @@ export default function MatchCard({
   onAccepted,
 }: MatchCardProps) {
   const router = useRouter()
+  const { t } = useT()
   const { addAlly, selectedGame } = useApp()
   const [cardState, setCardState] = useState<CardState>('default')
   const [hoverBtn, setHoverBtn] = useState(false)
@@ -84,9 +86,9 @@ export default function MatchCard({
     'rgba(255,255,255,0.3)'
 
   const statusText =
-    player.status === 'ingame' ? `Live — ${resolvedStatusGame ?? 'In Game'}` :
-    player.status === 'searching' ? 'Searching for a squad' :
-    'Offline'
+    player.status === 'ingame' ? t('Live — {game}', { game: resolvedStatusGame ?? t('In Game') }) :
+    player.status === 'searching' ? t('Searching for a squad') :
+    t('Offline')
 
   const statusColor =
     player.status === 'ingame' ? '#22c55e' :
@@ -139,7 +141,7 @@ export default function MatchCard({
       {/* Overall */}
       <div style={{ marginBottom: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '5px' }}>
-          <span className="sub-heading" style={{ fontSize: '13px', fontWeight: 600 }}>Overall Match</span>
+          <span className="sub-heading" style={{ fontSize: '13px', fontWeight: 600 }}>{t('Overall Match')}</span>
           <span style={{ fontSize: '22px', fontWeight: 700, color: overallColor, fontFamily: 'var(--font-rajdhani), sans-serif', lineHeight: 1 }}>
             {player.overall}%
           </span>
@@ -150,9 +152,9 @@ export default function MatchCard({
       {/* Sub-scores */}
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '12px', marginBottom: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {[
-          { label: 'Gamesmanship', value: player.gamesmanship },
-          { label: 'Vibe Check',   value: player.vibe },
-          { label: 'Comms Style',  value: player.comms },
+          { label: t('Gamesmanship'), value: player.gamesmanship },
+          { label: t('Vibe Check'),   value: player.vibe },
+          { label: t('Comms Style'),  value: player.comms },
         ].map(({ label, value }) => (
           <div key={label}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
@@ -188,7 +190,7 @@ export default function MatchCard({
             color: player.willingToSpeak ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.28)',
           }}
         >
-          🎙 {player.willingToSpeak ? 'Mic on' : 'Mic off'}
+          🎙 {player.willingToSpeak ? t('Mic on') : t('Mic off')}
         </span>
         <span
           className={`comms-badge ${player.willingToChat ? 'active' : 'inactive'}`}
@@ -201,7 +203,7 @@ export default function MatchCard({
             color: player.willingToChat ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.28)',
           }}
         >
-          💬 {player.willingToChat ? 'Types' : 'No text'}
+          💬 {player.willingToChat ? t('Types') : t('No text')}
         </span>
       </div>
 
@@ -230,7 +232,7 @@ export default function MatchCard({
               transition: 'all 0.15s ease',
             }}
           >
-            {isOffline ? 'Player Offline' : 'Request to Squad'}
+            {isOffline ? t('Player Offline') : t('Request to Squad')}
           </button>
         )}
 
@@ -271,7 +273,7 @@ export default function MatchCard({
                 animation: 'subPulse 1.5s ease-in-out infinite',
               }}
             >
-              Waiting...
+              {t('Waiting...')}
             </span>
           </div>
         )}
@@ -290,11 +292,11 @@ export default function MatchCard({
             >
               <span style={{ color: '#22c55e', fontSize: '14px' }}>✓</span>
               <span style={{ color: '#22c55e', fontSize: '14px', fontWeight: 700, fontFamily: 'var(--font-rajdhani), sans-serif' }}>
-                Squad Accepted
+                {t('Squad Accepted')}
               </span>
             </div>
             <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>
-              You are now allies.
+              {t('You are now allies.')}
             </p>
 
             {/* Go to chat — auto-allied, no separate "Add as Ally" step (SPEC_AMENDMENT_11 FIX 1/2) */}
@@ -317,7 +319,7 @@ export default function MatchCard({
                 transition: 'all 0.15s ease',
               }}
             >
-              Go to chat →
+              {t('Go to chat →')}
             </button>
           </div>
         )}
@@ -336,11 +338,11 @@ export default function MatchCard({
             >
               <span style={{ color: '#ef4444', fontSize: '14px' }}>✗</span>
               <span style={{ color: '#ef4444', fontSize: '14px', fontWeight: 700, fontFamily: 'var(--font-rajdhani), sans-serif' }}>
-                Squad Declined
+                {t('Squad Declined')}
               </span>
             </div>
             <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>
-              This player declined your request.
+              {t('This player declined your request.')}
             </p>
           </div>
         )}

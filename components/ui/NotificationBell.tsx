@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useApp } from '@/context/AppContext'
+import { useT } from '@/context/I18nContext'
 
 interface NotificationBellProps {
   /** Overrides the badge count — defaults to the number of pending squad requests */
@@ -16,6 +17,7 @@ interface NotificationBellProps {
  */
 export default function NotificationBell({ count, size = 20 }: NotificationBellProps) {
   const router = useRouter()
+  const { t } = useT()
   const { squadRequests } = useApp()
   const [hovered, setHovered] = useState(false)
 
@@ -26,7 +28,7 @@ export default function NotificationBell({ count, size = 20 }: NotificationBellP
       onClick={() => router.push('/notifications')}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      aria-label={total > 0 ? `Notifications — ${total} squad requests` : 'Notifications'}
+      aria-label={total > 0 ? t('Notifications — {count} squad requests', { count: total }) : t('Notifications')}
       style={{
         position: 'relative',
         background: 'none',

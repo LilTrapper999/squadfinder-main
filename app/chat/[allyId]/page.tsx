@@ -6,6 +6,7 @@ import { useApp } from '@/context/AppContext'
 import { scoreToColour } from '@/lib/matchColour'
 import ToggleSwitch from '@/components/ui/ToggleSwitch'
 import { useWindowWidth } from '@/lib/useWindowWidth'
+import { useT } from '@/context/I18nContext'
 
 const MOBILE_BREAKPOINT = 480
 
@@ -13,6 +14,7 @@ export default function ChatPage() {
   const params = useParams<{ allyId: string }>()
   const allyId = params.allyId
   const router = useRouter()
+  const { t } = useT()
   const { allies, getChat, sendMessage, toggleDisappearingMessages, pruneExpiredMessages } = useApp()
   const isMobile = useWindowWidth() < MOBILE_BREAKPOINT
 
@@ -50,7 +52,7 @@ export default function ChatPage() {
           gap: '12px', backgroundColor: '#0a0b0f', color: '#ffffff', zIndex: 1, position: 'relative',
         }}
       >
-        <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.5)' }}>Ally not found.</p>
+        <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.5)' }}>{t('Ally not found.')}</p>
         <button
           onClick={() => router.push('/squad-matches')}
           style={{
@@ -59,7 +61,7 @@ export default function ChatPage() {
             cursor: 'pointer', fontFamily: 'var(--font-rajdhani), sans-serif',
           }}
         >
-          ← Back to Squad Matches
+          {t('← Back to Squad Matches')}
         </button>
       </div>
     )
@@ -71,9 +73,9 @@ export default function ChatPage() {
     'rgba(255,255,255,0.3)'
 
   const statusText =
-    ally.status === 'ingame' ? `Live — ${ally.statusGame ?? 'In Game'}` :
-    ally.status === 'searching' ? 'Searching for a squad' :
-    'Offline'
+    ally.status === 'ingame' ? t('Live — {game}', { game: ally.statusGame ?? t('In Game') }) :
+    ally.status === 'searching' ? t('Searching for a squad') :
+    t('Offline')
 
   return (
     <div
@@ -106,7 +108,7 @@ export default function ChatPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
           <button
             onClick={() => router.back()}
-            aria-label="Back"
+            aria-label={t('Back')}
             style={{
               background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)',
               fontSize: '18px', cursor: 'pointer', padding: '4px', lineHeight: 1,
@@ -153,12 +155,12 @@ export default function ChatPage() {
               whiteSpace: 'nowrap',
             }}
           >
-            {isMobile ? '⏱' : '⏱ Disappearing messages'}
+            {isMobile ? '⏱' : `⏱ ${t('Disappearing messages')}`}
           </span>
           <ToggleSwitch
             checked={disappearing}
             onChange={() => toggleDisappearingMessages(allyId)}
-            label="Disappearing messages"
+            label={t('Disappearing messages')}
           />
         </div>
       </div>
@@ -175,7 +177,7 @@ export default function ChatPage() {
           }}
         >
           <span style={{ fontSize: '12px', color: '#e8a020', fontFamily: 'Inter, sans-serif' }}>
-            ⏱ Messages disappear after 24 hours
+            {`⏱ ${t('Messages disappear after 24 hours')}`}
           </span>
         </div>
       )}
@@ -185,7 +187,7 @@ export default function ChatPage() {
         {messages.length === 0 ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>
-              No messages yet. Say hello 👋
+              {t('No messages yet. Say hello')} 👋
             </p>
           </div>
         ) : (
@@ -244,7 +246,7 @@ export default function ChatPage() {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') handleSend() }}
-          placeholder="Type a message…"
+          placeholder={t('Type a message…')}
           style={{
             flex: 1,
             padding: '10px 14px',
@@ -274,7 +276,7 @@ export default function ChatPage() {
             transition: 'all 0.15s ease',
           }}
         >
-          Send
+          {t('Send')}
         </button>
       </div>
     </div>

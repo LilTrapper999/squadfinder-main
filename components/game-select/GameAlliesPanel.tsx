@@ -2,6 +2,7 @@
 
 import { Game } from '@/lib/types'
 import { useApp } from '@/context/AppContext'
+import { useT } from '@/context/I18nContext'
 import { useWindowWidth } from '@/lib/useWindowWidth'
 import { AllyCard, sortAllies } from '@/components/matches/AlliesPanel'
 
@@ -15,6 +16,7 @@ const MOBILE_BREAKPOINT = 768
 
 export default function GameAlliesPanel({ game, closing = false }: GameAlliesPanelProps) {
   const { allies } = useApp()
+  const { t } = useT()
   const isMobile = useWindowWidth() < MOBILE_BREAKPOINT
 
   if (!game) return null
@@ -100,7 +102,7 @@ export default function GameAlliesPanel({ game, closing = false }: GameAlliesPan
             letterSpacing: '0.06em',
           }}
         >
-          Your Allies ({gameAllies.length})
+          {t('Your Allies ({count})', { count: gameAllies.length })}
         </p>
       </div>
 
@@ -120,10 +122,10 @@ export default function GameAlliesPanel({ game, closing = false }: GameAlliesPan
             }}
           >
             <p style={{ margin: '0 0 8px', fontSize: '13px', color: '#ffffff', fontFamily: 'var(--font-rajdhani), sans-serif', fontWeight: 700 }}>
-              No allies yet.
+              {t('No allies yet.')}
             </p>
             <p style={{ margin: 0, fontSize: '12px', color: '#8b95a5', lineHeight: 1.5 }}>
-              Squad up here and they&apos;ll show up in this list.
+              {t("Squad up here and they'll show up in this list.")}
             </p>
           </div>
         ) : (

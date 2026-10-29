@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useT } from '@/context/I18nContext'
 import { useApp } from '@/context/AppContext'
 import { GAME_QUESTIONS } from '@/lib/mockData'
 import CheckboxGrid from '@/components/ui/CheckboxGrid'
@@ -43,6 +44,7 @@ const PERSONALITY_OPTS = [
 // ─── Section header ────────────────────────────────────────────────────────────
 
 function GroupHeader({ label, subtext }: { label: string; subtext?: string }) {
+  const { t } = useT()
   return (
     <div
       style={{
@@ -53,11 +55,11 @@ function GroupHeader({ label, subtext }: { label: string; subtext?: string }) {
       }}
     >
       <p className="main-heading" style={{ margin: 0, fontSize: '19.25px' }}>
-        {label}
+        {t(label)}
       </p>
       {subtext && (
         <p style={{ margin: '5px 0 0', fontSize: '14px', fontWeight: 500, color: 'rgba(255,255,255,0.75)' }}>
-          {subtext}
+          {t(subtext)}
         </p>
       )}
     </div>
@@ -65,6 +67,7 @@ function GroupHeader({ label, subtext }: { label: string; subtext?: string }) {
 }
 
 function QuestionLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
+  const { t } = useT()
   return (
     <p
       style={{
@@ -93,7 +96,7 @@ function QuestionLabel({ children, required }: { children: React.ReactNode; requ
             textShadow: required ? '0 0 8px rgba(255,59,59,0.5)' : 'none',
           }}
         >
-          {required ? 'Required' : 'Optional'}
+          {required ? t('Required') : t('Optional')}
         </span>
       )}
     </p>
@@ -117,6 +120,7 @@ function CommsSlider({ chat, voice, onChange }: {
   voice: string
   onChange: (chat: 'yes' | 'no', voice: 'yes' | 'no') => void
 }) {
+  const { t } = useT()
   const chatOn = chat === 'yes'
   const voiceOn = voice === 'yes'
   const activeIndex = chatOn && voiceOn ? 3 : voiceOn ? 2 : chatOn ? 1 : 0
@@ -138,7 +142,7 @@ function CommsSlider({ chat, voice, onChange }: {
           letterSpacing: '0.04em',
           textTransform: 'uppercase',
         }}>
-          {COMMS_STYLE_LABELS[activeIndex]}
+          {t(COMMS_STYLE_LABELS[activeIndex])}
         </span>
       </div>
 
@@ -184,7 +188,7 @@ function CommsSlider({ chat, voice, onChange }: {
                 whiteSpace: 'nowrap',
               }}
             >
-              {label}
+              {t(label)}
             </span>
           ))}
         </div>
@@ -244,6 +248,7 @@ function RoleMatchRadioRow({ value, onChange, columns }: {
   onChange: (v: number) => void
   columns: number
 }) {
+  const { t } = useT()
   return (
     <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: '6px' }}>
       {ROLE_MATCH_OPTIONS.map((opt) => {
@@ -272,10 +277,10 @@ function RoleMatchRadioRow({ value, onChange, columns }: {
             />
             <span>
               <span style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: isSelected ? '#e8a020' : 'rgba(255,255,255,0.8)', userSelect: 'none' }}>
-                {opt.label}
+                {t(opt.label)}
               </span>
               <span style={{ display: 'block', fontSize: '10px', color: 'rgba(255,255,255,0.35)', userSelect: 'none', marginTop: '1px' }}>
-                {opt.subtitle}
+                {t(opt.subtitle)}
               </span>
             </span>
           </label>
@@ -289,6 +294,7 @@ function RoleMatchRadioRow({ value, onChange, columns }: {
 
 export default function ProfileForm() {
   const router = useRouter()
+  const { t } = useT()
   const { selectedGame, profileAnswers, updateProfileAnswer } = useApp()
   const width = useWindowWidth()
   const isTablet = width < TABLET_BREAKPOINT
@@ -388,7 +394,7 @@ export default function ProfileForm() {
       <div style={{ marginBottom: '32px' }}>
         <WelcomeBanner
           game={selectedGame}
-          subtext="Answer honestly — this is how we find your perfect squad."
+          subtext={t('Answer honestly — this is how we find your perfect squad.')}
         />
       </div>
 
@@ -403,7 +409,7 @@ export default function ProfileForm() {
 
           {/* G1 — Skill */}
           <QuestionBlock>
-            <QuestionLabel required={false}>Skill level</QuestionLabel>
+            <QuestionLabel required={false}>{t('Skill level')}</QuestionLabel>
             <Slider
               value={gamesNum('skill')}
               onChange={(v) => updateGamesmanship('skill', v)}
@@ -414,13 +420,13 @@ export default function ProfileForm() {
           {/* G2 — In-game username: per-game, and required — squadmates can't invite you without it */}
           <QuestionBlock>
             <QuestionLabel required={true}>
-              In-game username{selectedGame ? ` for ${selectedGame.name}` : ''}
+              {selectedGame ? t('In-game username for {game}', { game: selectedGame.name }) : t('In-game username')}
             </QuestionLabel>
             <input
               type="text"
               value={usernameFor(profileAnswers, key)}
               onChange={(e) => updateGameUsername(e.target.value)}
-              placeholder="e.g. ShadowRook"
+              placeholder={t('e.g. ShadowRook')}
               style={{
                 width: '100%',
                 padding: '11px 14px',
@@ -435,13 +441,13 @@ export default function ProfileForm() {
               }}
             />
             <p style={{ margin: '6px 0 0', fontSize: '10px', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>
-              This is specific to this game — build a profile for another game and you&apos;ll set a different username.
+              {t("This is specific to this game — build a profile for another game and you'll set a different username.")}
             </p>
           </QuestionBlock>
 
           {/* G3 — Role matching style (SPEC_AMENDMENT_08 FIX 2) */}
           <QuestionBlock>
-            <QuestionLabel required={false}>Role matching style</QuestionLabel>
+            <QuestionLabel required={false}>{t('Role matching style')}</QuestionLabel>
             <RoleMatchRadioRow
               value={(() => {
                 const group = gamesmanshipGroupFor(profileAnswers, key)
@@ -455,7 +461,7 @@ export default function ProfileForm() {
           {/* G4 — Roles */}
           {gq?.roles && gq.roles.length > 0 && (
             <QuestionBlock>
-              <QuestionLabel required={true}>What&apos;s your role?</QuestionLabel>
+              <QuestionLabel required={true}>{t("What's your role?")}</QuestionLabel>
               <div
                 style={{
                   display: 'grid',
@@ -510,7 +516,7 @@ export default function ProfileForm() {
                             userSelect: 'none',
                           }}
                         >
-                          {role.label}
+                          {t(role.label)}
                         </span>
                         {role.subtitle && (
                           <span
@@ -522,7 +528,7 @@ export default function ProfileForm() {
                               marginTop: '1px',
                             }}
                           >
-                            {role.subtitle}
+                            {t(role.subtitle)}
                           </span>
                         )}
                       </span>
@@ -536,7 +542,7 @@ export default function ProfileForm() {
           {/* G5 — Maps */}
           {gq?.maps && gq.maps.length > 0 && (
             <QuestionBlock>
-              <QuestionLabel required={true}>Which maps do you know well?</QuestionLabel>
+              <QuestionLabel required={true}>{t('Which maps do you know well?')}</QuestionLabel>
               <CheckboxGrid
                 options={gq.maps}
                 selected={gamesArr('maps')}
@@ -549,7 +555,7 @@ export default function ProfileForm() {
           {/* G6 — Weapons: each category unfolds on click instead of a native <select> */}
           {gq?.weapons && gq.weapons.length > 0 && (
             <QuestionBlock>
-              <QuestionLabel required={true}>Which weapons do you run?</QuestionLabel>
+              <QuestionLabel required={true}>{t('Which weapons do you run?')}</QuestionLabel>
               {gq.weapons.map((cat) => {
                 const isOpen = !!openWeaponCats[cat.category]
                 return (
@@ -572,7 +578,7 @@ export default function ProfileForm() {
                         fontFamily: 'inherit',
                       }}
                     >
-                      <span className="sub-heading weapon-category-title">{cat.category}</span>
+                      <span className="sub-heading weapon-category-title">{t(cat.category)}</span>
                       {/* Points right when collapsed, down when expanded */}
                       <span
                         style={{
@@ -607,7 +613,7 @@ export default function ProfileForm() {
 
           {/* V1 — Rage level */}
           <QuestionBlock>
-            <QuestionLabel required={false}>Rage level</QuestionLabel>
+            <QuestionLabel required={false}>{t('Rage level')}</QuestionLabel>
             <Slider
               value={nestedNum('vibeCheck', 'rageLevel')}
               onChange={(v) => updateNested('vibeCheck', 'rageLevel', v)}
@@ -617,7 +623,7 @@ export default function ProfileForm() {
 
           {/* V2 — Personality */}
           <QuestionBlock>
-            <QuestionLabel required={true}>Personality vibe <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>(pick all that apply)</span></QuestionLabel>
+            <QuestionLabel required={true}>{t('Personality vibe')} <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>{t('(pick all that apply)')}</span></QuestionLabel>
             <div
               style={{
                 display: 'grid',
@@ -657,7 +663,7 @@ export default function ProfileForm() {
                       style={{ accentColor: '#e8a020', width: '13px', height: '13px', flexShrink: 0, cursor: 'pointer' }}
                     />
                     <span style={{ fontSize: '12px', color: isSelected ? '#e8a020' : 'rgba(255,255,255,0.7)', userSelect: 'none', lineHeight: 1.3 }}>
-                      {opt}
+                      {t(opt)}
                     </span>
                   </label>
                 )
@@ -678,12 +684,12 @@ export default function ProfileForm() {
               lineHeight: 1.4,
             }}
           >
-            Languages determine your match score. Chat and mic preferences are shown to potential squadmates.
+            {t('Languages determine your match score. Chat and mic preferences are shown to potential squadmates.')}
           </p>
 
           {/* C1 — Comms style (replaces separate chat/voice yes-no toggles) */}
           <QuestionBlock>
-            <QuestionLabel required={false}>In-game Comms Style</QuestionLabel>
+            <QuestionLabel required={false}>{t('In-game Comms Style')}</QuestionLabel>
             <CommsSlider
               chat={nestedStr('comms', 'willingToChat')}
               voice={nestedStr('comms', 'willingToSpeak')}
@@ -693,7 +699,7 @@ export default function ProfileForm() {
 
           {/* C2 — Languages */}
           <QuestionBlock>
-            <QuestionLabel required={true}>Languages you play in</QuestionLabel>
+            <QuestionLabel required={true}>{t('Languages you play in')}</QuestionLabel>
             <LanguagePicker
               selected={nestedArr('comms', 'languages')}
               onChange={(v) => updateNested('comms', 'languages', v)}
@@ -739,10 +745,10 @@ export default function ProfileForm() {
                 color: '#e8a020',
               }}
             >
-              Still required
+              {t('Still required')}
             </p>
             <p style={{ margin: 0, fontSize: '11px', color: '#8b95a5', lineHeight: 1.5 }}>
-              {missingRequired.join(' · ')}
+              {missingRequired.map((m) => t(m)).join(' · ')}
             </p>
           </div>
         )}
@@ -765,7 +771,7 @@ export default function ProfileForm() {
             boxShadow: canSubmit ? '0 4px 20px rgba(232,160,32,0.3)' : 'none',
           }}
         >
-          FIND MY SQUAD →
+          {t('FIND MY SQUAD →')}
         </button>
       </div>
     </div>

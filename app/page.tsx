@@ -1,5 +1,6 @@
 import LoginCard from '@/components/auth/LoginCard'
 import AnimatedBackground from '@/components/ui/AnimatedBackground'
+import LanguageSwitcher from '@/components/ui/LanguageSwitcher'
 
 export default function LoginPage() {
   return (
@@ -59,6 +60,10 @@ export default function LoginPage() {
           zIndex: 0,
         }}
       />
+
+      <div style={{ position: 'absolute', top: '16px', insetInlineEnd: '20px', zIndex: 2 }}>
+        <LanguageSwitcher />
+      </div>
 
       <LoginCard />
     </div>
