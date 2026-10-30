@@ -1,3 +1,7 @@
+'use client'
+
+import { useT } from '@/context/I18nContext'
+
 function getScoreColor(value: number): string {
   if (value >= 90) return '#22c55e'
   if (value >= 80) return '#86efac'
@@ -7,6 +11,7 @@ function getScoreColor(value: number): string {
 }
 
 export default function OverallScore({ value }: { value: number }) {
+  const { t } = useT()
   const color = getScoreColor(value)
   return (
     <div style={{ marginBottom: '48px' }}>
@@ -31,7 +36,7 @@ export default function OverallScore({ value }: { value: number }) {
           {value}%
         </span>
         <span style={{ fontSize: '14px', color: '#8b95a5' }}>
-          Overall squad compatibility
+          {t('Overall squad compatibility')}
         </span>
       </div>
       <div

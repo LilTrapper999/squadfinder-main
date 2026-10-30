@@ -2,14 +2,18 @@
 
 import { useState } from 'react'
 import { Game } from '@/lib/types'
+import { useT } from '@/context/I18nContext'
 
 interface GameTileProps {
   game: Game
   selected: boolean
   onSelect: () => void
+  /** How many players are currently looking for a team in this game */
+  lookingCount?: number
 }
 
-export default function GameTile({ game, selected, onSelect }: GameTileProps) {
+export default function GameTile({ game, selected, onSelect, lookingCount = 0 }: GameTileProps) {
+  const { t } = useT()
   const [hovered, setHovered] = useState(false)
   const [imgError, setImgError] = useState(false)
 
@@ -60,6 +64,45 @@ export default function GameTile({ game, selected, onSelect }: GameTileProps) {
         />
       )}
 
+      {/* Players currently looking for a team in this game (live presence count) */}
+      <div
+        title={t('{count} looking for a team', { count: lookingCount })}
+        style={{
+          position: 'absolute',
+          top: '6px',
+          left: '6px',
+          zIndex: 2,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          padding: '2px 6px',
+          borderRadius: '10px',
+          backgroundColor: 'rgba(10,11,15,0.75)',
+          border: `1px solid ${lookingCount > 0 ? 'rgba(34,197,94,0.45)' : 'rgba(255,255,255,0.12)'}`,
+        }}
+      >
+        <span
+          aria-hidden="true"
+          style={{
+            width: '6px',
+            height: '6px',
+            borderRadius: '50%',
+            backgroundColor: lookingCount > 0 ? '#22c55e' : '#4a5568',
+            boxShadow: lookingCount > 0 ? '0 0 5px rgba(34,197,94,0.8)' : 'none',
+          }}
+        />
+        <span
+          className="sub-heading"
+          style={{
+            fontSize: '10px',
+            fontWeight: 700,
+            color: lookingCount > 0 ? '#22c55e' : 'rgba(255,255,255,0.4)',
+          }}
+        >
+          {lookingCount}
+        </span>
+      </div>
+
       {/* Mobile badge — distinguishes separate mobile catalogue entries (SPEC_AMENDMENT_11 FIX 4) */}
       {game.platform === 'Mobile' && (
         <div
@@ -87,7 +130,7 @@ export default function GameTile({ game, selected, onSelect }: GameTileProps) {
               color: '#e8a020',
             }}
           >
-            MOBILE
+            {t('MOBILE')}
           </span>
         </div>
       )}

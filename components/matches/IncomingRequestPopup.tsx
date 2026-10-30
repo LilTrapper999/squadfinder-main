@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { IncomingRequest } from '@/lib/types'
+import { useT } from '@/context/I18nContext'
 
 interface IncomingRequestPopupProps {
   request: IncomingRequest
@@ -29,6 +30,7 @@ export default function IncomingRequestPopup({
   onDeclineAndBlock,
   onExpire,
 }: IncomingRequestPopupProps) {
+  const { t } = useT()
   const DURATION = 20 // seconds
   const [secondsLeft, setSecondsLeft] = useState(DURATION)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -60,9 +62,9 @@ export default function IncomingRequestPopup({
     'rgba(255,255,255,0.3)'
 
   const statusText =
-    request.senderStatus === 'ingame' ? `Live — ${request.senderStatusGame ?? 'In Game'}` :
-    request.senderStatus === 'searching' ? 'Searching for a squad' :
-    'Offline'
+    request.senderStatus === 'ingame' ? t('Live — {game}', { game: request.senderStatusGame ?? t('In Game') }) :
+    request.senderStatus === 'searching' ? t('Searching for a squad') :
+    t('Offline')
 
   const statusColor =
     request.senderStatus === 'ingame' ? '#22c55e' :
@@ -112,7 +114,7 @@ export default function IncomingRequestPopup({
             className="main-heading"
             style={{ fontSize: '22px', margin: 0 }}
           >
-            MATCH REQUEST{queueLength > 0 ? ` (${queueLength} more waiting)` : ''}
+            {queueLength > 0 ? t('MATCH REQUEST ({count} more waiting)', { count: queueLength }) : t('MATCH REQUEST')}
           </h2>
         </div>
 
@@ -162,7 +164,7 @@ export default function IncomingRequestPopup({
 
             {/* Overall match */}
             <p style={{ margin: 0, fontSize: '13px', color: overallColor, fontWeight: 600 }}>
-              Overall Match: {request.overallMatch}%
+              {t('Overall Match: {score}%', { score: request.overallMatch })}
             </p>
           </div>
         </div>
@@ -187,7 +189,7 @@ export default function IncomingRequestPopup({
                 transition: 'all 0.15s ease',
               }}
             >
-              Decline
+              {t('Decline')}
             </button>
 
             {/* Decline & Block */}
@@ -207,7 +209,7 @@ export default function IncomingRequestPopup({
                 transition: 'all 0.15s ease',
               }}
             >
-              Decline &amp; Block
+              {t('Decline & Block')}
             </button>
           </div>
 
@@ -229,7 +231,7 @@ export default function IncomingRequestPopup({
               transition: 'all 0.15s ease',
             }}
           >
-            Accept
+            {t('Accept')}
           </button>
         </div>
 
@@ -256,7 +258,7 @@ export default function IncomingRequestPopup({
               />
             </div>
             <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', width: '28px', textAlign: 'right', flexShrink: 0 }}>
-              {secondsLeft}s
+              {t('{seconds}s', { seconds: secondsLeft })}
             </span>
           </div>
         </div>

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useApp } from '@/context/AppContext'
+import { useT } from '@/context/I18nContext'
 import { GAME_QUESTIONS, findGameById } from '@/lib/mockData'
 import { calculateMatch } from '@/lib/matching'
 import { buildProfileFromAnswers, gameKey } from '@/lib/profileAnswers'
@@ -63,6 +64,7 @@ function bucketRequests(requests: SquadRequest[]): CategoryGroup[] {
 
 export default function NotificationsPage() {
   const router = useRouter()
+  const { t } = useT()
   const {
     profileAnswers,
     squadRequests,
@@ -144,10 +146,10 @@ export default function NotificationsPage() {
               onClick={() => router.push('/squad-matches')}
               style={{ background: 'none', border: 'none', color: '#4a5568', fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
             >
-              ← Back
+              {t('← Back')}
             </button>
             <span style={{ color: '#4a5568', fontSize: '12px', flexShrink: 0 }}>/</span>
-            <span style={{ color: '#8b95a5', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Notifications</span>
+            <span style={{ color: '#8b95a5', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('Notifications')}</span>
           </div>
         </div>
       </div>
@@ -155,7 +157,7 @@ export default function NotificationsPage() {
       {/* Page heading + instructions */}
       <div style={{ padding: isMobile ? '16px 16px 0' : '20px 28px 0', flexShrink: 0 }}>
         <h1 className="main-heading" style={{ fontSize: 'clamp(24px, 6vw, 40px)', margin: 0 }}>
-          NOTIFICATIONS
+          {t('NOTIFICATIONS')}
         </h1>
 
         <div
@@ -177,15 +179,13 @@ export default function NotificationsPage() {
             }}
           >
             {squadRequests.length === 0
-              ? 'No squad requests waiting'
-              : `${squadRequests.length} request${squadRequests.length === 1 ? '' : 's'} waiting`}
+              ? t('No squad requests waiting')
+              : squadRequests.length === 1
+              ? t('1 request waiting')
+              : t('{count} requests waiting', { count: squadRequests.length })}
           </p>
           <p style={{ margin: 0, fontSize: '13px', color: '#8b95a5', lineHeight: 1.6 }}>
-            Requests are filed by game. Expand a <span style={{ color: '#e8a020' }}>category</span> on the
-            left and pick a <span style={{ color: '#e8a020' }}>game</span> to see everyone who asked to
-            squad up on it. On each card, click{' '}
-            <span style={{ color: '#e8a020' }}>any percentage</span> to read the answers they gave for
-            that category, then Accept, Decline, or Decline &amp; Block.
+            {t('Requests are filed by game. Expand a category on the left and pick a game to see everyone who asked to squad up on it. On each card, click any percentage to read the answers they gave for that category, then Accept, Decline, or Decline & Block.')}
           </p>
         </div>
       </div>
@@ -217,11 +217,10 @@ export default function NotificationsPage() {
             }}
           >
             <p className="sub-heading" style={{ margin: 0, fontSize: '18px' }}>
-              ALL CAUGHT UP
+              {t('ALL CAUGHT UP')}
             </p>
             <p style={{ margin: 0, fontSize: '13px', color: '#8b95a5', maxWidth: '380px', lineHeight: 1.5 }}>
-              When another player sends you a squad request it lands here, grouped under the game
-              they want to play.
+              {t('When another player sends you a squad request it lands here, grouped under the game they want to play.')}
             </p>
           </div>
         ) : (
@@ -290,7 +289,7 @@ export default function NotificationsPage() {
                             textOverflow: 'ellipsis',
                           }}
                         >
-                          {CATEGORY_LABELS[category]}
+                          {t(CATEGORY_LABELS[category])}
                         </span>
                       </span>
                       <span
@@ -378,7 +377,9 @@ export default function NotificationsPage() {
                     {activeBucket.game.name}
                   </p>
                   <p style={{ margin: '0 0 16px', fontSize: '12px', color: '#8b95a5' }}>
-                    {activeBucket.requests.length} request{activeBucket.requests.length === 1 ? '' : 's'} for this game
+                    {activeBucket.requests.length === 1
+                      ? t('1 request for this game')
+                      : t('{count} requests for this game', { count: activeBucket.requests.length })}
                   </p>
 
                   <div
@@ -413,7 +414,7 @@ export default function NotificationsPage() {
                   {/* A request for a game with no question set can't be scored meaningfully */}
                   {!GAME_QUESTIONS[gameKey(activeBucket.game)] && (
                     <p style={{ margin: '16px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
-                      No question set for this game yet — scores are indicative only.
+                      {t('No question set for this game yet — scores are indicative only.')}
                     </p>
                   )}
                 </>

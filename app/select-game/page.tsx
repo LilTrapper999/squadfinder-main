@@ -6,10 +6,12 @@ import { Game, GameCategory } from '@/lib/types'
 import { useApp } from '@/context/AppContext'
 import GameGrid from '@/components/game-select/GameGrid'
 import AnimatedBackground from '@/components/ui/AnimatedBackground'
-import NotificationBell from '@/components/ui/NotificationBell'
+import HeaderActions from '@/components/ui/HeaderActions'
+import { useT } from '@/context/I18nContext'
 
 export default function SelectGamePage() {
   const router = useRouter()
+  const { t } = useT()
   const { setSelectedGame, selectedGame } = useApp()
   const [activeCategory, setActiveCategory] = useState<GameCategory>('extraction')
   const [localGame, setLocalGame] = useState<Game | null>(selectedGame)
@@ -101,14 +103,14 @@ export default function SelectGamePage() {
               fontFamily: 'inherit',
             }}
           >
-            ← Back
+            {t('← Back')}
           </button>
           <span style={{ color: '#4a5568', fontSize: '12px' }}>/</span>
-          <span style={{ color: '#8b95a5', fontSize: '13px' }}>Select Game</span>
+          <span style={{ color: '#8b95a5', fontSize: '13px' }}>{t('Select Game')}</span>
         </div>
 
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
-          <NotificationBell />
+          <HeaderActions />
         </div>
       </div>
 

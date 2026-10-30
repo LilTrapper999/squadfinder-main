@@ -3,9 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useApp } from '@/context/AppContext'
+import { useT } from '@/context/I18nContext'
+import { SHOW_DEV_FEATURES } from '@/lib/launch'
 
 export default function LoginCard() {
   const router = useRouter()
+  const { t } = useT()
   const { isReturningUser, setIsReturningUser } = useApp()
   const [rememberMe, setRememberMe] = useState(false)
   const [hoveredGoogle, setHoveredGoogle] = useState(false)
@@ -61,7 +64,7 @@ export default function LoginCard() {
           lineHeight: 1.2,
         }}
       >
-        FIND YOUR SQUAD
+        {t('FIND YOUR SQUAD')}
       </h1>
 
       {/* Subheading */}
@@ -73,7 +76,7 @@ export default function LoginCard() {
           lineHeight: 1.5,
         }}
       >
-        Connect with players who match your style, game, and version.
+        {t('Connect with players who match your style, game, and version.')}
       </p>
 
       {/* Google button */}
@@ -105,11 +108,12 @@ export default function LoginCard() {
           <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
         </svg>
         <span style={{ fontSize: '15px', fontWeight: 500, color: '#ffffff' }}>
-          Continue with Google
+          {t('Continue with Google')}
         </span>
       </button>
 
-      {/* Dev bypass — skip OAuth */}
+      {/* Dev bypass — skip OAuth. Removed at launch (see lib/launch.ts). */}
+      {SHOW_DEV_FEATURES && (
       <button
         onClick={handleDevSkip}
         onMouseEnter={() => setHoveredSkip(true)}
@@ -133,6 +137,7 @@ export default function LoginCard() {
       >
         ⚡ Enter Without Login (Dev)
       </button>
+      )}
 
       {/* Remember me */}
       <label
@@ -150,10 +155,11 @@ export default function LoginCard() {
           onChange={() => setRememberMe(!rememberMe)}
           style={{ accentColor: '#e8a020', width: '16px', height: '16px', cursor: 'pointer' }}
         />
-        <span style={{ fontSize: '14px', color: '#8b95a5' }}>Remember me</span>
+        <span style={{ fontSize: '14px', color: '#8b95a5' }}>{t('Remember me')}</span>
       </label>
 
-      {/* Divider */}
+      {/* Divider + returning-user toggle below are demo-only. Removed at launch (see lib/launch.ts). */}
+      {SHOW_DEV_FEATURES && (<>
       <div
         style={{
           height: '1px',
@@ -182,6 +188,7 @@ export default function LoginCard() {
           <span style={{ color: '#e8a020', fontSize: '11px' }}>(demo)</span>
         </span>
       </label>
+      </>)}
     </div>
   )
 }

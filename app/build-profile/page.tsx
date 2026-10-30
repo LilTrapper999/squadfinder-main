@@ -3,13 +3,15 @@
 import { useRouter } from 'next/navigation'
 import ProfileForm from '@/components/profile/ProfileForm'
 import AnimatedBackground from '@/components/ui/AnimatedBackground'
-import NotificationBell from '@/components/ui/NotificationBell'
+import HeaderActions from '@/components/ui/HeaderActions'
 import { useWindowWidth } from '@/lib/useWindowWidth'
+import { useT } from '@/context/I18nContext'
 
 const MOBILE_BREAKPOINT = 768
 
 export default function BuildProfilePage() {
   const router = useRouter()
+  const { t } = useT()
   const isMobile = useWindowWidth() < MOBILE_BREAKPOINT
 
   return (
@@ -66,20 +68,20 @@ export default function BuildProfilePage() {
               flexShrink: 0,
             }}
           >
-            ← Back
+            {t('← Back')}
           </button>
           {!isMobile && (
             <>
               <span style={{ color: '#4a5568', fontSize: '12px' }}>/</span>
-              <span style={{ color: '#4a5568', fontSize: '13px' }}>Select Game</span>
+              <span style={{ color: '#4a5568', fontSize: '13px' }}>{t('Select Game')}</span>
             </>
           )}
           <span style={{ color: '#4a5568', fontSize: '12px' }}>/</span>
-          <span style={{ color: '#8b95a5', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Build Profile</span>
+          <span style={{ color: '#8b95a5', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('Build Profile')}</span>
         </div>
 
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-          <NotificationBell />
+          <HeaderActions />
         </div>
       </div>
 
@@ -98,7 +100,7 @@ export default function BuildProfilePage() {
         {/* Page heading */}
         <div style={{ marginBottom: '24px' }}>
           <h1 className="main-heading" style={{ fontSize: 'clamp(24px, 6vw, 40px)', margin: 0 }}>
-            HELP US FIND YOUR SQUAD
+            {t('HELP US FIND YOUR SQUAD')}
           </h1>
         </div>
 

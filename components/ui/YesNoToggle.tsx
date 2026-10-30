@@ -1,11 +1,14 @@
 'use client'
 
+import { useT } from '@/context/I18nContext'
+
 interface YesNoToggleProps {
   value: 'yes' | 'no' | null
   onChange: (v: 'yes' | 'no') => void
 }
 
 export default function YesNoToggle({ value, onChange }: YesNoToggleProps) {
+  const { t } = useT()
   return (
     <div style={{ display: 'flex', gap: '10px' }}>
       {(['yes', 'no'] as const).map((opt) => {
@@ -30,7 +33,7 @@ export default function YesNoToggle({ value, onChange }: YesNoToggleProps) {
               transition: 'all 0.15s ease',
             }}
           >
-            {opt === 'yes' ? 'Yes' : 'No'}
+            {opt === 'yes' ? t('Yes') : t('No')}
           </button>
         )
       })}

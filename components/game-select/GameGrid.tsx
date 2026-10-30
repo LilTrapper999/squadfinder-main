@@ -12,6 +12,8 @@ import { GAMES_BY_CATEGORY, GAME_QUESTIONS } from '@/lib/mockData'
 import { useApp } from '@/context/AppContext'
 import { gameKey, isProfileComplete } from '@/lib/profileAnswers'
 import { useWindowWidth } from '@/lib/useWindowWidth'
+import { useLookingCounts } from '@/lib/useLookingPresence'
+import { useT } from '@/context/I18nContext'
 import GameTile from './GameTile'
 import GameAlliesPanel from './GameAlliesPanel'
 
@@ -49,8 +51,10 @@ export default function GameGrid({
   onGameSelect,
 }: GameGridProps) {
   const router = useRouter()
+  const { t } = useT()
   const { setSelectedVersion, isReturningUser, profileAnswers } = useApp()
   const games = GAMES_BY_CATEGORY[category] ?? []
+  const lookingCounts = useLookingCounts()
   const gridRef = useRef<HTMLDivElement>(null)
   const [cols, setCols] = useState(3)
   const [hoverTab, setHoverTab] = useState<GameCategory | null>(null)
@@ -125,7 +129,7 @@ export default function GameGrid({
           className="main-heading"
           style={{ fontSize: 'clamp(24px, 6vw, 40px)', alignSelf: 'flex-start', verticalAlign: 'top', margin: 0 }}
         >
-          CHOOSE YOUR BATTLEFIELD
+          {t('CHOOSE YOUR BATTLEFIELD')}
         </h2>
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '16px' }}>
@@ -158,7 +162,7 @@ export default function GameGrid({
                   whiteSpace: 'nowrap',
                 }}
               >
-                {cat.label}
+                {t(cat.label)}
               </button>
             )
           })}
@@ -192,6 +196,7 @@ export default function GameGrid({
                 game={game}
                 selected={selectedGame?.id === game.id}
                 onSelect={() => onGameSelect(game)}
+                lookingCount={lookingCounts[game.id] ?? 0}
               />
             ))}
           </div>
@@ -234,7 +239,7 @@ export default function GameGrid({
               boxShadow: '0 4px 20px rgba(232,160,32,0.3)',
             }}
           >
-            Find My Squad →
+            {t('Find My Squad →')}
           </button>
         </div>
       )}

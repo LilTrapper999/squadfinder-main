@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Game } from '@/lib/types'
+import { useT } from '@/context/I18nContext'
 
 interface WelcomeBannerProps {
   game: Game | null
@@ -14,6 +15,7 @@ interface WelcomeBannerProps {
  * identical — the selected game is shown as its catalogue logo rather than spelled out.
  */
 export default function WelcomeBanner({ game, subtext }: WelcomeBannerProps) {
+  const { t } = useT()
   const [imgError, setImgError] = useState(false)
   const showLogo = !!game?.logoUrl && !imgError
 
@@ -81,7 +83,7 @@ export default function WelcomeBanner({ game, subtext }: WelcomeBannerProps) {
             fontFamily: 'var(--font-rajdhani), sans-serif',
           }}
         >
-          Welcome, Commander
+          {t('Welcome, Commander')}
         </p>
         <p style={{ margin: 0, fontSize: '13px', color: '#8b95a5', lineHeight: 1.5 }}>
           {subtext}

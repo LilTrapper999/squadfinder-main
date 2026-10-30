@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import NotificationBell from '@/components/ui/NotificationBell'
+import HeaderActions from '@/components/ui/HeaderActions'
 
 /**
  * Global top navigation bar — rendered by root layout on every page.
@@ -46,7 +46,7 @@ export default function TopNav() {
         </svg>
       </div>
 
-      <NotificationBell />
+      <HeaderActions />
     </div>
   )
 }

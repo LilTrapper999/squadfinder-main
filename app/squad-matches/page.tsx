@@ -3,23 +3,25 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useApp } from '@/context/AppContext'
+import { useT } from '@/context/I18nContext'
 import { MOCK_MATCHES, MOCK_OPPONENT_PROFILES } from '@/lib/mockData'
 import { MatchPlayer } from '@/lib/types'
 import { calculateMatch } from '@/lib/matching'
-import { buildProfileFromAnswers, gameKey } from '@/lib/profileAnswers'
+import { buildProfileFromAnswers, gameKey, usernameFor } from '@/lib/profileAnswers'
 import { useWindowWidth } from '@/lib/useWindowWidth'
+import { useAnnounceLooking } from '@/lib/useLookingPresence'
 import MatchCard from '@/components/matches/MatchCard'
 import AlliesPanel from '@/components/matches/AlliesPanel'
 import IncomingRequestPopup from '@/components/matches/IncomingRequestPopup'
 import AnimatedBackground from '@/components/ui/AnimatedBackground'
-import NotificationBell from '@/components/ui/NotificationBell'
-import WelcomeBanner from '@/components/ui/WelcomeBanner'
+import HeaderActions from '@/components/ui/HeaderActions'
 
 const MOBILE_BREAKPOINT = 768
 const TABLET_BREAKPOINT = 1100
 
 export default function SquadMatchesPage() {
   const router = useRouter()
+  const { t } = useT()
   const {
     selectedGame,
     profileAnswers,
@@ -32,6 +34,17 @@ export default function SquadMatchesPage() {
 
   // Cards blocked via popup Decline & Block
   const [blockedMatchIds, setBlockedMatchIds] = useState<string[]>([])
+
+  // The main area is for people you don't know yet — existing allies are reached through the
+  // allies panel instead. Captured once on load, not live: a card you just squadded up with
+  // has to stay put so its "Squad Accepted / Go to chat" state remains visible.
+  const [knownAllies] = useState(() => ({
+    ids: new Set(allies.map((a) => a.id)),
+    usernames: new Set(allies.map((a) => a.username)),
+  }))
+
+  // Tell select-game's player counts that this user is currently looking for a team.
+  useAnnounceLooking(selectedGame?.id ?? null)
 
   // Hover state for Return to Homepage button
   const [hoverReturn, setHoverReturn] = useState(false)
@@ -46,6 +59,7 @@ export default function SquadMatchesPage() {
   // Live-calculated matches: pair each mock display identity (username/label/status)
   // with the corresponding opponent profile and run the real matching algorithm.
   const myProfile = buildProfileFromAnswers(gameKey(selectedGame), profileAnswers)
+  const username = usernameFor(profileAnswers, gameKey(selectedGame)).trim()
   const computedMatches: MatchPlayer[] = MOCK_MATCHES.map((match, i) => {
     const opponent = MOCK_OPPONENT_PROFILES[i]
     if (!opponent) return match
@@ -67,6 +81,7 @@ export default function SquadMatchesPage() {
     .sort((a, b) => b.overall - a.overall)
     .filter((p) => {
       if (blockedMatchIds.includes(p.id)) return false
+      if (knownAllies.ids.has(p.id) || knownAllies.usernames.has(p.revealedUsername)) return false
       if (p.status === 'offline') return false
       if (p.status === 'ingame' && !notificationsEnabled) return false
       return true
@@ -140,7 +155,7 @@ export default function SquadMatchesPage() {
             color: '#0a0b0f',
             letterSpacing: '0.08em',
           }}>
-            YOU&apos;RE IN A SQUAD!
+            {t("YOU'RE IN A SQUAD!")}
           </span>
         </div>
       )}
@@ -178,10 +193,10 @@ export default function SquadMatchesPage() {
               onClick={() => router.push('/build-profile')}
               style={{ background: 'none', border: 'none', color: '#4a5568', fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
             >
-              ← Back
+              {t('← Back')}
             </button>
             <span style={{ color: '#4a5568', fontSize: '12px', flexShrink: 0 }}>/</span>
-            <span style={{ color: '#8b95a5', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Squad Matches</span>
+            <span style={{ color: '#8b95a5', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('Squad Matches')}</span>
           </div>
         </div>
 
@@ -204,14 +219,14 @@ export default function SquadMatchesPage() {
             </div>
           )}
 
-          <NotificationBell />
+          <HeaderActions />
         </div>
       </div>
 
       {/* Page heading — at the very top of the page, matching the other pages' heading size */}
       <div style={{ padding: isMobile ? '16px 16px 0' : '20px 28px 0', flexShrink: 0 }}>
         <h1 className="main-heading" style={{ fontSize: 'clamp(24px, 6vw, 40px)', margin: 0 }}>
-          YOUR SQUAD AWAITS
+          {username ? t('{name}, YOUR SQUAD AWAITS', { name: username }) : t('YOUR SQUAD AWAITS')}
         </h1>
       </div>
 
@@ -231,23 +246,16 @@ export default function SquadMatchesPage() {
             color: '#ffffff',
           }}
         >
-          {/* Instructions + Change Details — where the heading used to sit */}
-          <div style={{ padding: isMobile ? '16px 16px 0' : '24px 28px 0', flexShrink: 0, display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'stretch', gap: '16px' }}>
-            {/* Same letterbox as build-profile — only the subtext differs */}
-            <div style={{ flex: 1 }}>
-              <WelcomeBanner
-                game={selectedGame}
-                subtext={`Find more allies for ${selectedGame?.name ?? 'your game'}.`}
-              />
-            </div>
+          {/* Change Details — sits just above the cards; the page title is the only other thing up here */}
+          <div style={{ padding: isMobile ? '12px 16px 0' : '16px 28px 0', flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
             <button
               onClick={() => router.push('/build-profile')}
               onMouseEnter={() => setHoverChangeDetails(true)}
               onMouseLeave={() => setHoverChangeDetails(false)}
               style={{
                 flexShrink: 0,
-                padding: isMobile ? '13px 24px' : '0 24px',
-                borderRadius: '10px',
+                padding: '8px 20px',
+                borderRadius: '8px',
                 border: `1px solid ${hoverChangeDetails ? '#e8a020' : 'rgba(232,160,32,0.3)'}`,
                 backgroundColor: hoverChangeDetails ? 'rgba(232,160,32,0.1)' : 'transparent',
                 color: '#e8a020',
@@ -260,7 +268,7 @@ export default function SquadMatchesPage() {
                 whiteSpace: 'nowrap',
               }}
             >
-              Change Details
+              {t('Change Details')}
             </button>
           </div>
 
@@ -293,7 +301,7 @@ export default function SquadMatchesPage() {
 
             {/* Privacy footer */}
             <p style={{ margin: '0 0 16px', fontSize: '12px', color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>
-              Usernames are hidden until both players accept. Declined requests are hidden for 1 hour.
+              {t('Usernames are hidden until both players accept. Declined requests are hidden for 1 hour.')}
             </p>
 
             {/* Notification toggle — Prototype only — replace with real Web Notifications permission in Phase 2 */}
@@ -305,7 +313,7 @@ export default function SquadMatchesPage() {
                   onChange={(e) => setNotificationsEnabled(e.target.checked)}
                   style={{ accentColor: '#e8a020', width: '13px', height: '13px', cursor: 'pointer' }}
                 />
-                Show players currently in-game (notifications on)
+                {t('Show players currently in-game (notifications on)')}
               </label>
             </div>
 
@@ -336,7 +344,7 @@ export default function SquadMatchesPage() {
                     // animation comes from .main-heading class
                   }}
                 >
-                  PICK ANOTHER GAME
+                  {t('PICK ANOTHER GAME')}
                 </button>
               </div>
             )}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useWindowWidth } from '@/lib/useWindowWidth'
+import { useT } from '@/context/I18nContext'
 
 const MOBILE_BREAKPOINT = 480
 const TABLET_BREAKPOINT = 900
@@ -21,6 +22,7 @@ interface LanguagePickerProps {
 }
 
 export default function LanguagePicker({ selected, onChange }: LanguagePickerProps) {
+  const { t } = useT()
   const [otherChecked, setOtherChecked] = useState(false)
   const [otherText, setOtherText] = useState('')
   const width = useWindowWidth()
@@ -123,7 +125,7 @@ export default function LanguagePicker({ selected, onChange }: LanguagePickerPro
             style={{ accentColor: '#e8a020', width: '13px', height: '13px', flexShrink: 0, cursor: 'pointer' }}
           />
           <span style={{ fontSize: '12px', color: otherChecked ? '#e8a020' : 'rgba(255,255,255,0.7)', userSelect: 'none' }}>
-            Other
+            {t('Other')}
           </span>
         </label>
       </div>
@@ -136,7 +138,7 @@ export default function LanguagePicker({ selected, onChange }: LanguagePickerPro
             value={otherText}
             onChange={(e) => setOtherText(e.target.value)}
             onBlur={handleOtherBlur}
-            placeholder="Type your language exactly as others would type it"
+            placeholder={t('Type your language exactly as others would type it')}
             required
             style={{
               width: '100%',
@@ -152,7 +154,7 @@ export default function LanguagePicker({ selected, onChange }: LanguagePickerPro
             }}
           />
           <p style={{ margin: '5px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
-            Will be capitalised automatically (e.g. &quot;klingon&quot; → &quot;Klingon&quot;)
+            {t('Will be capitalised automatically (e.g. "klingon" → "Klingon")')}
           </p>
         </div>
       )}

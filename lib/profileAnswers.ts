@@ -118,7 +118,9 @@ export function missingRequiredAnswers(
 
   if (!usernameFor(answers, key).trim()) missing.push('In-game username')
   if (gq?.roles?.length && arr(gamesmanship.roles).length === 0) missing.push('Your role')
-  if (gq?.maps?.length && arr(gamesmanship.maps).length === 0) missing.push('Maps you know well')
+  if (gq?.maps?.length && arr(gamesmanship.maps).length === 0 && gamesmanship.noMaps !== true) {
+    missing.push('Maps you know well')
+  }
   if (gq?.weapons?.length && arr(gamesmanship.weapons).length === 0) missing.push('Weapons you run')
   if (arr(nestedGroup(answers, 'vibeCheck').personality).length === 0) missing.push('Personality vibe')
   if (arr(comms.languages).length === 0) missing.push('Languages you play in')

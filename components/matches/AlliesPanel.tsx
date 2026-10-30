@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Ally } from '@/lib/types'
 import { useApp } from '@/context/AppContext'
+import { useT } from '@/context/I18nContext'
 import { useWindowWidth } from '@/lib/useWindowWidth'
 
 function getScoreColor(value: number): string {
@@ -18,9 +19,19 @@ interface AllyCardProps {
   ally: Ally
 }
 
-/** Sorts pinned allies to the top, otherwise preserves insertion order. */
+/** Pinned allies first, then online before offline; otherwise insertion order (sort is stable). */
 export function sortAllies(allies: Ally[]): Ally[] {
-  return [...allies].sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned))
+  const online = (a: Ally) => Number(a.status !== 'offline')
+  return [...allies].sort(
+    (a, b) => Number(!!b.pinned) - Number(!!a.pinned) || online(b) - online(a)
+  )
+}
+
+/** Dot colour + label for an ally's presence. "Online" covers searching and in-game alike. */
+function presenceOf(status: Ally['status']): { color: string; label: string } {
+  if (status === 'ingame') return { color: '#22c55e', label: 'In game' }
+  if (status === 'searching') return { color: '#22c55e', label: 'Online' }
+  return { color: '#4a5568', label: 'Offline' }
 }
 
 interface IconButtonProps {
@@ -68,8 +79,10 @@ function IconButton({ label, active, activeColor, onClick, children }: IconButto
  */
 export function AllyCard({ ally }: AllyCardProps) {
   const router = useRouter()
+  const { t } = useT()
   const { toggleAllyPinned, toggleAllyBlocked } = useApp()
   const [hovered, setHovered] = useState(false)
+  const presence = presenceOf(ally.status)
 
   // A blocked ally shouldn't open a chat — the whole point is you've stopped talking.
   const canOpenChat = !ally.blocked && !ally.blockedYou
@@ -126,13 +139,31 @@ export function AllyCard({ ally }: AllyCardProps) {
           {ally.username}
         </p>
         <p style={{ margin: 0, fontSize: '12px', color: getScoreColor(ally.overall), fontWeight: 500 }}>
-          {ally.overall}% match
+          {t('{score}% match', { score: ally.overall })}
         </p>
+
+        {/* Online / offline — same on every allies list */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '3px' }}>
+          <span
+            aria-hidden="true"
+            style={{
+              width: '7px',
+              height: '7px',
+              borderRadius: '50%',
+              backgroundColor: presence.color,
+              boxShadow: presence.color === '#22c55e' ? '0 0 6px rgba(34,197,94,0.7)' : 'none',
+              flexShrink: 0,
+            }}
+          />
+          <span style={{ fontSize: '11px', color: presence.color === '#22c55e' ? '#22c55e' : '#8b95a5' }}>
+            {t(presence.label)}
+          </span>
+        </div>
 
         {/* Why the chat is dead — shown on every allies list, per SPEC */}
         {ally.blockedYou && (
           <p style={{ margin: '3px 0 0', fontSize: '10px', color: '#ef4444', fontWeight: 600 }}>
-            User has blocked you
+            {t('User has blocked you')}
           </p>
         )}
       </div>
@@ -140,7 +171,7 @@ export function AllyCard({ ally }: AllyCardProps) {
       {/* Pin (favourite) + dislike (block) */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
         <IconButton
-          label={ally.pinned ? `Unpin ${ally.username}` : `Pin ${ally.username}`}
+          label={ally.pinned ? t('Unpin {name}', { name: ally.username }) : t('Pin {name}', { name: ally.username })}
           active={!!ally.pinned}
           activeColor="#e8a020"
           onClick={() => toggleAllyPinned(ally.id)}
@@ -152,7 +183,7 @@ export function AllyCard({ ally }: AllyCardProps) {
         </IconButton>
 
         <IconButton
-          label={ally.blocked ? `Unblock ${ally.username}` : `Block ${ally.username}`}
+          label={ally.blocked ? t('Unblock {name}', { name: ally.username }) : t('Block {name}', { name: ally.username })}
           active={!!ally.blocked}
           activeColor="#ef4444"
           onClick={() => toggleAllyBlocked(ally.id)}
@@ -174,6 +205,7 @@ interface AlliesPanelProps {
 const MOBILE_BREAKPOINT = 768
 
 export default function AlliesPanel({ allies }: AlliesPanelProps) {
+  const { t } = useT()
   const isMobile = useWindowWidth() < MOBILE_BREAKPOINT
 
   return (
@@ -227,7 +259,7 @@ export default function AlliesPanel({ allies }: AlliesPanelProps) {
             letterSpacing: '0.08em',
           }}
         >
-          YOUR ALLIES ({allies.length})
+          {t('YOUR ALLIES ({count})', { count: allies.length })}
         </p>
       </div>
 
@@ -247,10 +279,10 @@ export default function AlliesPanel({ allies }: AlliesPanelProps) {
             }}
           >
             <p style={{ margin: '0 0 8px', fontSize: '14px', color: '#ffffff', fontFamily: 'var(--font-rajdhani), sans-serif', fontWeight: 700 }}>
-              No allies yet.
+              {t('No allies yet.')}
             </p>
             <p style={{ margin: 0, fontSize: '13px', color: '#8b95a5', lineHeight: 1.5 }}>
-              Accept a squad request to add them as an ally — you&apos;ll be able to chat right away.
+              {t("Accept a squad request to add them as an ally — you'll be able to chat right away.")}
             </p>
           </div>
         ) : (

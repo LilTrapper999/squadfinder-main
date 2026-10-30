@@ -1,5 +1,7 @@
 'use client'
 
+import { useT } from '@/context/I18nContext'
+
 interface SliderProps {
   /** Internal value: 0–100 (displayed as 0.0–10.0) */
   value: number
@@ -15,6 +17,7 @@ interface SliderProps {
 }
 
 export default function Slider({ value, onChange, sliderMinLabel, sliderMaxLabel, tickLabels }: SliderProps) {
+  const { t } = useT()
   const pct = (value / 100) * 100
   const display = (value / 10).toFixed(1)
 
@@ -87,7 +90,7 @@ export default function Slider({ value, onChange, sliderMinLabel, sliderMaxLabel
                   userSelect: 'none',
                 }}
               >
-                {tickLabels[labelIndex]}
+                {t(tickLabels[labelIndex])}
               </span>
             ))}
           </div>
@@ -131,8 +134,8 @@ export default function Slider({ value, onChange, sliderMinLabel, sliderMaxLabel
       {/* Min / max labels (when no tick labels) */}
       {!tickLabels && (sliderMinLabel || sliderMaxLabel) && (
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '-4px' }}>
-          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>{sliderMinLabel ?? ''}</span>
-          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>{sliderMaxLabel ?? ''}</span>
+          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>{sliderMinLabel ? t(sliderMinLabel) : ''}</span>
+          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>{sliderMaxLabel ? t(sliderMaxLabel) : ''}</span>
         </div>
       )}
     </div>

@@ -3,6 +3,7 @@
 import { Question } from '@/lib/types'
 import Chip from '@/components/ui/Chip'
 import Slider from '@/components/ui/Slider'
+import { useT } from '@/context/I18nContext'
 
 interface QuestionBlockProps {
   question: Question
@@ -11,6 +12,7 @@ interface QuestionBlockProps {
 }
 
 export default function QuestionBlock({ question, value, onChange }: QuestionBlockProps) {
+  const { t } = useT()
   const strValue = typeof value === 'string' ? value : ''
   const arrValue = Array.isArray(value) ? value : []
   const numValue = typeof value === 'number' ? value : 50 // default mid-point for 0–100
@@ -33,7 +35,7 @@ export default function QuestionBlock({ question, value, onChange }: QuestionBlo
           color: '#d0d8e4',
         }}
       >
-        {question.label}
+        {t(question.label)}
       </p>
 
       {/* Radio */}
@@ -64,7 +66,7 @@ export default function QuestionBlock({ question, value, onChange }: QuestionBlo
                 style={{ accentColor: '#e8a020' }}
               />
               <span style={{ fontSize: '14px', color: strValue === opt.value ? '#e8a020' : '#8b95a5' }}>
-                {opt.label}
+                {t(opt.label)}
               </span>
             </label>
           ))}
@@ -80,7 +82,7 @@ export default function QuestionBlock({ question, value, onChange }: QuestionBlo
               selected={arrValue.includes(opt.value)}
               onClick={() => toggleChip(opt.value)}
             >
-              {opt.label}
+              {t(opt.label)}
             </Chip>
           ))}
         </div>
@@ -106,11 +108,11 @@ export default function QuestionBlock({ question, value, onChange }: QuestionBlo
           }}
         >
           <option value="" disabled>
-            Select an option
+            {t('Select an option')}
           </option>
           {question.options.map((opt) => (
             <option key={opt.value} value={opt.value}>
-              {opt.label}
+              {t(opt.label)}
             </option>
           ))}
         </select>
@@ -154,7 +156,7 @@ export default function QuestionBlock({ question, value, onChange }: QuestionBlo
                     color: isSelected ? '#e8a020' : '#d0d8e4',
                   }}
                 >
-                  {role.label}
+                  {t(role.label)}
                 </span>
                 {role.subtitle && (
                   <span
@@ -165,7 +167,7 @@ export default function QuestionBlock({ question, value, onChange }: QuestionBlo
                       marginTop: '2px',
                     }}
                   >
-                    {role.subtitle}
+                    {t(role.subtitle)}
                   </span>
                 )}
               </button>

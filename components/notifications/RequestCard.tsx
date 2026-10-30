@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useT } from '@/context/I18nContext'
 import { MatchScores, SquadRequest } from '@/lib/types'
 import { scoreToColour } from '@/lib/matchColour'
 import { CATEGORY_LABEL, ScoreCategory, describeAnswers } from '@/lib/profileAnswers'
@@ -44,6 +45,7 @@ function AnswersPanel({
   score: number
   onClose: () => void
 }) {
+  const { t } = useT()
   const groups = describeAnswers(request.profile, category)
   const showGroupTitles = groups.length > 1
 
@@ -69,11 +71,11 @@ function AnswersPanel({
             color: '#e8a020',
           }}
         >
-          {CATEGORY_LABEL[category]}
+          {t(CATEGORY_LABEL[category])}
         </p>
         <button
           onClick={onClose}
-          aria-label="Close answers"
+          aria-label={t('Close answers')}
           style={{
             background: 'none',
             border: 'none',
@@ -89,7 +91,7 @@ function AnswersPanel({
         </button>
       </div>
       <p style={{ margin: '0 0 12px', fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>
-        {request.senderUsername}&apos;s answers · <span style={{ color: scoreToColour(score), fontWeight: 600 }}>{score}% match</span>
+        {t("{name}'s answers", { name: request.senderUsername })} · <span style={{ color: scoreToColour(score), fontWeight: 600 }}>{t('{score}% match', { score })}</span>
       </p>
 
       {/* Answer groups */}
@@ -108,17 +110,17 @@ function AnswersPanel({
                   color: '#e8a020',
                 }}
               >
-                {group.title}
+                {t(group.title)}
               </p>
             )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {group.items.map((item) => (
                 <div key={item.label}>
-                  <p style={{ margin: '0 0 4px', fontSize: '11px', color: '#8b95a5' }}>{item.label}</p>
+                  <p style={{ margin: '0 0 4px', fontSize: '11px', color: '#8b95a5' }}>{t(item.label)}</p>
                   {item.values.length === 0 ? (
                     <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.25)', fontStyle: 'italic' }}>
-                      No answer given
+                      {t('No answer given')}
                     </p>
                   ) : (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
@@ -134,7 +136,7 @@ function AnswersPanel({
                             border: '1px solid rgba(232,160,32,0.2)',
                           }}
                         >
-                          {value}
+                          {t(value)}
                         </span>
                       ))}
                     </div>
@@ -161,6 +163,7 @@ export default function RequestCard({
   onDeclineAndBlock,
 }: RequestCardProps) {
   // Which score readout is expanded — null when the answers popup is closed
+  const { t } = useT()
   const [openCategory, setOpenCategory] = useState<ScoreCategory | null>(null)
   const [outcome, setOutcome] = useState<Outcome | null>(null)
   const [hoverAccept, setHoverAccept] = useState(false)
@@ -171,9 +174,9 @@ export default function RequestCard({
     'rgba(255,255,255,0.3)'
 
   const statusText =
-    request.senderStatus === 'ingame' ? `Live — ${request.senderStatusGame ?? 'In Game'}` :
-    request.senderStatus === 'searching' ? 'Searching for a squad' :
-    'Offline'
+    request.senderStatus === 'ingame' ? t('Live — {game}', { game: request.senderStatusGame ?? t('In Game') }) :
+    request.senderStatus === 'searching' ? t('Searching for a squad') :
+    t('Offline')
 
   const scoreByCategory: Record<ScoreCategory, number> = {
     overall: scores.overall,
@@ -254,7 +257,7 @@ export default function RequestCard({
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '5px' }}>
-            <span className="sub-heading" style={{ fontSize: '13px', fontWeight: 600 }}>Overall Match</span>
+            <span className="sub-heading" style={{ fontSize: '13px', fontWeight: 600 }}>{t('Overall Match')}</span>
             <span style={{ fontSize: '22px', fontWeight: 700, color: scoreToColour(scores.overall), fontFamily: 'var(--font-rajdhani), sans-serif', lineHeight: 1 }}>
               {scores.overall}%
             </span>
@@ -291,7 +294,7 @@ export default function RequestCard({
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '12px', color: isOpen ? '#e8a020' : '#8b95a5' }}>{CATEGORY_LABEL[category]}</span>
+                  <span style={{ fontSize: '12px', color: isOpen ? '#e8a020' : '#8b95a5' }}>{t(CATEGORY_LABEL[category])}</span>
                   <span style={{ fontSize: '12px', color: scoreToColour(value), fontWeight: 600 }}>{value}%</span>
                 </div>
                 <Bar value={value} />
@@ -301,7 +304,7 @@ export default function RequestCard({
         </div>
 
         <p style={{ margin: '0 0 14px', fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
-          Tap any percentage to see their answers.
+          {t('Tap any percentage to see their answers.')}
         </p>
 
         {/* Inline answers popup — narrow viewports have no room beside the card */}
@@ -332,7 +335,7 @@ export default function RequestCard({
                   fontFamily: 'var(--font-rajdhani), sans-serif',
                 }}
               >
-                {outcome === 'accepted' ? 'Accepted — now allies' : outcome === 'blocked' ? 'Declined & blocked' : 'Declined'}
+                {outcome === 'accepted' ? t('Accepted — now allies') : outcome === 'blocked' ? t('Declined & blocked') : t('Declined')}
               </span>
             </div>
           ) : (
@@ -356,7 +359,7 @@ export default function RequestCard({
                   transition: 'all 0.15s ease',
                 }}
               >
-                Accept
+                {t('Accept')}
               </button>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
@@ -376,7 +379,7 @@ export default function RequestCard({
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  Decline
+                  {t('Decline')}
                 </button>
                 <button
                   onClick={() => handleAction('blocked', onDeclineAndBlock)}
@@ -395,7 +398,7 @@ export default function RequestCard({
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  Decline &amp; Block
+                  {t('Decline & Block')}
                 </button>
               </div>
             </div>
