@@ -14,13 +14,13 @@ import { GAMES_BY_CATEGORY, GAME_QUESTIONS } from '@/lib/mockData'
 import type { Game } from '@/lib/types'
 
 export const runtime = 'nodejs'
-export const maxDuration = 300
+export const maxDuration = 600
 export const dynamic = 'force-dynamic'
 
 const MODEL = 'claude-sonnet-5-5'
 const CONCURRENCY = 3
 // Stop starting new games shortly before maxDuration so we can return a report.
-const DEADLINE_MS = 270_000
+const DEADLINE_MS = 570_000
 const MAX_ADDITIONS_PER_KIND = 25
 
 // ─── Deterministic ids (must match scripts/generate-seed.mjs exactly) ────────
@@ -347,7 +347,10 @@ export async function GET(request: Request) {
   const anthropic = new Anthropic({ apiKey: anthropicKey })
 
   const started = Date.now()
-  const queue = buildBaseGames().filter((b) => GAME_QUESTIONS[b.baseId])
+  const eligible = buildBaseGames().filter((b) => GAME_QUESTIONS[b.baseId])
+  // Rotate the starting point daily so, if a run ever times out, the same games aren't the ones skipped every day.
+  const offset = eligible.length ? Math.floor(Date.now() / 86_400_000) % eligible.length : 0
+  const queue = [...eligible.slice(offset), ...eligible.slice(0, offset)]
   const reports: GameReport[] = []
   let skippedForTime = 0
 

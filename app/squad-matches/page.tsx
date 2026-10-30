@@ -7,7 +7,7 @@ import { useT } from '@/context/I18nContext'
 import { MOCK_MATCHES, MOCK_OPPONENT_PROFILES } from '@/lib/mockData'
 import { MatchPlayer } from '@/lib/types'
 import { calculateMatch } from '@/lib/matching'
-import { buildProfileFromAnswers, gameKey } from '@/lib/profileAnswers'
+import { buildProfileFromAnswers, gameKey, usernameFor } from '@/lib/profileAnswers'
 import { useWindowWidth } from '@/lib/useWindowWidth'
 import { useAnnounceLooking } from '@/lib/useLookingPresence'
 import MatchCard from '@/components/matches/MatchCard'
@@ -15,7 +15,6 @@ import AlliesPanel from '@/components/matches/AlliesPanel'
 import IncomingRequestPopup from '@/components/matches/IncomingRequestPopup'
 import AnimatedBackground from '@/components/ui/AnimatedBackground'
 import HeaderActions from '@/components/ui/HeaderActions'
-import WelcomeBanner from '@/components/ui/WelcomeBanner'
 
 const MOBILE_BREAKPOINT = 768
 const TABLET_BREAKPOINT = 1100
@@ -60,6 +59,7 @@ export default function SquadMatchesPage() {
   // Live-calculated matches: pair each mock display identity (username/label/status)
   // with the corresponding opponent profile and run the real matching algorithm.
   const myProfile = buildProfileFromAnswers(gameKey(selectedGame), profileAnswers)
+  const username = usernameFor(profileAnswers, gameKey(selectedGame)).trim()
   const computedMatches: MatchPlayer[] = MOCK_MATCHES.map((match, i) => {
     const opponent = MOCK_OPPONENT_PROFILES[i]
     if (!opponent) return match
@@ -226,7 +226,7 @@ export default function SquadMatchesPage() {
       {/* Page heading — at the very top of the page, matching the other pages' heading size */}
       <div style={{ padding: isMobile ? '16px 16px 0' : '20px 28px 0', flexShrink: 0 }}>
         <h1 className="main-heading" style={{ fontSize: 'clamp(24px, 6vw, 40px)', margin: 0 }}>
-          {t('YOUR SQUAD AWAITS')}
+          {username ? t('{name}, YOUR SQUAD AWAITS', { name: username }) : t('YOUR SQUAD AWAITS')}
         </h1>
       </div>
 
@@ -246,23 +246,16 @@ export default function SquadMatchesPage() {
             color: '#ffffff',
           }}
         >
-          {/* Instructions + Change Details — where the heading used to sit */}
-          <div style={{ padding: isMobile ? '16px 16px 0' : '24px 28px 0', flexShrink: 0, display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'stretch', gap: '16px' }}>
-            {/* Same letterbox as build-profile — only the subtext differs */}
-            <div style={{ flex: 1 }}>
-              <WelcomeBanner
-                game={selectedGame}
-                subtext={t('Find more allies for {game}.', { game: selectedGame?.name ?? t('your game') })}
-              />
-            </div>
+          {/* Change Details — sits just above the cards; the page title is the only other thing up here */}
+          <div style={{ padding: isMobile ? '12px 16px 0' : '16px 28px 0', flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
             <button
               onClick={() => router.push('/build-profile')}
               onMouseEnter={() => setHoverChangeDetails(true)}
               onMouseLeave={() => setHoverChangeDetails(false)}
               style={{
                 flexShrink: 0,
-                padding: isMobile ? '13px 24px' : '0 24px',
-                borderRadius: '10px',
+                padding: '8px 20px',
+                borderRadius: '8px',
                 border: `1px solid ${hoverChangeDetails ? '#e8a020' : 'rgba(232,160,32,0.3)'}`,
                 backgroundColor: hoverChangeDetails ? 'rgba(232,160,32,0.1)' : 'transparent',
                 color: '#e8a020',

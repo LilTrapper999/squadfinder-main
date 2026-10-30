@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useT } from '@/context/I18nContext'
 import { useApp } from '@/context/AppContext'
-import { GAME_QUESTIONS } from '@/lib/mockData'
+import { GAME_QUESTIONS, GAME_SPECIFIC_QUESTIONS } from '@/lib/mockData'
+import type { Question } from '@/lib/types'
+import GameQuestionBlock from '@/components/profile/QuestionBlock'
 import CheckboxGrid from '@/components/ui/CheckboxGrid'
 import LanguagePicker from '@/components/ui/LanguagePicker'
 import Slider from '@/components/ui/Slider'
@@ -23,8 +25,25 @@ import {
   usernameFor,
 } from '@/lib/profileAnswers'
 
-const TABLET_BREAKPOINT = 1024
 const MOBILE_BREAKPOINT = 640
+
+// Steps: 0 identify (username) → 1 Gamesmanship → 2 Vibe Check → 3 Comms
+const STEP_COUNT = 4
+// Which required answers (labels from missingRequiredAnswers) belong to which step
+const STEP_REQUIRED: string[][] = [
+  ['In-game username'],
+  [], // Gamesmanship — gated per sub-card, see SUB_REQUIRED
+  ['Personality vibe'],
+  ['Languages you play in'],
+]
+// Gamesmanship sub-cards: skill/role/role-matching · maps · weapons · game-specific extras
+type SubCard = 'basics' | 'maps' | 'weapons' | 'specific'
+const SUB_REQUIRED: Record<SubCard, string[]> = {
+  basics: ['Your role'],
+  maps: ['Maps you know well'],
+  weapons: ['Weapons you run'],
+  specific: [],
+}
 
 // ─── Vibe Check — personality options ────────────────────────────────────────
 
@@ -297,21 +316,19 @@ export default function ProfileForm() {
   const { t } = useT()
   const { selectedGame, profileAnswers, updateProfileAnswer } = useApp()
   const width = useWindowWidth()
-  const isTablet = width < TABLET_BREAKPOINT
   const isMobile = width < MOBILE_BREAKPOINT
-  const columnCount = isMobile ? 1 : isTablet ? 2 : 3
 
   // Weapons/maps/roles are keyed by the base game in GAME_QUESTIONS, not per version —
   // each version is its own selectable tile now, but they all share the same question set.
   // Answers are filed under the same key so one game's picks can't satisfy another's.
   const key = gameKey(selectedGame)
-  const gq = GAME_QUESTIONS[key]
 
-  // Weapon categories unfold on click rather than living behind a native <select> dropdown.
-  const [openWeaponCats, setOpenWeaponCats] = useState<Record<string, boolean>>({})
-  function toggleWeaponCat(category: string) {
-    setOpenWeaponCats((prev) => ({ ...prev, [category]: !prev[category] }))
-  }
+  // A refresh drops the in-memory game selection, leaving a form with no maps or weapons to
+  // show — send them back to pick a game instead.
+  useEffect(() => {
+    if (!selectedGame) router.replace('/select-game')
+  }, [selectedGame, router])
+  const gq = GAME_QUESTIONS[key]
 
   // ── helpers ──────────────────────────────────────────────────────────────────
   // Nested key helpers for the game-agnostic groups (e.g. 'vibeCheck.personality')
@@ -346,11 +363,30 @@ export default function ProfileForm() {
     return typeof val === 'number' ? val : fallback
   }
 
-  function updateGamesmanship(field: string, value: unknown) {
+  // Several fields in one write — sequential updateGamesmanship calls would each read the same
+  // pre-render snapshot and the second would clobber the first.
+  function updateGamesmanshipFields(fields: Record<string, unknown>) {
     const allGames = nestedGroup(profileAnswers, 'gamesmanship')
     const thisGame = gamesmanshipGroupFor(profileAnswers, key)
-    updateProfileAnswer('gamesmanship', { ...allGames, [key]: { ...thisGame, [field]: value } })
+    updateProfileAnswer('gamesmanship', { ...allGames, [key]: { ...thisGame, ...fields } })
   }
+
+  function updateGamesmanship(field: string, value: unknown) {
+    updateGamesmanshipFields({ [field]: value })
+  }
+
+  // "None — I don't know any maps yet" satisfies the maps requirement for beginners.
+  const noMaps = gamesmanshipGroupFor(profileAnswers, key).noMaps === true
+
+  // The game's own extra questions. role/map are already asked above, so they're skipped here.
+  const specificQuestions: Question[] = (
+    GAME_SPECIFIC_QUESTIONS[key] ?? GAME_SPECIFIC_QUESTIONS[`_${selectedGame?.category ?? ''}`] ?? []
+  ).filter((q) => q.id !== 'role' && q.id !== 'map')
+  const rawSpecific = gamesmanshipGroupFor(profileAnswers, key).specific
+  const specificAnswers: Record<string, unknown> =
+    rawSpecific && typeof rawSpecific === 'object' && !Array.isArray(rawSpecific)
+      ? (rawSpecific as Record<string, unknown>)
+      : {}
 
   // Both fields must land in the same update — two sequential updateNested calls would each
   // read the same pre-render 'comms' snapshot and the second would clobber the first.
@@ -381,6 +417,43 @@ export default function ProfileForm() {
   const missingRequired = missingRequiredAnswers(key, profileAnswers, gq)
   const canSubmit = missingRequired.length === 0
 
+  // The profile is built one section at a time; Next stays locked until that step's required
+  // answers are in. The final submit still checks the whole profile (canSubmit).
+  const [step, setStep] = useState(0)
+  // Gamesmanship (step 1) is itself a short run of sub-cards. A sub-card with nothing to show
+  // for this game (no maps, no weapons, no extra questions) isn't in the run at all.
+  const [subStep, setSubStep] = useState(0)
+  const subCards: SubCard[] = [
+    'basics',
+    ...(gq?.maps?.length ? (['maps'] as const) : []),
+    ...(gq?.weapons?.length ? (['weapons'] as const) : []),
+    ...(specificQuestions.length > 0 ? (['specific'] as const) : []),
+  ]
+  const subCount = subCards.length
+  const lastSub = subCount - 1
+  const card = subCards[subStep]
+  const topRef = useRef<HTMLDivElement>(null)
+  const isLastStep = step === STEP_COUNT - 1
+  const required = step === 1 ? SUB_REQUIRED[card] : STEP_REQUIRED[step]
+  const stepMissing = missingRequired.filter((m) => required.includes(m))
+  const stepComplete = isLastStep ? canSubmit : stepMissing.length === 0
+
+  function goTo(nextStep: number, nextSub: number) {
+    setStep(nextStep)
+    setSubStep(nextSub)
+    topRef.current?.scrollIntoView({ block: 'start' })
+  }
+  function goNext() {
+    if (!stepComplete || isLastStep) return
+    if (step === 1 && subStep < lastSub) goTo(1, subStep + 1)
+    else goTo(step + 1, 0)
+  }
+  function goBack() {
+    if (step === 1 && subStep > 0) goTo(1, subStep - 1)
+    else if (step === 2) goTo(1, lastSub)
+    else if (step > 0) goTo(step - 1, 0)
+  }
+
   function handleSubmit() {
     if (!canSubmit) return
     router.push('/squad-matches')
@@ -390,23 +463,73 @@ export default function ProfileForm() {
   return (
     <div style={{ paddingBottom: '80px' }}>
 
-      {/* Welcome banner — the selected game is shown as its logo rather than named in prose */}
-      <div style={{ marginBottom: '32px' }}>
-        <WelcomeBanner
-          game={selectedGame}
-          subtext={t('Answer honestly — this is how we find your perfect squad.')}
-        />
+      <div ref={topRef} style={{ maxWidth: '860px', margin: '0 auto' }}>
+
+      {/* Progress — the profile is built one section at a time */}
+      <p style={{ margin: '0 0 14px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8b95a5', fontFamily: 'var(--font-rajdhani), sans-serif' }}>
+        {t('Step {current} of {total}', { current: step + 1, total: STEP_COUNT })}
+      </p>
+      {step === 1 && (
+        <p style={{ margin: '-6px 0 14px', fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>
+          {t('Gamesmanship · part {current} of {total}', { current: subStep + 1, total: subCount })}
+        </p>
+      )}
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '28px' }}>
+        {Array.from({ length: STEP_COUNT }, (_, i) => (
+          <div key={i} style={{ flex: 1, height: '3px', borderRadius: '2px', backgroundColor: i <= step ? '#e8a020' : 'rgba(255,255,255,0.1)', transition: 'background-color 0.2s ease' }} />
+        ))}
       </div>
 
-      {/* 3-column layout — Gamesmanship / Vibe Check / Comms sit side by side, each top-aligned
-          regardless of content height (a CSS-columns masonry would let taller columns bleed
-          into the next, pushing Comms out of the third column). */}
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columnCount}, 1fr)`, columnGap: '32px', alignItems: 'start' }}>
+      {/* STEP 1 — identify: the welcome banner doubles as the in-game username prompt */}
+      {step === 0 && (
+        <div style={{ marginBottom: '32px' }}>
+          <WelcomeBanner
+            game={selectedGame}
+            subtext={
+              <>
+                <span style={{ display: 'block', marginBottom: '10px' }}>
+                  {t('How should we call you?')}
+                </span>
+                <input
+                  type="text"
+                  autoFocus
+                  value={usernameFor(profileAnswers, key)}
+                  onChange={(e) => updateGameUsername(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && stepComplete) goNext() }}
+                  placeholder={t('e.g. ShadowRook')}
+                  aria-label={selectedGame ? t('In-game username for {game}', { game: selectedGame.name }) : t('In-game username')}
+                  style={{
+                    width: '100%',
+                    maxWidth: '360px',
+                    padding: '11px 14px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    backgroundColor: 'rgba(255,255,255,0.05)',
+                    color: '#ffffff',
+                    fontSize: '14px',
+                    fontFamily: 'inherit',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                <span style={{ display: 'block', margin: '8px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.35)', lineHeight: 1.4 }}>
+                  {t("This is specific to this game — build a profile for another game and you'll set a different username.")}
+                </span>
+              </>
+            }
+          />
+        </div>
+      )}
 
-        {/* ── GROUP 1: Gamesmanship ─────────────────────────────────────────── */}
+      <div>
+
+        {/* ── STEP 2: Gamesmanship ──────────────────────────────────────────── */}
+        {step === 1 && (
         <div style={{ breakInside: 'avoid', marginBottom: '28px' }}>
           <GroupHeader label="Gamesmanship" subtext="Specific for all games" />
 
+          {/* Sub-card 1 — skill level, your role, role matching style */}
+          {card === 'basics' && (<>
           {/* G1 — Skill */}
           <QuestionBlock>
             <QuestionLabel required={false}>{t('Skill level')}</QuestionLabel>
@@ -417,46 +540,7 @@ export default function ProfileForm() {
             />
           </QuestionBlock>
 
-          {/* G2 — In-game username: per-game, and required — squadmates can't invite you without it */}
-          <QuestionBlock>
-            <QuestionLabel required={true}>
-              {selectedGame ? t('In-game username for {game}', { game: selectedGame.name }) : t('In-game username')}
-            </QuestionLabel>
-            <input
-              type="text"
-              value={usernameFor(profileAnswers, key)}
-              onChange={(e) => updateGameUsername(e.target.value)}
-              placeholder={t('e.g. ShadowRook')}
-              style={{
-                width: '100%',
-                padding: '11px 14px',
-                borderRadius: '6px',
-                border: '1px solid rgba(255,255,255,0.1)',
-                backgroundColor: 'rgba(255,255,255,0.03)',
-                color: '#ffffff',
-                fontSize: '14px',
-                fontFamily: 'inherit',
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
-            />
-            <p style={{ margin: '6px 0 0', fontSize: '10px', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>
-              {t("This is specific to this game — build a profile for another game and you'll set a different username.")}
-            </p>
-          </QuestionBlock>
-
-          {/* G3 — Role matching style (SPEC_AMENDMENT_08 FIX 2) */}
-          <QuestionBlock>
-            <QuestionLabel required={false}>{t('Role matching style')}</QuestionLabel>
-            <RoleMatchRadioRow
-              value={(() => {
-                const group = gamesmanshipGroupFor(profileAnswers, key)
-                return 'roleMatchPreference' in group ? gamesNum('roleMatchPreference', 50) : 50
-              })()}
-              onChange={(v) => updateGamesmanship('roleMatchPreference', v)}
-              columns={isMobile ? 1 : 3}
-            />
-          </QuestionBlock>
+          {/* In-game username moved to step 1 (the welcome banner) */}
 
           {/* G4 — Roles */}
           {gq?.roles && gq.roles.length > 0 && (
@@ -539,75 +623,96 @@ export default function ProfileForm() {
             </QuestionBlock>
           )}
 
-          {/* G5 — Maps */}
-          {gq?.maps && gq.maps.length > 0 && (
+          {/* G3 — Role matching style (SPEC_AMENDMENT_08 FIX 2) */}
+          <QuestionBlock>
+            <QuestionLabel required={false}>{t('Role matching style')}</QuestionLabel>
+            <RoleMatchRadioRow
+              value={(() => {
+                const group = gamesmanshipGroupFor(profileAnswers, key)
+                return 'roleMatchPreference' in group ? gamesNum('roleMatchPreference', 50) : 50
+              })()}
+              onChange={(v) => updateGamesmanship('roleMatchPreference', v)}
+              columns={isMobile ? 1 : 3}
+            />
+          </QuestionBlock>
+          </>)}
+
+          {/* Sub-card 2 — maps, with an explicit "none" for beginners */}
+          {card === 'maps' && gq?.maps && gq.maps.length > 0 && (
             <QuestionBlock>
               <QuestionLabel required={true}>{t('Which maps do you know well?')}</QuestionLabel>
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '9px 12px',
+                  marginBottom: '10px',
+                  borderRadius: '5px',
+                  border: `1px solid ${noMaps ? '#e8a020' : 'rgba(255,255,255,0.12)'}`,
+                  backgroundColor: noMaps ? 'rgba(232,160,32,0.07)' : 'transparent',
+                  cursor: 'pointer',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={noMaps}
+                  onChange={() => {
+                    // Picking "none" clears any maps; picking a map below clears "none"
+                    updateGamesmanshipFields({ noMaps: !noMaps, maps: [] })
+                  }}
+                  style={{ accentColor: '#e8a020', width: '13px', height: '13px', cursor: 'pointer' }}
+                />
+                <span style={{ fontSize: '13px', fontWeight: 600, color: noMaps ? '#e8a020' : 'rgba(255,255,255,0.8)' }}>
+                  {t("None — I don't know any maps yet")}
+                </span>
+              </label>
               <CheckboxGrid
                 options={gq.maps}
                 selected={gamesArr('maps')}
-                onChange={(v) => updateGamesmanship('maps', v)}
+                onChange={(v) => updateGamesmanshipFields({ maps: v, noMaps: false })}
                 columns={gq.maps.length > 12 ? 3 : 2}
               />
             </QuestionBlock>
           )}
 
-          {/* G6 — Weapons: each category unfolds on click instead of a native <select> */}
-          {gq?.weapons && gq.weapons.length > 0 && (
+          {/* Sub-card 3 — weapons: every category open on one card, pick freely across them */}
+          {card === 'weapons' && gq?.weapons && gq.weapons.length > 0 && (
             <QuestionBlock>
-              <QuestionLabel required={true}>{t('Which weapons do you run?')}</QuestionLabel>
-              {gq.weapons.map((cat) => {
-                const isOpen = !!openWeaponCats[cat.category]
-                return (
-                  <div key={cat.category} style={{ marginBottom: '8px' }}>
-                    <button
-                      type="button"
-                      onClick={() => toggleWeaponCat(cat.category)}
-                      aria-expanded={isOpen}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        width: '100%',
-                        background: 'none',
-                        border: 'none',
-                        padding: 0,
-                        marginTop: '16px',
-                        marginBottom: '6px',
-                        cursor: 'pointer',
-                        fontFamily: 'inherit',
-                      }}
-                    >
-                      <span className="sub-heading weapon-category-title">{t(cat.category)}</span>
-                      {/* Points right when collapsed, down when expanded */}
-                      <span
-                        style={{
-                          display: 'inline-block',
-                          color: '#e8a020',
-                          fontSize: '10px',
-                          transition: 'transform 0.15s ease',
-                          transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)',
-                        }}
-                      >
-                        ▶
-                      </span>
-                    </button>
-                    {isOpen && (
-                      <CheckboxGrid
-                        options={cat.weapons}
-                        selected={gamesArr('weapons')}
-                        onChange={(v) => updateGamesmanship('weapons', v)}
-                        columns={cat.weapons.length > 8 ? 3 : 2}
-                      />
-                    )}
-                  </div>
-                )
-              })}
+              <QuestionLabel required={true}>{t('Weapons — pick at least 1')}</QuestionLabel>
+              <p style={{ margin: '-4px 0 6px', fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>
+                {t('Pick as many as you like, from any category.')}
+              </p>
+              {gq.weapons.map((cat) => (
+                <div key={cat.category} style={{ marginBottom: '8px' }}>
+                  <p style={{ margin: '16px 0 6px' }}>
+                    <span className="sub-heading weapon-category-title">{t(cat.category)}</span>
+                  </p>
+                  <CheckboxGrid
+                    options={cat.weapons}
+                    selected={gamesArr('weapons')}
+                    onChange={(v) => updateGamesmanship('weapons', v)}
+                    columns={cat.weapons.length > 8 ? 3 : 2}
+                  />
+                </div>
+              ))}
             </QuestionBlock>
           )}
-        </div>
 
-        {/* ── GROUP 2: Vibe Check ───────────────────────────────────────────── */}
+          {/* Sub-card 4 — the game's own extra questions (optional, shown on match cards only) */}
+          {card === 'specific' && specificQuestions.map((q) => (
+            <GameQuestionBlock
+              key={q.id}
+              question={q}
+              value={specificAnswers[q.id] as string | string[] | number | undefined}
+              onChange={(v) => updateGamesmanship('specific', { ...specificAnswers, [q.id]: v })}
+            />
+          ))}
+        </div>
+        )}
+
+        {/* ── STEP 3: Vibe Check ────────────────────────────────────────────── */}
+        {step === 2 && (
         <div style={{ breakInside: 'avoid', marginBottom: '28px' }}>
           <GroupHeader label="Vibe Check" subtext="Applies to every game" />
 
@@ -671,8 +776,10 @@ export default function ProfileForm() {
             </div>
           </QuestionBlock>
         </div>
+        )}
 
-        {/* ── GROUP 3: Comms ────────────────────────────────────────────────── */}
+        {/* ── STEP 4: Comms ─────────────────────────────────────────────────── */}
+        {step === 3 && (
         <div style={{ breakInside: 'avoid', marginBottom: '28px' }}>
           <GroupHeader label="Comms" subtext="Applies to every game" />
           <p
@@ -706,24 +813,52 @@ export default function ProfileForm() {
             />
           </QuestionBlock>
         </div>
+        )}
 
       </div>
 
-      {/* Fixed CTA */}
+      {/* Step navigation — Back on the left, Next / Find My Squad on the right */}
       <div
         style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          zIndex: 100,
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'flex-end',
-          gap: '8px',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap',
+          marginTop: '8px',
         }}
       >
-        {/* Names what's still blocking submission — the button alone can't say why it's dead */}
-        {!canSubmit && (
+        {step > 0 ? (
+          <button
+            type="button"
+            onClick={goBack}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '8px',
+              border: '1px solid rgba(232,160,32,0.4)',
+              backgroundColor: 'transparent',
+              color: '#e8a020',
+              fontSize: '15px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: 'var(--font-rajdhani), sans-serif',
+              letterSpacing: '0.06em',
+            }}
+          >
+            {t('← Back')}
+          </button>
+        ) : <span />}
+
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-end',
+            gap: '8px',
+          }}
+        >
+        {/* Names what's still blocking this step — the button alone can't say why it's dead */}
+        {!stepComplete && (
           <div
             style={{
               maxWidth: '260px',
@@ -748,31 +883,33 @@ export default function ProfileForm() {
               {t('Still required')}
             </p>
             <p style={{ margin: 0, fontSize: '11px', color: '#8b95a5', lineHeight: 1.5 }}>
-              {missingRequired.map((m) => t(m)).join(' · ')}
+              {stepMissing.map((m) => t(m)).join(' · ')}
             </p>
           </div>
         )}
 
         <button
-          onClick={handleSubmit}
-          disabled={!canSubmit}
+          onClick={isLastStep ? handleSubmit : goNext}
+          disabled={!stepComplete}
           style={{
             padding: '14px 32px',
             borderRadius: '8px',
             border: 'none',
-            backgroundColor: canSubmit ? '#e8a020' : 'rgba(255,255,255,0.05)',
-            color: canSubmit ? '#0a0b0f' : '#4a5568',
+            backgroundColor: stepComplete ? '#e8a020' : 'rgba(255,255,255,0.05)',
+            color: stepComplete ? '#0a0b0f' : '#4a5568',
             fontSize: '15px',
             fontWeight: 700,
-            cursor: canSubmit ? 'pointer' : 'not-allowed',
+            cursor: stepComplete ? 'pointer' : 'not-allowed',
             fontFamily: 'var(--font-rajdhani), sans-serif',
             letterSpacing: '0.06em',
             transition: 'all 0.15s ease',
-            boxShadow: canSubmit ? '0 4px 20px rgba(232,160,32,0.3)' : 'none',
+            boxShadow: stepComplete ? '0 4px 20px rgba(232,160,32,0.3)' : 'none',
           }}
         >
-          {t('FIND MY SQUAD →')}
+          {isLastStep ? t('FIND MY SQUAD →') : t('Next →')}
         </button>
+        </div>
+      </div>
       </div>
     </div>
   )

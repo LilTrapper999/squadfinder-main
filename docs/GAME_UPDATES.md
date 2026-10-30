@@ -15,4 +15,4 @@ Web content is treated as data: only plain short names pass validation, URLs/mar
 ## Limitations
 - The UI still reads `lib/mockData.ts`. DB updates only reach players once the app reads the catalogue from Supabase.
 - Model output can be wrong or stale; review `game_updates` periodically. Changes are applied automatically (`applied = true`), not queued for approval.
-- Very large catalogues may not finish in the 300s limit; the response reports `skippedForTime`.
+- Very large catalogues may not finish in the 10-minute (600s) limit; the response reports `skippedForTime`, and the start point rotates daily so different games are skipped each time. Note: Vercel only allows a 600s function duration on plans/config that support it (Pro with Fluid Compute); on Hobby it is capped lower.
