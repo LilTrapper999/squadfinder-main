@@ -1,10 +1,11 @@
 'use client'
 
-import React, { createContext, useContext, useState, ReactNode } from 'react'
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { Game, GameVersion, ProfileAnswers, Ally, IncomingRequest, SquadRequest, AllyChat, ChatMessage } from '@/lib/types'
 import { MOCK_SQUAD_REQUESTS, MOCK_BLOCKED_BY, findGameById } from '@/lib/mockData'
 import { buildProfileFromAnswers, gameKey } from '@/lib/profileAnswers'
 import { calculateMatch } from '@/lib/matching'
+import { SHOW_DEV_FEATURES } from '@/lib/launch'
 
 interface AppContextValue {
   // Game selection
@@ -76,6 +77,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // doesn't exist yet, so nobody could have requested them. Returning users get the mock
   // backlog when they identify themselves at login.
   const [squadRequests, setSquadRequests] = useState<SquadRequest[]>([])
+
+  // Demo notifications: when running on localhost, start with the mock requests already waiting
+  // so the bell and /notifications can be shown without ticking "Returning user (demo)" first.
+  // Client-side only (hostname isn't known during SSR), and never on a deployed host.
+  useEffect(() => {
+    if (!SHOW_DEV_FEATURES) return
+    if (['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname)) {
+      setSquadRequests(MOCK_SQUAD_REQUESTS)
+    }
+  }, [])
 
   function setIsReturningUser(v: boolean) {
     setIsReturningUserState(v)

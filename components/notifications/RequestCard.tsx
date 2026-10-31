@@ -3,9 +3,7 @@
 import { useState } from 'react'
 import { useT } from '@/context/I18nContext'
 import { MatchBreakdown, SquadRequest } from '@/lib/types'
-import { scoreToColour } from '@/lib/matchColour'
-import { CATEGORY_LABEL, ScoreCategory } from '@/lib/profileAnswers'
-import ScoreBreakdownModal from './ScoreBreakdownModal'
+import ScoreBars from './ScoreBars'
 
 interface RequestCardProps {
   request: SquadRequest
@@ -21,14 +19,6 @@ type Outcome = 'accepted' | 'declined' | 'blocked'
 /** How long the confirmation strip shows before the card leaves the list */
 const OUTCOME_DELAY = 900
 
-function Bar({ value }: { value: number }) {
-  return (
-    <div style={{ height: '6px', borderRadius: '3px', backgroundColor: 'rgba(255,255,255,0.08)' }}>
-      <div style={{ height: '100%', borderRadius: '3px', backgroundColor: scoreToColour(value), width: `${value}%`, transition: 'width 0.5s ease' }} />
-    </div>
-  )
-}
-
 // ─── Card ───────────────────────────────────────────────────────────────────
 
 export default function RequestCard({
@@ -40,9 +30,6 @@ export default function RequestCard({
 }: RequestCardProps) {
   const { t } = useT()
   const { scores } = breakdown
-  // Which score's breakdown popup is open — null when closed
-  const [openCategory, setOpenCategory] = useState<ScoreCategory | null>(null)
-  const [hoverScore, setHoverScore] = useState<ScoreCategory | null>(null)
   const [outcome, setOutcome] = useState<Outcome | null>(null)
   const [hoverAccept, setHoverAccept] = useState(false)
 
@@ -60,7 +47,6 @@ export default function RequestCard({
   function handleAction(result: Outcome, commit: () => void) {
     if (outcome) return
     setOutcome(result)
-    setOpenCategory(null)
     setTimeout(commit, OUTCOME_DELAY)
   }
 
@@ -95,79 +81,12 @@ export default function RequestCard({
           </div>
         </div>
 
-        {/* Overall — click for the full breakdown */}
-        <button
-          onClick={() => setOpenCategory('overall')}
-          onMouseEnter={() => setHoverScore('overall')}
-          onMouseLeave={() => setHoverScore(null)}
-          aria-haspopup="dialog"
-          aria-label={t('{label}: {score}% — see how it was scored', { label: t(CATEGORY_LABEL.overall), score: scores.overall })}
-          style={{
-            display: 'block',
-            width: '100%',
-            textAlign: 'left',
-            background: hoverScore === 'overall' ? 'rgba(232,160,32,0.08)' : 'none',
-            border: '1px solid',
-            borderColor: hoverScore === 'overall' ? 'rgba(232,160,32,0.35)' : 'transparent',
-            borderRadius: '6px',
-            padding: '6px 8px',
-            margin: '0 -8px 8px',
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-            transition: 'all 0.15s ease',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '5px' }}>
-            <span className="sub-heading" style={{ fontSize: '13px', fontWeight: 600 }}>{t('Overall Match')}</span>
-            <span style={{ fontSize: '22px', fontWeight: 700, color: scoreToColour(scores.overall), fontFamily: 'var(--font-rajdhani), sans-serif', lineHeight: 1 }}>
-              {scores.overall}%<span aria-hidden="true" style={{ marginLeft: '4px', fontSize: '16px', color: 'rgba(255,255,255,0.35)' }}>›</span>
-            </span>
-          </div>
-          <Bar value={scores.overall} />
-        </button>
-
-        {/* Sub-scores — click any percentage to see how it was reached */}
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '12px', marginBottom: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {([
-            { category: 'gamesmanship' as const, value: scores.gamesmanship },
-            { category: 'vibe' as const,         value: scores.vibeCheck },
-            { category: 'comms' as const,        value: scores.comms },
-          ]).map(({ category, value }) => {
-            const isHovered = hoverScore === category
-            return (
-              <button
-                key={category}
-                onClick={() => setOpenCategory(category)}
-                onMouseEnter={() => setHoverScore(category)}
-                onMouseLeave={() => setHoverScore(null)}
-                aria-haspopup="dialog"
-                aria-label={t('{label}: {score}% — see how it was scored', { label: t(CATEGORY_LABEL[category]), score: value })}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  textAlign: 'left',
-                  background: isHovered ? 'rgba(232,160,32,0.08)' : 'none',
-                  border: '1px solid',
-                  borderColor: isHovered ? 'rgba(232,160,32,0.35)' : 'transparent',
-                  borderRadius: '6px',
-                  padding: '5px 8px',
-                  margin: '0 -8px',
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '12px', color: isHovered ? '#e8a020' : '#8b95a5' }}>{t(CATEGORY_LABEL[category])}</span>
-                  <span style={{ fontSize: '12px', color: scoreToColour(value), fontWeight: 600 }}>
-                    {value}%<span aria-hidden="true" style={{ marginLeft: '4px', color: 'rgba(255,255,255,0.35)' }}>›</span>
-                  </span>
-                </div>
-                <Bar value={value} />
-              </button>
-            )
-          })}
-        </div>
+        {/* Every percentage opens the popup explaining how it was reached */}
+        <ScoreBars
+          scores={{ overall: scores.overall, gamesmanship: scores.gamesmanship, vibe: scores.vibeCheck, comms: scores.comms }}
+          breakdown={breakdown}
+          displayName={request.senderUsername}
+        />
 
         {/* Comms info — plain badges, not a score (same as the squad-matches card) */}
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '4px 0', borderTop: '1px solid rgba(255,255,255,0.06)', marginBottom: '10px' }}>
@@ -279,14 +198,6 @@ export default function RequestCard({
         </div>
       </div>
 
-      {openCategory && (
-        <ScoreBreakdownModal
-          category={openCategory}
-          breakdown={breakdown}
-          senderUsername={request.senderUsername}
-          onClose={() => setOpenCategory(null)}
-        />
-      )}
     </div>
   )
 }

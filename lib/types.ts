@@ -45,6 +45,8 @@ export interface MatchPlayer {
   willingToSpeak: boolean
   status: MatchStatus
   statusGame: string | null
+  /** How each score was reached — drives the click-a-percentage popup. Absent on bare mock rows. */
+  breakdown?: MatchBreakdown
 }
 
 export interface Ally {
