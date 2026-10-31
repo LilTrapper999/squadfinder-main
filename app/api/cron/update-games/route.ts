@@ -14,13 +14,13 @@ import { GAMES_BY_CATEGORY, GAME_QUESTIONS } from '@/lib/mockData'
 import type { Game } from '@/lib/types'
 
 export const runtime = 'nodejs'
-export const maxDuration = 600
+export const maxDuration = 300
 export const dynamic = 'force-dynamic'
 
 const MODEL = 'claude-sonnet-5-5'
 const CONCURRENCY = 3
 // Stop starting new games shortly before maxDuration so we can return a report.
-const DEADLINE_MS = 570_000
+const DEADLINE_MS = 270_000
 const MAX_ADDITIONS_PER_KIND = 25
 
 // ─── Deterministic ids (must match scripts/generate-seed.mjs exactly) ────────
