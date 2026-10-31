@@ -127,12 +127,20 @@ export default function DbSmokeTestPage() {
     setSaveError(null)
     setSaved(null)
 
+    // Profiles are keyed by BASE game (SPEC_DB_CHANGES.md §3.2): a version tile saves to its base row.
+    const { data: gameRow } = await supabase
+      .from('games')
+      .select('id, base_game_id')
+      .eq('id', selectedGameId)
+      .single()
+    const profileGameId = gameRow?.base_game_id ?? selectedGameId
+
     const { error: upsertError } = await supabase
       .from('game_profiles')
       .upsert(
         {
           user_id: userId,
-          game_id: selectedGameId,
+          game_id: profileGameId,
           in_game_username: username.trim(),
           skill,
           rage,
@@ -150,7 +158,7 @@ export default function DbSmokeTestPage() {
       .from('game_profiles')
       .select('in_game_username, skill, rage, updated_at')
       .eq('user_id', userId)
-      .eq('game_id', selectedGameId)
+      .eq('game_id', profileGameId)
       .single()
 
     setSaving(false)

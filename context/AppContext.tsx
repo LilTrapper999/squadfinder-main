@@ -1,11 +1,17 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import React, { createContext, useCallback, useContext, useEffect, useState, ReactNode } from 'react'
 import { Game, GameVersion, ProfileAnswers, Ally, IncomingRequest, SquadRequest, AllyChat, ChatMessage } from '@/lib/types'
 import { MOCK_SQUAD_REQUESTS, MOCK_BLOCKED_BY, findGameById } from '@/lib/mockData'
 import { buildProfileFromAnswers, gameKey } from '@/lib/profileAnswers'
 import { calculateMatch } from '@/lib/matching'
 import { SHOW_DEV_FEATURES } from '@/lib/launch'
+import { supabase } from '@/lib/supabase/client'
+import {
+  acceptRequest, blockAllyRpc, declineAndBlockRequest, declineRequest, fetchAllies,
+  fetchPendingRequests, heartbeat, removeAllyRpc, setAllyPinned, unblockRpc,
+} from '@/lib/db/requests'
+import { loadProfileAnswers, saveProfile } from '@/lib/db/profiles'
 
 interface AppContextValue {
   // Game selection
@@ -40,6 +46,13 @@ interface AppContextValue {
   acceptSquadRequest: (id: string) => void
   declineSquadRequest: (id: string) => void
   declineAndBlockSquadRequest: (id: string) => void
+  /** Supabase user id when signed in; null for the dev bypass, which keeps the in-memory demo behaviour */
+  userId: string | null
+  /** Last error from a request/ally action that talks to the database (shown on /notifications) */
+  requestError: string | null
+  clearRequestError: () => void
+  /** Saves the answers for the selected game to the database (no-op when not signed in). Throws on failure. */
+  saveMyProfile: () => Promise<void>
 
   // FIX 1 — notification gate for showing in-game players
   // Prototype only — replace with real Web Notifications permission in Phase 2
@@ -78,19 +91,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // backlog when they identify themselves at login.
   const [squadRequests, setSquadRequests] = useState<SquadRequest[]>([])
 
-  // Demo notifications: when running on localhost, start with the mock requests already waiting
-  // so the bell and /notifications can be shown without ticking "Returning user (demo)" first.
-  // Client-side only (hostname isn't known during SSR), and never on a deployed host.
-  useEffect(() => {
-    if (!SHOW_DEV_FEATURES) return
-    if (['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname)) {
-      setSquadRequests(MOCK_SQUAD_REQUESTS)
-    }
-  }, [])
-
   function setIsReturningUser(v: boolean) {
     setIsReturningUserState(v)
-    setSquadRequests(v ? MOCK_SQUAD_REQUESTS : [])
+    // Signed-in users' requests come from the database, never from the demo backlog.
+    if (!userId) setSquadRequests(v ? MOCK_SQUAD_REQUESTS : [])
   }
 
   // Notification gate (FIX 1)
@@ -102,6 +106,123 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Private ally chat (SPEC_AMENDMENT_11 FIX 2/3)
   const [chats, setChats] = useState<AllyChat[]>([])
+
+  // ── Real data (SPEC_DB_CHANGES.md) ─────────────────────────────────────────
+  // Signed in with Supabase: requests, allies and the saved profile come from the database.
+  // Dev bypass / signed out: everything below stays inert and the in-memory demo behaves as before.
+  const [userId, setUserId] = useState<string | null>(null)
+  const [authReady, setAuthReady] = useState(false)
+  const [requestError, setRequestError] = useState<string | null>(null)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUserId(data.session?.user.id ?? null)
+      setAuthReady(true)
+    })
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user.id ?? null)
+    })
+    return () => listener.subscription.unsubscribe()
+  }, [])
+
+  // Demo notifications: when running on localhost without a session, start with the mock requests
+  // already waiting so the bell and /notifications can be shown. Client-side only, never deployed.
+  useEffect(() => {
+    if (!SHOW_DEV_FEATURES || !authReady || userId) return
+    if (['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname)) {
+      setSquadRequests(MOCK_SQUAD_REQUESTS)
+    }
+  }, [authReady, userId])
+
+  const refreshRequests = useCallback(async () => {
+    try {
+      setSquadRequests(await fetchPendingRequests())
+    } catch (e) {
+      console.error('[squad requests] load failed', e)
+    }
+  }, [])
+
+  const refreshAllies = useCallback(async () => {
+    try {
+      const fetched = await fetchAllies()
+      setAllies(fetched)
+      // Every ally relationship has a chat (chat itself is still in-memory; see the allies/chat slice).
+      setChats(prev => [
+        ...prev,
+        ...fetched
+          .filter(a => !prev.some(c => c.allyId === a.id))
+          .map(a => ({ allyId: a.id, disappearingMessages: false, messages: [] as ChatMessage[] })),
+      ])
+    } catch (e) {
+      console.error('[allies] load failed', e)
+    }
+  }, [])
+
+  // On sign-in: restore the saved profile and load requests/allies.
+  useEffect(() => {
+    if (!userId) return
+    let cancelled = false
+    loadProfileAnswers(userId)
+      .then(saved => {
+        if (cancelled || !saved) return
+        setProfileAnswers(prev => (Object.keys(prev).length > 0 ? prev : saved))
+        setIsReturningUserState(true)
+      })
+      .catch(e => console.error('[profile] load failed', e))
+    refreshRequests()
+    refreshAllies()
+    return () => { cancelled = true }
+  }, [userId, refreshRequests, refreshAllies])
+
+  // Presence heartbeat + live updates. The database broadcasts only {kind, request_id} to the
+  // private topic user:<uid>; on any event we simply re-read. Polling is the safety net.
+  useEffect(() => {
+    if (!userId) return
+    let cancelled = false
+    const visible = () => document.visibilityState === 'visible'
+    const beat = () => { if (visible()) heartbeat().catch(() => {}) }
+    const reread = () => { if (visible()) { refreshRequests(); refreshAllies() } }
+
+    beat()
+    const beatTimer = setInterval(beat, 45_000)
+    const pollTimer = setInterval(reread, 60_000)
+    const onVisible = () => { beat(); reread() }
+    document.addEventListener('visibilitychange', onVisible)
+
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    supabase.realtime.setAuth().then(() => {
+      if (cancelled) return
+      channel = supabase
+        .channel(`user:${userId}`, { config: { private: true } })
+        .on('broadcast', { event: 'request_received' }, () => refreshRequests())
+        .on('broadcast', { event: 'request_updated' }, () => { refreshRequests(); refreshAllies() })
+        .subscribe()
+    })
+
+    return () => {
+      cancelled = true
+      clearInterval(beatTimer)
+      clearInterval(pollTimer)
+      document.removeEventListener('visibilitychange', onVisible)
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [userId, refreshRequests, refreshAllies])
+
+  /** Runs a database action, surfaces its error, and re-reads so the UI always shows the truth. */
+  async function runAction(action: () => Promise<void>) {
+    setRequestError(null)
+    try {
+      await action()
+    } catch (e) {
+      setRequestError(e instanceof Error ? e.message : 'Something went wrong')
+    }
+    await Promise.all([refreshRequests(), refreshAllies()])
+  }
+
+  async function saveMyProfile() {
+    if (!userId || !selectedGame) return
+    await saveProfile(userId, gameKey(selectedGame), profileAnswers)
+  }
 
   function updateProfileAnswer(key: string, value: string | string[] | number | Record<string, unknown>) {
     setProfileAnswers(prev => ({ ...prev, [key]: value }))
@@ -165,16 +286,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   function removeAlly(id: string) {
+    if (userId) {
+      // Ends the relationship for both sides and deletes the chat (SPEC D10)
+      void runAction(() => removeAllyRpc(id))
+      return
+    }
     setAllies(prev => prev.filter(a => a.id !== id))
   }
 
   function toggleAllyPinned(id: string) {
+    const ally = allies.find(a => a.id === id)
     setAllies(prev => prev.map(a => a.id === id ? { ...a, pinned: !a.pinned } : a))
+    if (userId && ally) {
+      void runAction(() => setAllyPinned(id, !ally.pinned))
+    }
   }
 
   // Blocking keeps the ally record — un-allying them would let them request you again with
   // nothing to remind you why you said no last time.
   function toggleAllyBlocked(id: string) {
+    if (userId) {
+      const ally = allies.find(a => a.id === id)
+      if (ally) void runAction(() => (ally.blockId ? unblockRpc(ally.blockId) : blockAllyRpc(id)))
+      return
+    }
     setAllies(prev => prev.map(a => a.id === id ? { ...a, blocked: !a.blocked } : a))
     setBlockedUsers(prev => {
       const ally = allies.find(a => a.id === id)
@@ -201,6 +336,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   function acceptSquadRequest(id: string) {
+    if (userId) {
+      // The database computes the score and creates both ally rows and the chat.
+      void runAction(() => acceptRequest(id))
+      return
+    }
     const request = squadRequests.find(r => r.id === id)
     if (request) {
       // Score against the profile for the game the request is *for*, not whichever game
@@ -219,10 +359,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   function declineSquadRequest(id: string) {
+    if (userId) {
+      void runAction(() => declineRequest(id))
+      return
+    }
     removeSquadRequest(id)
   }
 
   function declineAndBlockSquadRequest(id: string) {
+    if (userId) {
+      void runAction(() => declineAndBlockRequest(id))
+      return
+    }
     blockUser(id)
     removeSquadRequest(id)
   }
@@ -258,6 +406,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       acceptSquadRequest,
       declineSquadRequest,
       declineAndBlockSquadRequest,
+      userId,
+      requestError,
+      clearRequestError: () => setRequestError(null),
+      saveMyProfile,
       notificationsEnabled,
       setNotificationsEnabled,
       squadAccepted,

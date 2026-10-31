@@ -314,7 +314,9 @@ function RoleMatchRadioRow({ value, onChange, columns }: {
 export default function ProfileForm() {
   const router = useRouter()
   const { t } = useT()
-  const { selectedGame, profileAnswers, updateProfileAnswer } = useApp()
+  const { selectedGame, profileAnswers, updateProfileAnswer, saveMyProfile } = useApp()
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const width = useWindowWidth()
   const isMobile = width < MOBILE_BREAKPOINT
 
@@ -454,9 +456,18 @@ export default function ProfileForm() {
     else if (step > 0) goTo(step - 1, 0)
   }
 
-  function handleSubmit() {
-    if (!canSubmit) return
-    router.push('/squad-matches')
+  async function handleSubmit() {
+    if (!canSubmit || saving) return
+    setSaving(true)
+    setSaveError(null)
+    try {
+      // Saves to the database when signed in; a no-op for the dev bypass.
+      await saveMyProfile()
+      router.push('/squad-matches')
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : t('Could not save your profile. Please try again.'))
+      setSaving(false)
+    }
   }
 
   // ── render ────────────────────────────────────────────────────────────────────
@@ -890,7 +901,7 @@ export default function ProfileForm() {
 
         <button
           onClick={isLastStep ? handleSubmit : goNext}
-          disabled={!stepComplete}
+          disabled={!stepComplete || saving}
           style={{
             padding: '14px 32px',
             borderRadius: '8px',
@@ -908,6 +919,9 @@ export default function ProfileForm() {
         >
           {isLastStep ? t('FIND MY SQUAD →') : t('Next →')}
         </button>
+        {saveError && (
+          <p role="alert" style={{ margin: '12px 0 0', fontSize: '13px', color: '#ef4444' }}>{saveError}</p>
+        )}
         </div>
       </div>
       </div>

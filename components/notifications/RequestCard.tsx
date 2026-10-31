@@ -34,12 +34,13 @@ export default function RequestCard({
   const [hoverAccept, setHoverAccept] = useState(false)
 
   const statusDotColor =
-    request.senderStatus === 'ingame' ? '#22c55e' :
+    request.senderStatus === 'ingame' || request.senderStatus === 'online' ? '#22c55e' :
     request.senderStatus === 'searching' ? '#e8a020' :
     'rgba(255,255,255,0.3)'
 
   const statusText =
     request.senderStatus === 'ingame' ? t('Live — {game}', { game: request.senderStatusGame ?? t('In Game') }) :
+    request.senderStatus === 'online' ? t('Online') :
     request.senderStatus === 'searching' ? t('Searching for a squad') :
     t('Offline')
 

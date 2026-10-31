@@ -30,7 +30,7 @@ export function sortAllies(allies: Ally[]): Ally[] {
 /** Dot colour + label for an ally's presence. "Online" covers searching and in-game alike. */
 function presenceOf(status: Ally['status']): { color: string; label: string } {
   if (status === 'ingame') return { color: '#22c55e', label: 'In game' }
-  if (status === 'searching') return { color: '#22c55e', label: 'Online' }
+  if (status === 'searching' || status === 'online') return { color: '#22c55e', label: 'Online' }
   return { color: '#4a5568', label: 'Offline' }
 }
 

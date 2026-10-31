@@ -83,6 +83,8 @@ export default function NotificationsPage() {
     acceptSquadRequest,
     declineSquadRequest,
     declineAndBlockSquadRequest,
+    requestError,
+    clearRequestError,
   } = useApp()
   const lookingCounts = useLookingCounts()
 
@@ -177,6 +179,33 @@ export default function NotificationsPage() {
           <h1 className="main-heading" style={{ fontSize: 'clamp(24px, 6vw, 40px)', margin: 0 }}>
             {t('NOTIFICATIONS')}
           </h1>
+
+          {requestError && (
+            <div
+              role="alert"
+              style={{
+                marginTop: '12px',
+                padding: '10px 14px',
+                borderRadius: '8px',
+                backgroundColor: 'rgba(239,68,68,0.08)',
+                border: '1px solid rgba(239,68,68,0.3)',
+                color: '#fca5a5',
+                fontSize: '13px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: '12px',
+              }}
+            >
+              <span>{requestError}</span>
+              <button
+                onClick={clearRequestError}
+                aria-label={t('Dismiss')}
+                style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', fontSize: '16px', lineHeight: 1 }}
+              >
+                ×
+              </button>
+            </div>
+          )}
 
           <div
             style={{

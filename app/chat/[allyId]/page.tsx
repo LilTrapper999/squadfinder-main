@@ -68,12 +68,13 @@ export default function ChatPage() {
   }
 
   const statusDotColor =
-    ally.status === 'ingame' ? '#22c55e' :
+    ally.status === 'ingame' || ally.status === 'online' ? '#22c55e' :
     ally.status === 'searching' ? '#e8a020' :
     'rgba(255,255,255,0.3)'
 
   const statusText =
     ally.status === 'ingame' ? t('Live — {game}', { game: ally.statusGame ?? t('In Game') }) :
+    ally.status === 'online' ? t('Online') :
     ally.status === 'searching' ? t('Searching for a squad') :
     t('Offline')
 

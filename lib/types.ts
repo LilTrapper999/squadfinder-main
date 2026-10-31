@@ -28,7 +28,8 @@ export interface Game {
   baseId?: string
 }
 
-export type MatchStatus = 'ingame' | 'searching' | 'offline'
+/** 'online' = in SquadFinder but not searching (the database cannot know if someone is in a game); 'ingame' is legacy demo data only. */
+export type MatchStatus = 'ingame' | 'online' | 'searching' | 'offline'
 
 export interface MatchPlayer {
   id: string
@@ -67,6 +68,8 @@ export interface Ally {
   blocked?: boolean
   /** They blocked you — surfaced on the card so the dead chat isn't a mystery */
   blockedYou?: boolean
+  /** DB only: the caller's own user_blocks row for this ally, needed to unblock */
+  blockId?: string
 }
 
 // ─── Private ally chat (SPEC_AMENDMENT_11 FIX 2/3) ───────────────────────────

@@ -93,6 +93,7 @@ try {
       const version = g.versions[0]
       gameRows.push({
         id: baseUuid,
+        slug: g.id,
         name: g.name,
         category: g.category,
         mark: g.mark,
@@ -123,6 +124,7 @@ try {
 
       gameRows.push({
         id: baseUuid,
+        slug: baseId,
         name: baseName,
         category: sample.category,
         mark: sample.mark,
@@ -141,6 +143,7 @@ try {
         const version = g.versions[0]
         gameRows.push({
           id: uuidv5(`game:${g.id}`, NAMESPACE),
+          slug: g.id,
           name: g.name,
           category: g.category,
           mark: g.mark,
@@ -173,6 +176,12 @@ try {
     })
   }
 
+  const slugs = new Set()
+  for (const g of gameRows) {
+    if (slugs.has(g.slug)) throw new Error(`duplicate games.slug "${g.slug}"`)
+    slugs.add(g.slug)
+  }
+
   // --- Step 3: emit SQL ---
 
   const lines = []
@@ -183,13 +192,14 @@ try {
   lines.push('')
   lines.push(`-- ${gameRows.length} games (${gameRows.filter(g => !g.isSelectable).length} non-selectable reference-data anchors)`)
   lines.push('insert into public.games')
-  lines.push('  (id, name, category, mark, logo_url, steam_app_id, platforms, is_mobile, has_team_feature, base_game_id, version_label, version_date, is_selectable)')
+  lines.push('  (id, slug, name, category, mark, logo_url, steam_app_id, platforms, is_mobile, has_team_feature, base_game_id, version_label, version_date, is_selectable)')
   lines.push('values')
   lines.push(
     gameRows
       .map((g) => {
         const values = [
           sqlStr(g.id),
+          sqlStr(g.slug),
           sqlStr(g.name),
           sqlStr(g.category),
           sqlStr(g.mark),
@@ -205,10 +215,11 @@ try {
         ]
         return `  (${values.join(', ')})`
       })
-      .join(',\n') + ';'
+      .join(',\n')
   )
   lines.push(`-- resolve base_game_id -> games(id) is already correct above since anchors are inserted`)
   lines.push('on conflict (id) do update set')
+  lines.push('  slug = excluded.slug,')
   lines.push('  name = excluded.name,')
   lines.push('  category = excluded.category,')
   lines.push('  mark = excluded.mark,')
@@ -229,7 +240,7 @@ try {
   lines.push(
     referenceRows
       .map((r) => `  (${sqlStr(r.gameId)}, ${sqlJsonb(r.maps)}, ${sqlJsonb(r.weapons)}, ${sqlJsonb(r.roles)})`)
-      .join(',\n') + ';'
+      .join(',\n')
   )
   lines.push('on conflict (game_id) do update set')
   lines.push('  maps = excluded.maps,')
