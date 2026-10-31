@@ -9,10 +9,11 @@ export default function LoginPage() {
       style={{
         flex: 1,
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'safe center',
         justifyContent: 'center',
         position: 'relative',
-        overflow: 'hidden',
+        overflowX: 'hidden',
+        overflowY: 'auto',
         backgroundColor: '#0a0b0f',
         color: '#ffffff',
         padding: '20px',
