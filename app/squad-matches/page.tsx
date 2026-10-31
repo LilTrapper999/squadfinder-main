@@ -6,7 +6,7 @@ import { useApp } from '@/context/AppContext'
 import { useT } from '@/context/I18nContext'
 import { MOCK_MATCHES, MOCK_OPPONENT_PROFILES } from '@/lib/mockData'
 import { MatchPlayer } from '@/lib/types'
-import { calculateMatch } from '@/lib/matching'
+import { explainMatch } from '@/lib/matching'
 import { buildProfileFromAnswers, gameKey, usernameFor } from '@/lib/profileAnswers'
 import { useWindowWidth } from '@/lib/useWindowWidth'
 import { useAnnounceLooking } from '@/lib/useLookingPresence'
@@ -63,9 +63,11 @@ export default function SquadMatchesPage() {
   const computedMatches: MatchPlayer[] = MOCK_MATCHES.map((match, i) => {
     const opponent = MOCK_OPPONENT_PROFILES[i]
     if (!opponent) return match
-    const scores = calculateMatch(myProfile, opponent.profile)
+    const breakdown = explainMatch(myProfile, opponent.profile)
+    const scores = breakdown.scores
     return {
       ...match,
+      breakdown,
       overall: scores.overall,
       gamesmanship: scores.gamesmanship,
       vibe: scores.vibeCheck,

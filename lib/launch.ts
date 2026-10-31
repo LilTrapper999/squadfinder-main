@@ -8,5 +8,6 @@
  *   - login page: "Enter Without Login (Dev)" bypass button
  *   - login page: "Returning user (demo)" toggle
  *   - /db-smoke-test page (Supabase connectivity check)
+ *   - AppContext: on localhost the demo squad requests (MOCK_SQUAD_REQUESTS) are seeded at start
  */
 export const SHOW_DEV_FEATURES = true

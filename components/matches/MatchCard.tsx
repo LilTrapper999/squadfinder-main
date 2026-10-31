@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { MatchPlayer } from '@/lib/types'
 import { useApp } from '@/context/AppContext'
 import { useT } from '@/context/I18nContext'
-import { scoreToColour } from '@/lib/matchColour'
+import ScoreBars from '@/components/notifications/ScoreBars'
 
 type CardState = 'default' | 'waiting' | 'accepted' | 'declined'
 
@@ -13,17 +13,6 @@ interface MatchCardProps {
   player: MatchPlayer
   resolvedStatusGame: string | null
   onAccepted: (playerId: string) => void
-}
-
-const getBarColor = scoreToColour
-
-function Bar({ value }: { value: number }) {
-  const color = getBarColor(value)
-  return (
-    <div style={{ height: '6px', borderRadius: '3px', backgroundColor: 'rgba(255,255,255,0.08)' }}>
-      <div style={{ height: '100%', borderRadius: '3px', backgroundColor: color, width: `${value}%`, transition: 'width 0.5s ease' }} />
-    </div>
-  )
 }
 
 export default function MatchCard({
@@ -39,6 +28,8 @@ export default function MatchCard({
   const [hoverChatBtn, setHoverChatBtn] = useState(false)
 
   const isOffline = player.status === 'offline'
+  // 'MATCH 01' → 'Match 01' for running text inside the popup
+  const anonymousName = player.label.charAt(0) + player.label.slice(1).toLowerCase()
   const isWaiting = cardState === 'waiting'
   const isAccepted = cardState === 'accepted'
   const isDeclined = cardState === 'declined'
@@ -95,8 +86,6 @@ export default function MatchCard({
     player.status === 'searching' ? '#e8a020' :
     'rgba(255,255,255,0.3)'
 
-  const overallColor = getBarColor(player.overall)
-
   // Card border
   const borderColor =
     isAccepted ? '#22c55e' :
@@ -138,33 +127,13 @@ export default function MatchCard({
         </div>
       </div>
 
-      {/* Overall */}
-      <div style={{ marginBottom: '12px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '5px' }}>
-          <span className="sub-heading" style={{ fontSize: '13px', fontWeight: 600 }}>{t('Overall Match')}</span>
-          <span style={{ fontSize: '22px', fontWeight: 700, color: overallColor, fontFamily: 'var(--font-rajdhani), sans-serif', lineHeight: 1 }}>
-            {player.overall}%
-          </span>
-        </div>
-        <Bar value={player.overall} />
-      </div>
-
-      {/* Sub-scores */}
-      <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '12px', marginBottom: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {[
-          { label: t('Gamesmanship'), value: player.gamesmanship },
-          { label: t('Vibe Check'),   value: player.vibe },
-          { label: t('Comms Style'),  value: player.comms },
-        ].map(({ label, value }) => (
-          <div key={label}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-              <span style={{ fontSize: '12px', color: '#8b95a5' }}>{label}</span>
-              <span style={{ fontSize: '12px', color: getBarColor(value), fontWeight: 600 }}>{value}%</span>
-            </div>
-            <Bar value={value} />
-          </div>
-        ))}
-      </div>
+      {/* Every percentage opens the popup showing how it was reached. Until the match is
+          accepted the other player is only ever "Match 01" — never their username. */}
+      <ScoreBars
+        scores={{ overall: player.overall, gamesmanship: player.gamesmanship, vibe: player.vibe, comms: player.comms }}
+        breakdown={player.breakdown}
+        displayName={isAccepted ? player.revealedUsername : anonymousName}
+      />
 
       {/* Comms info — plain badges, not a score (SPEC_AMENDMENT_10 FIX 2) */}
       <div
@@ -206,6 +175,12 @@ export default function MatchCard({
           💬 {player.willingToChat ? t('Types') : t('No text')}
         </span>
       </div>
+
+      {player.breakdown && (
+        <p style={{ margin: '0 0 14px', fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
+          {t('Tap any percentage to see how it was scored.')}
+        </p>
+      )}
 
       {/* CTA area */}
       <div style={{ marginTop: 'auto' }}>
