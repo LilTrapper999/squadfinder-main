@@ -172,6 +172,45 @@ export interface MatchScores {
   comms: number
 }
 
+// ─── Score breakdown (the "how did we get this number" popup on /notifications) ──────────────
+
+export type MatchFactorId = 'weapons' | 'maps' | 'roles' | 'skill' | 'rage' | 'personality' | 'languages'
+
+export type MatchFactorDetail =
+  /** List answers (weapons, maps, roles, personality, languages): who picked what */
+  | {
+      kind: 'overlap'
+      shared: string[]
+      onlyYou: string[]
+      onlyThem: string[]
+      /** Roles only — 0–1, how far both players' role-matching styles lean toward *similar* roles */
+      similarityLean?: number
+    }
+  /** Slider answers (skill, rage): both values on the 0–10 scale and the gap between them */
+  | { kind: 'scale'; you: number; them: number; gap: number; maxGap: number }
+
+export interface MatchFactor {
+  id: MatchFactorId
+  /** 0–100 */
+  score: number
+  /** This factor's share of its category score, 0–1 */
+  weight: number
+  detail: MatchFactorDetail
+}
+
+export interface MatchCategoryBreakdown {
+  /** Same rounded value calculateMatch returns for this category */
+  score: number
+  factors: MatchFactor[]
+}
+
+export interface MatchBreakdown {
+  scores: MatchScores
+  gamesmanship: MatchCategoryBreakdown
+  vibe: MatchCategoryBreakdown
+  comms: MatchCategoryBreakdown
+}
+
 export interface MatchResult {
   matchId: string
   scores: MatchScores

@@ -1,7 +1,15 @@
 // /lib/matching.ts
 // Compatibility scoring between two player profiles (MATCHING_LOGIC_SPEC.md, roleScore per SPEC_AMENDMENT_08 FIX 2).
 
-import { Profile, MatchScores, MatchResult } from './types'
+import {
+  Profile,
+  MatchScores,
+  MatchResult,
+  MatchBreakdown,
+  MatchFactor,
+  MatchFactorDetail,
+  MatchFactorId,
+} from './types'
 
 // ── Utility ──────────────────────────────────────────────
 
@@ -68,11 +76,15 @@ function roleScore(me: Profile, them: Profile): number {
   const similarityScore = overlapRatio * 100        // high overlap = high score
   const diversityScore = (1 - overlapRatio) * 100   // low overlap = high score
 
-  // Average both players' preferences (0–10 scale → 0–1)
-  const avgPref = ((me.roleMatchPreference ?? 5) + (them.roleMatchPreference ?? 5)) / 20
+  const avgPref = roleSimilarityLean(me, them)
 
   // Blend: 0.0 pref = pure diversity, 1.0 pref = pure similarity
   return diversityScore * (1 - avgPref) + similarityScore * avgPref
+}
+
+/** Both players' role-matching preferences averaged and rescaled from 0–10 to 0–1. */
+function roleSimilarityLean(me: Profile, them: Profile): number {
+  return ((me.roleMatchPreference ?? 5) + (them.roleMatchPreference ?? 5)) / 20
 }
 
 /**
@@ -147,6 +159,68 @@ export function calculateMatch(me: Profile, them: Profile): MatchScores {
     gamesmanship: Math.round(gamesmanship),
     vibeCheck: Math.round(vibeCheck),
     comms: Math.round(comms),
+  }
+}
+
+// ── Explanation ──────────────────────────────────────────
+
+function overlapDetail(me: string[], them: string[]): Extract<MatchFactorDetail, { kind: 'overlap' }> {
+  return {
+    kind: 'overlap',
+    shared: intersection(me, them),
+    onlyYou: me.filter(x => !them.includes(x)),
+    onlyThem: them.filter(x => !me.includes(x)),
+  }
+}
+
+function scaleDetail(you: number, them: number): Extract<MatchFactorDetail, { kind: 'scale' }> {
+  const maxGap = 5 // keep in step with proximityScore's default
+  return { kind: 'scale', you, them, gap: Math.abs(you - them), maxGap }
+}
+
+/**
+ * explainMatch
+ *
+ * Same inputs and same scoring functions as calculateMatch, but returns every component of every
+ * score — which picks the two players share, which only one made, and how far apart their sliders
+ * sit — so the UI can show *why* a percentage is what it is. Category scores come from the same
+ * helpers calculateMatch uses, so the two can never disagree.
+ */
+export function explainMatch(me: Profile, them: Profile): MatchBreakdown {
+  const scores = calculateMatch(me, them)
+
+  const factor = (
+    id: MatchFactorId,
+    score: number,
+    weight: number,
+    detail: MatchFactorDetail,
+  ): MatchFactor => ({ id, score: Math.round(score), weight, detail })
+
+  return {
+    scores,
+    gamesmanship: {
+      score: scores.gamesmanship,
+      factors: [
+        factor('weapons', weaponScore(me, them), 0.25, overlapDetail(me.weapons, them.weapons)),
+        factor('maps', mapScore(me, them), 0.25, overlapDetail(me.maps, them.maps)),
+        factor('roles', roleScore(me, them), 0.25, {
+          ...overlapDetail(me.roles, them.roles),
+          similarityLean: roleSimilarityLean(me, them),
+        }),
+        factor('skill', skillScore(me, them), 0.25, scaleDetail(me.skill, them.skill)),
+      ],
+    },
+    vibe: {
+      score: scores.vibeCheck,
+      factors: [
+        factor('rage', rageScore(me, them), 0.5, scaleDetail(me.rage, them.rage)),
+        factor('personality', personalityScore(me, them), 0.5, overlapDetail(me.personality, them.personality)),
+      ],
+    },
+    comms: {
+      score: scores.comms,
+      factors: [factor('languages', commsScore(me, them), 1, overlapDetail(me.languages, them.languages))],
+    },
   }
 }
 
