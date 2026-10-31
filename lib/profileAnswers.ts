@@ -1,7 +1,6 @@
 // /lib/profileAnswers.ts
 // Shared translation layer between the raw /build-profile answer blob and the typed Profile
-// the matching engine consumes — plus the human-readable rendering of a profile used by the
-// per-category answers popup on /notifications.
+// the matching engine consumes — plus the labels the score breakdown popup on /notifications uses.
 
 import { Game, GameQuestions, Profile, ProfileAnswers } from './types'
 
@@ -137,7 +136,7 @@ export function isProfileComplete(
   return missingRequiredAnswers(key, answers, gq).length === 0
 }
 
-// ─── Profile → readable answers (notifications popup) ───────────────────────
+// ─── Score labels (notifications breakdown popup) ───────────────────────────
 
 /** The four clickable score readouts on a match/notification card. */
 export type ScoreCategory = 'overall' | 'gamesmanship' | 'vibe' | 'comms'
@@ -149,74 +148,7 @@ export const CATEGORY_LABEL: Record<ScoreCategory, string> = {
   comms: 'Comms Style',
 }
 
-export interface AnswerItem {
-  /** The build-profile question this answers */
-  label: string
-  /** One entry per selected option — empty means the sender skipped the question */
-  values: string[]
-}
-
-export interface AnswerGroup {
-  title: string
-  items: AnswerItem[]
-}
-
-/** Renders a 0.0–10.0 slider answer as "6.5 / 10 — Mid (Respectfully)". */
-function sliderAnswer(value: number, labels: [string, string, string]): string {
-  const anchor = value <= 2.5 ? labels[0] : value < 7.5 ? labels[1] : labels[2]
-  return `${value.toFixed(1)} / 10 — ${anchor}`
-}
-
-/** Mirrors ProfileForm's CommsSlider — the two booleans are a single 4-stop answer. */
-function commsStyle(profile: Profile): string {
-  if (profile.willingToChat && profile.willingToSpeak) return 'Both'
-  if (profile.willingToSpeak) return 'Only Voice Chat'
-  if (profile.willingToChat) return 'Only Text Chat'
-  return 'No Communication'
-}
-
-function gamesmanshipGroup(profile: Profile): AnswerGroup {
-  return {
-    title: 'Gamesmanship',
-    items: [
-      { label: 'Role matching style', values: [sliderAnswer(profile.roleMatchPreference ?? 5, ROLE_MATCH_LABELS)] },
-      { label: 'Skill level', values: [sliderAnswer(profile.skill, SKILL_LABELS)] },
-      { label: "What's your role?", values: profile.roles },
-      { label: 'Maps they know well', values: profile.maps },
-      { label: 'Weapons they run', values: profile.weapons },
-    ],
-  }
-}
-
-function vibeGroup(profile: Profile): AnswerGroup {
-  return {
-    title: 'Vibe Check',
-    items: [
-      { label: 'Rage level', values: [sliderAnswer(profile.rage, RAGE_LABELS)] },
-      { label: 'Personality vibe', values: profile.personality },
-    ],
-  }
-}
-
-function commsGroup(profile: Profile): AnswerGroup {
-  return {
-    title: 'Comms',
-    items: [
-      { label: 'Comms style', values: [commsStyle(profile)] },
-      { label: 'Languages they play in', values: profile.languages },
-    ],
-  }
-}
-
-/**
- * Every answer the sender gave for one score category — 'overall' returns all three groups,
- * since the overall score is the average of them.
- */
-export function describeAnswers(profile: Profile, category: ScoreCategory): AnswerGroup[] {
-  switch (category) {
-    case 'gamesmanship': return [gamesmanshipGroup(profile)]
-    case 'vibe':         return [vibeGroup(profile)]
-    case 'comms':        return [commsGroup(profile)]
-    case 'overall':      return [gamesmanshipGroup(profile), vibeGroup(profile), commsGroup(profile)]
-  }
+/** Which of a slider's three anchor labels a 0.0–10.0 value sits closest to. */
+export function sliderAnchor(value: number, labels: [string, string, string]): string {
+  return value <= 2.5 ? labels[0] : value < 7.5 ? labels[1] : labels[2]
 }

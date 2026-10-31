@@ -83,6 +83,17 @@ export function AllyCard({ ally }: AllyCardProps) {
   const { toggleAllyPinned, toggleAllyBlocked } = useApp()
   const [hovered, setHovered] = useState(false)
   const presence = presenceOf(ally.status)
+  const [copied, setCopied] = useState(false)
+
+  async function copyUsername() {
+    try {
+      await navigator.clipboard.writeText(ally.username)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      // Clipboard blocked (e.g. insecure context) — nothing useful to do.
+    }
+  }
 
   // A blocked ally shouldn't open a chat — the whole point is you've stopped talking.
   const canOpenChat = !ally.blocked && !ally.blockedYou
@@ -124,20 +135,51 @@ export function AllyCard({ ally }: AllyCardProps) {
     >
       {/* Username + match percentage */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p
-          style={{
-            margin: '0 0 2px',
-            fontSize: '14px',
-            fontWeight: 600,
-            color: '#ffffff',
-            fontFamily: 'var(--font-rajdhani), sans-serif',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {ally.username}
-        </p>
+        {/* Username with a small copy icon — paste it into the game's friend search */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', margin: '0 0 2px', minWidth: 0 }}>
+          <p
+            style={{
+              margin: 0,
+              fontSize: '14px',
+              fontWeight: 600,
+              color: '#ffffff',
+              fontFamily: 'var(--font-rajdhani), sans-serif',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {ally.username}
+          </p>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); copyUsername() }}
+            aria-label={t('Copy username')}
+            title={copied ? t('Copied!') : t('Copy username')}
+            style={{
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              padding: 0,
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: copied ? '#22c55e' : 'rgba(255,255,255,0.4)',
+              transition: 'color 0.15s ease',
+            }}
+          >
+            {copied ? (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            ) : (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+            )}
+          </button>
+        </div>
         <p style={{ margin: 0, fontSize: '12px', color: getScoreColor(ally.overall), fontWeight: 500 }}>
           {t('{score}% match', { score: ally.overall })}
         </p>
