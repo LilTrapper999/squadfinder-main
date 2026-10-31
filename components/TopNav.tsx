@@ -20,6 +20,10 @@ export default function TopNav() {
   const OWN_TOP_BAR = ['/', '/select-game', '/build-profile', '/squad-matches']
   if (OWN_TOP_BAR.includes(pathname)) return null
 
+  // Legal pages are readable without an account, so a sign-out button there would be noise —
+  // and /reset-password is reached from an email link, mid-recovery.
+  const PUBLIC_PAGES = ['/privacy', '/terms', '/reset-password']
+
   return (
     <div
       style={{
@@ -46,7 +50,7 @@ export default function TopNav() {
         </svg>
       </div>
 
-      <HeaderActions />
+      <HeaderActions showSignOut={!PUBLIC_PAGES.includes(pathname)} />
     </div>
   )
 }

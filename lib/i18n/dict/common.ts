@@ -4,6 +4,7 @@ export const common: Namespace = {
   es: {
     "Change language": "Cambiar idioma",
     "Language": "Idioma",
+    "Sign out": "Cerrar sesión",
     "Online": "En línea",
     "Offline": "Desconectado",
     "In game": "En partida",
@@ -14,6 +15,7 @@ export const common: Namespace = {
   fr: {
     "Change language": "Changer de langue",
     "Language": "Langue",
+    "Sign out": "Se déconnecter",
     "Online": "En ligne",
     "Offline": "Hors ligne",
     "In game": "En jeu",
@@ -24,6 +26,7 @@ export const common: Namespace = {
   de: {
     "Change language": "Sprache ändern",
     "Language": "Sprache",
+    "Sign out": "Abmelden",
     "Online": "Online",
     "Offline": "Offline",
     "In game": "Im Spiel",
@@ -34,6 +37,7 @@ export const common: Namespace = {
   pt: {
     "Change language": "Mudar idioma",
     "Language": "Idioma",
+    "Sign out": "Sair",
     "Online": "Online",
     "Offline": "Offline",
     "In game": "Em jogo",
@@ -44,6 +48,7 @@ export const common: Namespace = {
   ru: {
     "Change language": "Сменить язык",
     "Language": "Язык",
+    "Sign out": "Выйти",
     "Online": "В сети",
     "Offline": "Не в сети",
     "In game": "В игре",
@@ -54,6 +59,7 @@ export const common: Namespace = {
   zh: {
     "Change language": "切换语言",
     "Language": "语言",
+    "Sign out": "退出登录",
     "Online": "在线",
     "Offline": "离线",
     "In game": "游戏中",
@@ -64,6 +70,7 @@ export const common: Namespace = {
   ja: {
     "Change language": "言語を変更",
     "Language": "言語",
+    "Sign out": "ログアウト",
     "Online": "オンライン",
     "Offline": "オフライン",
     "In game": "ゲーム中",
@@ -74,6 +81,7 @@ export const common: Namespace = {
   ko: {
     "Change language": "언어 변경",
     "Language": "언어",
+    "Sign out": "로그아웃",
     "Online": "온라인",
     "Offline": "오프라인",
     "In game": "게임 중",
@@ -84,6 +92,7 @@ export const common: Namespace = {
   ar: {
     "Change language": "تغيير اللغة",
     "Language": "اللغة",
+    "Sign out": "تسجيل الخروج",
     "Online": "متصل",
     "Offline": "غير متصل",
     "In game": "في اللعبة",
@@ -94,6 +103,7 @@ export const common: Namespace = {
   hi: {
     "Change language": "भाषा बदलें",
     "Language": "भाषा",
+    "Sign out": "साइन आउट",
     "Online": "ऑनलाइन",
     "Offline": "ऑफ़लाइन",
     "In game": "गेम में",

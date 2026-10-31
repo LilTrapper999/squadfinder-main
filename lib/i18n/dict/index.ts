@@ -1,6 +1,7 @@
 import type { LangCode } from '../languages'
 import { common } from './common'
 import { login } from './login'
+import { auth } from './auth'
 import { selectGame } from './selectGame'
 import { profile } from './profile'
 import { matches } from './matches'
@@ -15,7 +16,7 @@ import { social } from './social'
  */
 export type Namespace = Partial<Record<Exclude<LangCode, 'en'>, Record<string, string>>>
 
-const NAMESPACES: Namespace[] = [common, login, selectGame, profile, matches, social]
+const NAMESPACES: Namespace[] = [common, login, auth, selectGame, profile, matches, social]
 
 export const DICTIONARY: Partial<Record<LangCode, Record<string, string>>> = {}
 

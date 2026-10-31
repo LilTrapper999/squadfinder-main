@@ -6,6 +6,7 @@ import { useApp } from '@/context/AppContext'
 import { useT } from '@/context/I18nContext'
 import { SHOW_DEV_FEATURES } from '@/lib/launch'
 import { supabase } from '@/lib/supabase/client'
+import EmailAuthForm from '@/components/auth/EmailAuthForm'
 
 export default function LoginCard() {
   const router = useRouter()
@@ -36,7 +37,12 @@ export default function LoginCard() {
     setSignInError(false)
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/` },
+      options: {
+        redirectTo: `${window.location.origin}/`,
+        // Always show Google's account chooser so a returning user can pick (or switch) accounts
+        // instead of being signed straight back in as the last one.
+        queryParams: { prompt: 'select_account' },
+      },
     })
     // On success the browser navigates to Google, so only the failure path returns here.
     if (error) {
@@ -73,7 +79,7 @@ export default function LoginCard() {
           fontWeight: 700,
           color: '#e8a020',
           letterSpacing: '0.05em',
-          marginBottom: '32px',
+          marginBottom: '24px',
         }}
       >
         SQUADFINDER
@@ -96,7 +102,7 @@ export default function LoginCard() {
         className="sub-heading"
         style={{
           fontSize: '15px',
-          margin: '0 0 36px 0',
+          margin: '0 0 28px 0',
           lineHeight: 1.5,
         }}
       >
@@ -123,7 +129,7 @@ export default function LoginCard() {
           opacity: signingIn ? 0.7 : 1,
           transition: 'all 0.15s ease',
           fontFamily: 'inherit',
-          marginBottom: signInError ? '10px' : '20px',
+          marginBottom: 0,
         }}
       >
         {/* Google G SVG */}
@@ -139,10 +145,32 @@ export default function LoginCard() {
       </button>
 
       {signInError && (
-        <p style={{ fontSize: '13px', color: '#e5484d', margin: '0 0 20px 0' }}>
+        <p role="alert" style={{ fontSize: '13px', color: '#e5484d', margin: 0 }}>
           {t('Sign-in failed. Please try again.')}
         </p>
       )}
+
+      {/* "or" divider between Google and email sign-in */}
+      <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(255,255,255,0.08)' }} />
+        <span
+          style={{
+            fontFamily: 'var(--font-rajdhani), sans-serif',
+            fontWeight: 700,
+            fontSize: '12px',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            color: '#4a5568',
+          }}
+        >
+          {t('or')}
+        </span>
+        <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(255,255,255,0.08)' }} />
+      </div>
+
+      <div style={{ width: '100%' }}>
+        <EmailAuthForm />
+      </div>
 
       {/* Dev bypass — skip OAuth. Removed at launch (see lib/launch.ts). */}
       {SHOW_DEV_FEATURES && (
@@ -178,7 +206,7 @@ export default function LoginCard() {
           alignItems: 'center',
           gap: '10px',
           cursor: 'pointer',
-          marginBottom: '28px',
+          marginBottom: SHOW_DEV_FEATURES ? '28px' : 0,
         }}
       >
         <input
