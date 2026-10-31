@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useApp } from '@/context/AppContext'
 import { useT } from '@/context/I18nContext'
 import { SHOW_DEV_FEATURES } from '@/lib/launch'
+import { supabase } from '@/lib/supabase/client'
 
 export default function LoginCard() {
   const router = useRouter()
@@ -13,12 +14,35 @@ export default function LoginCard() {
   const [rememberMe, setRememberMe] = useState(false)
   const [hoveredGoogle, setHoveredGoogle] = useState(false)
   const [hoveredSkip, setHoveredSkip] = useState(false)
+  const [signingIn, setSigningIn] = useState(false)
+  const [signInError, setSignInError] = useState(false)
 
+  // Google redirects back to this page with a session in the URL; supabase-js picks it up
+  // and fires SIGNED_IN. An already-signed-in visitor is sent straight into the app.
   // Both new and returning users start at select-game — isReturningUser only changes what
   // happens *after* a game is picked (skip build-profile straight to squad-matches or not).
-  // Demo only — replace with real OAuth + DB user lookup in Phase 2
-  function handleGoogleClick() {
-    router.push('/select-game')
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) router.replace('/select-game')
+    })
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) router.replace('/select-game')
+    })
+    return () => listener.subscription.unsubscribe()
+  }, [router])
+
+  async function handleGoogleClick() {
+    setSigningIn(true)
+    setSignInError(false)
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/` },
+    })
+    // On success the browser navigates to Google, so only the failure path returns here.
+    if (error) {
+      setSigningIn(false)
+      setSignInError(true)
+    }
   }
 
   function handleDevSkip() {
@@ -82,6 +106,7 @@ export default function LoginCard() {
       {/* Google button */}
       <button
         onClick={handleGoogleClick}
+        disabled={signingIn}
         onMouseEnter={() => setHoveredGoogle(true)}
         onMouseLeave={() => setHoveredGoogle(false)}
         style={{
@@ -94,10 +119,11 @@ export default function LoginCard() {
           backgroundColor: hoveredGoogle ? 'rgba(232,160,32,0.08)' : 'rgba(255,255,255,0.04)',
           border: `1px solid ${hoveredGoogle ? '#e8a020' : 'rgba(255,255,255,0.12)'}`,
           borderRadius: '8px',
-          cursor: 'pointer',
+          cursor: signingIn ? 'wait' : 'pointer',
+          opacity: signingIn ? 0.7 : 1,
           transition: 'all 0.15s ease',
           fontFamily: 'inherit',
-          marginBottom: '20px',
+          marginBottom: signInError ? '10px' : '20px',
         }}
       >
         {/* Google G SVG */}
@@ -108,9 +134,15 @@ export default function LoginCard() {
           <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
         </svg>
         <span style={{ fontSize: '15px', fontWeight: 500, color: '#ffffff' }}>
-          {t('Continue with Google')}
+          {signingIn ? t('Signing in…') : t('Continue with Google')}
         </span>
       </button>
+
+      {signInError && (
+        <p style={{ fontSize: '13px', color: '#e5484d', margin: '0 0 20px 0' }}>
+          {t('Sign-in failed. Please try again.')}
+        </p>
+      )}
 
       {/* Dev bypass — skip OAuth. Removed at launch (see lib/launch.ts). */}
       {SHOW_DEV_FEATURES && (
