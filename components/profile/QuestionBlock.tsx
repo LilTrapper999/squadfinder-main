@@ -99,7 +99,7 @@ export default function QuestionBlock({ question, value, onChange }: QuestionBlo
             backgroundColor: '#1a1d26',
             border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: '6px',
-            color: strValue ? '#ffffff' : '#4a5568',
+            color: strValue ? '#ffffff' : '#8b95a5',
             fontSize: '14px',
             fontFamily: 'inherit',
             cursor: 'pointer',
@@ -163,7 +163,7 @@ export default function QuestionBlock({ question, value, onChange }: QuestionBlo
                     style={{
                       display: 'block',
                       fontSize: '12px',
-                      color: 'rgba(255,255,255,0.35)',
+                      color: 'rgba(255,255,255,0.62)',
                       marginTop: '2px',
                     }}
                   >

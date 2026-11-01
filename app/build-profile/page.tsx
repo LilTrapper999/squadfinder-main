@@ -1,15 +1,25 @@
 'use client'
 
+import RequireAuth from '@/components/auth/RequireAuth'
 import { useRouter } from 'next/navigation'
 import ProfileForm from '@/components/profile/ProfileForm'
 import AnimatedBackground from '@/components/ui/AnimatedBackground'
 import HeaderActions from '@/components/ui/HeaderActions'
 import { useWindowWidth } from '@/lib/useWindowWidth'
 import { useT } from '@/context/I18nContext'
+import LogoMark from '@/components/ui/LogoMark'
 
 const MOBILE_BREAKPOINT = 768
 
 export default function BuildProfilePage() {
+  return (
+    <RequireAuth>
+      <BuildProfilePageInner />
+    </RequireAuth>
+  )
+}
+
+function BuildProfilePageInner() {
   const router = useRouter()
   const { t } = useT()
   const isMobile = useWindowWidth() < MOBILE_BREAKPOINT
@@ -52,7 +62,7 @@ export default function BuildProfilePage() {
               flexShrink: 0,
             }}
           >
-            SQUADFINDER
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}><LogoMark size={22} />SQUADFINDER</span>
           </span>
         )}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, overflow: 'hidden' }}>
@@ -61,7 +71,7 @@ export default function BuildProfilePage() {
             style={{
               background: 'none',
               border: 'none',
-              color: '#4a5568',
+              color: '#8b95a5',
               fontSize: '13px',
               cursor: 'pointer',
               fontFamily: 'inherit',
@@ -72,11 +82,11 @@ export default function BuildProfilePage() {
           </button>
           {!isMobile && (
             <>
-              <span style={{ color: '#4a5568', fontSize: '12px' }}>/</span>
-              <span style={{ color: '#4a5568', fontSize: '13px' }}>{t('Select Game')}</span>
+              <span style={{ color: '#8b95a5', fontSize: '12px' }}>/</span>
+              <span style={{ color: '#8b95a5', fontSize: '13px' }}>{t('Select Game')}</span>
             </>
           )}
-          <span style={{ color: '#4a5568', fontSize: '12px' }}>/</span>
+          <span style={{ color: '#8b95a5', fontSize: '12px' }}>/</span>
           <span style={{ color: '#8b95a5', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('Build Profile')}</span>
         </div>
 

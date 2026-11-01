@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useT } from '@/context/I18nContext'
+import { daysUntilExpiry } from '@/lib/requestExpiry'
 import { MatchBreakdown, SquadRequest } from '@/lib/types'
 import ScoreBars from './ScoreBars'
 
@@ -12,6 +13,8 @@ interface RequestCardProps {
   onAccept: () => void
   onDecline: () => void
   onDeclineAndBlock: () => void
+  /** Opens the report dialog (hosted by the page, so it outlives this card). */
+  onReport?: () => void
 }
 
 type Outcome = 'accepted' | 'declined' | 'blocked'
@@ -27,6 +30,7 @@ export default function RequestCard({
   onAccept,
   onDecline,
   onDeclineAndBlock,
+  onReport,
 }: RequestCardProps) {
   const { t } = useT()
   const { scores } = breakdown
@@ -34,15 +38,21 @@ export default function RequestCard({
   const [hoverAccept, setHoverAccept] = useState(false)
 
   const statusDotColor =
-    request.senderStatus === 'ingame' || request.senderStatus === 'online' ? '#22c55e' :
+    request.senderStatus === 'online' ? '#22c55e' :
     request.senderStatus === 'searching' ? '#e8a020' :
     'rgba(255,255,255,0.3)'
 
   const statusText =
-    request.senderStatus === 'ingame' ? t('Live — {game}', { game: request.senderStatusGame ?? t('In Game') }) :
     request.senderStatus === 'online' ? t('Online') :
     request.senderStatus === 'searching' ? t('Searching for a squad') :
     t('Offline')
+
+  const daysLeft = daysUntilExpiry(request.sentAt)
+  const expiryText =
+    daysLeft === null ? null :
+    daysLeft < 1 ? t('Expires today') :
+    daysLeft === 1 ? t('Expires in 1 day') :
+    t('Expires in {count} days', { count: daysLeft })
 
   // The confirmation strip stays up briefly, then the parent drops the card from the list.
   function handleAction(result: Outcome, commit: () => void) {
@@ -82,6 +92,12 @@ export default function RequestCard({
           </div>
         </div>
 
+        {expiryText && (
+          <p style={{ margin: '-6px 0 10px', fontSize: '11px', color: daysLeft !== null && daysLeft < 2 ? '#e8a020' : 'rgba(255,255,255,0.62)' }}>
+            {expiryText}
+          </p>
+        )}
+
         {/* Every percentage opens the popup explaining how it was reached */}
         <ScoreBars
           scores={{ overall: scores.overall, gamesmanship: scores.gamesmanship, vibe: scores.vibeCheck, comms: scores.comms }}
@@ -91,15 +107,15 @@ export default function RequestCard({
 
         {/* Comms info — plain badges, not a score (same as the squad-matches card) */}
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '4px 0', borderTop: '1px solid rgba(255,255,255,0.06)', marginBottom: '10px' }}>
-          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px', color: request.profile.willingToSpeak ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.28)' }}>
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px', color: request.profile.willingToSpeak ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.62)' }}>
             🎙 {request.profile.willingToSpeak ? t('Mic on') : t('Mic off')}
           </span>
-          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px', color: request.profile.willingToChat ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.28)' }}>
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px', color: request.profile.willingToChat ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.62)' }}>
             💬 {request.profile.willingToChat ? t('Types') : t('No text')}
           </span>
         </div>
 
-        <p style={{ margin: '0 0 14px', fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
+        <p style={{ margin: '0 0 14px', fontSize: '11px', color: 'rgba(255,255,255,0.62)' }}>
           {t('Tap any percentage to see how it was scored.')}
         </p>
 
@@ -194,6 +210,26 @@ export default function RequestCard({
                   {t('Decline & Block')}
                 </button>
               </div>
+
+              {onReport && (
+                <button
+                  type="button"
+                  onClick={onReport}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'rgba(255,255,255,0.65)',
+                    fontSize: '12px',
+                    textDecoration: 'underline',
+                    textUnderlineOffset: '3px',
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {t('Report this player')}
+                </button>
+              )}
             </div>
           )}
         </div>

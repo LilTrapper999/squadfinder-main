@@ -1,5 +1,6 @@
 // Regenerates supabase/seed.sql from the current lib/mockData.ts catalogue.
-// Run with: node scripts/generate-seed.mjs
+// Run with: npm run seed:generate
+// Drift check (writes nothing, exits 1 if supabase/seed.sql is stale): npm run check:seed
 //
 // Compiles lib/mockData.ts + lib/types.ts to plain JS in a temp dir (using the
 // `typescript` devDependency, so no extra tooling is required), imports the
@@ -10,7 +11,7 @@
 
 import { execFileSync } from 'node:child_process'
 import crypto from 'node:crypto'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -249,9 +250,23 @@ try {
   lines.push('')
 
   const outPath = path.join(repoRoot, 'supabase', 'seed.sql')
-  writeFileSync(outPath, lines.join('\n'), 'utf8')
-  console.log(`Wrote ${outPath}`)
-  console.log(`  games: ${gameRows.length}, reference-data rows: ${referenceRows.length}`)
+  const generated = lines.join('\n')
+
+  if (process.argv.includes('--check')) {
+    // Drift check (npm run check:seed): the committed seed must equal what the catalogue produces now.
+    const onDisk = existsSync(outPath) ? readFileSync(outPath, 'utf8') : ''
+    const same = (s) => s.replace(/\r\n/g, '\n').trimEnd()
+    if (same(onDisk) !== same(generated)) {
+      console.error('supabase/seed.sql is out of date with lib/mockData.ts. Run: npm run seed:generate')
+      process.exitCode = 1
+    } else {
+      console.log(`seed.sql is up to date (games: ${gameRows.length}, reference-data rows: ${referenceRows.length})`)
+    }
+  } else {
+    writeFileSync(outPath, generated, 'utf8')
+    console.log(`Wrote ${outPath}`)
+    console.log(`  games: ${gameRows.length}, reference-data rows: ${referenceRows.length}`)
+  }
 } finally {
   rmSync(tmpDir, { recursive: true, force: true })
 }

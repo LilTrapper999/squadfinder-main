@@ -9,6 +9,8 @@
 export default function AnimatedBackground() {
   return (
     <div
+      className="animated-bg"
+      aria-hidden="true"
       style={{
         position: 'fixed',
         top: 0,

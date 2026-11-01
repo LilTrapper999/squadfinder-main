@@ -28,26 +28,31 @@ export interface Game {
   baseId?: string
 }
 
-/** 'online' = in SquadFinder but not searching (the database cannot know if someone is in a game); 'ingame' is legacy demo data only. */
-export type MatchStatus = 'ingame' | 'online' | 'searching' | 'offline'
+/** 'online' = in SquadFinder but not searching (the database cannot know if someone is in a game). */
+export type MatchStatus = 'searching' | 'online' | 'offline'
 
-export interface MatchPlayer {
-  id: string
-  label: string
-  /** Hidden until accepted. TODO: fetch from DB once auth is wired up. */
-  revealedUsername: string
-  overall: number
-  gamesmanship: number
-  vibe: number
-  comms: number
-  /** Info badge only — not scored (SPEC_AMENDMENT_10) */
-  willingToChat: boolean
-  /** Info badge only — not scored (SPEC_AMENDMENT_10) */
-  willingToSpeak: boolean
+/**
+ * One row of find_squad_matches(): an anonymous candidate. `matchRef` is an opaque id the server
+ * resolves back to a user when a request is sent; the client never sees a user id or username.
+ */
+export interface MatchCandidate {
+  matchRef: string
+  profile: Profile
   status: MatchStatus
-  statusGame: string | null
-  /** How each score was reached — drives the click-a-percentage popup. Absent on bare mock rows. */
-  breakdown?: MatchBreakdown
+  /** Server-computed overall score (calculate_match); the same number explainMatch derives. */
+  score: number
+}
+
+/** A request the current user sent. 'accepted' ones reveal the ally's username via allies. */
+export type OutboundStatus = 'pending' | 'accepted' | 'declined' | 'expired'
+
+export interface OutboundRequest {
+  id: string
+  gameSlug: string
+  status: OutboundStatus
+  createdAt: string
+  /** The candidate this request was sent to (their game_profiles.id), or null once it's gone. */
+  matchRef: string | null
 }
 
 export interface Ally {
@@ -55,10 +60,11 @@ export interface Ally {
   username: string
   overall: number
   status: MatchStatus
-  statusGame: string | null
   /** Which selected game/version tile this ally relationship was formed under — scopes the
    *  per-game "Your Allies" panel on select-game. */
   gameId?: string
+  /** The squad request that created this relationship */
+  requestId?: string
   /** Favourited via the pin button — pinned allies sort to the top of every allies list */
   pinned?: boolean
   /**
@@ -66,35 +72,13 @@ export interface Ally {
    * on the list so you can see you already decided against them, and can be unblocked.
    */
   blocked?: boolean
-  /** They blocked you — surfaced on the card so the dead chat isn't a mystery */
-  blockedYou?: boolean
   /** DB only: the caller's own user_blocks row for this ally, needed to unblock */
   blockId?: string
 }
 
-// ─── Private ally chat (SPEC_AMENDMENT_11 FIX 2/3) ───────────────────────────
-// Prototype only — in-memory in AppContext, no persistence between sessions.
-
-export interface ChatMessage {
-  id: string
-  senderId: 'me' | 'them'
-  content: string
-  sentAt: number
-  /** null if disappearing messages was off when sent; sentAt + 86400000 if on */
-  expiresAt: number | null
-}
-
-export interface AllyChat {
-  allyId: string
-  /** Default false — messages persist until toggled on */
-  disappearingMessages: boolean
-  messages: ChatMessage[]
-}
-
 /**
  * A squad request another player has sent to the current user (SPEC_AMENDMENT_12).
- * Surfaced behind the bell icon and listed on /notifications. Unlike IncomingRequest —
- * the 20-second popup — these persist until the user answers them, and they carry the
+ * Surfaced behind the bell icon and listed on /notifications. These persist until the user answers them (14 days), and they carry the
  * sender's full profile so the notification card can show live match scores plus the
  * per-category answer breakdown.
  */
@@ -104,21 +88,10 @@ export interface SquadRequest {
   gameId: string
   senderUsername: string
   senderStatus: MatchStatus
-  senderStatusGame: string | null
+  /** ISO time the request was last sent; the 14-day expiry counts from here */
+  sentAt?: string
   /** Sender's build-profile answers — drives both the match scores and the answers popup */
   profile: Profile
-}
-
-export interface IncomingRequest {
-  id: string
-  /** Which MOCK_MATCHES entry to remove on Decline & Block */
-  matchId: string | null
-  senderUsername: string
-  senderStatus: MatchStatus
-  senderStatusGame: string | null
-  overallMatch: number
-  /** Unix timestamp: Date.now() + 20000 */
-  expiresAt: number
 }
 
 export interface QuestionOption {
@@ -216,12 +189,6 @@ export interface MatchBreakdown {
   comms: MatchCategoryBreakdown
 }
 
-export interface MatchResult {
-  matchId: string
-  scores: MatchScores
-  profile: Partial<Profile>
-}
-
 /** A named group of weapons shown under a category subtitle in the profile form */
 export interface WeaponCategory {
   category: string   // e.g. 'Assault Rifles', 'Submachine Guns'
@@ -243,7 +210,5 @@ export interface AppState {
   isReturningUser: boolean
   profileAnswers: ProfileAnswers
   allies: Ally[]
-  incomingRequests: IncomingRequest[]
-  blockedUsers: string[]
   squadStatus: 'searching' | 'in-squad' | null
 }

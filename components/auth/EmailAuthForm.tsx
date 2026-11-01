@@ -4,6 +4,8 @@ import { FormEvent, useEffect, useState } from 'react'
 import { useT } from '@/context/I18nContext'
 import { supabase } from '@/lib/supabase/client'
 import { Field, capsFont } from '@/components/auth/AuthField'
+import ConsentLine from '@/components/auth/ConsentLine'
+import { redirectOrigin } from '@/lib/siteUrl'
 
 type Mode = 'signin' | 'signup' | 'forgot' | 'sent-confirm' | 'sent-reset'
 
@@ -115,7 +117,7 @@ export default function EmailAuthForm() {
       const { data, error: err } = await supabase.auth.signUp({
         email: address,
         password,
-        options: { emailRedirectTo: `${window.location.origin}/` },
+        options: { emailRedirectTo: `${redirectOrigin()}/` },
       })
       setBusy(false)
       if (err) {
@@ -142,7 +144,7 @@ export default function EmailAuthForm() {
 
     if (mode === 'forgot') {
       await supabase.auth.resetPasswordForEmail(address, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${redirectOrigin()}/reset-password`,
       })
       setBusy(false)
       // Same message whether or not the address has an account.
@@ -157,12 +159,12 @@ export default function EmailAuthForm() {
     setCooldown(RESEND_COOLDOWN_SECONDS)
     setError(null)
     if (mode === 'sent-reset') {
-      await supabase.auth.resetPasswordForEmail(address, { redirectTo: `${window.location.origin}/reset-password` })
+      await supabase.auth.resetPasswordForEmail(address, { redirectTo: `${redirectOrigin()}/reset-password` })
     } else {
       const { error: err } = await supabase.auth.resend({
         type: 'signup',
         email: address,
-        options: { emailRedirectTo: `${window.location.origin}/` },
+        options: { emailRedirectTo: `${redirectOrigin()}/` },
       })
       if (err) setError(t('Could not send the email. Please try again.'))
     }
@@ -174,7 +176,7 @@ export default function EmailAuthForm() {
     const { error: err } = await supabase.auth.resend({
       type: 'signup',
       email: email.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/` },
+      options: { emailRedirectTo: `${redirectOrigin()}/` },
     })
     setError(err ? t('Could not send the email. Please try again.') : null)
     setNotice(err ? null : t('Confirmation email sent — check your inbox.'))
@@ -294,6 +296,8 @@ export default function EmailAuthForm() {
           autoComplete="new-password"
         />
       )}
+
+      {isSignup && <ConsentLine />}
 
       {notice && (
         <p role="status" style={{ fontSize: '13px', color: '#e8a020', margin: '-4px 0 12px 0', lineHeight: 1.4 }}>

@@ -1,5 +1,6 @@
 'use client'
 
+import RequireAuth from '@/components/auth/RequireAuth'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Game, GameCategory } from '@/lib/types'
@@ -8,8 +9,17 @@ import GameGrid from '@/components/game-select/GameGrid'
 import AnimatedBackground from '@/components/ui/AnimatedBackground'
 import HeaderActions from '@/components/ui/HeaderActions'
 import { useT } from '@/context/I18nContext'
+import LogoMark from '@/components/ui/LogoMark'
 
 export default function SelectGamePage() {
+  return (
+    <RequireAuth>
+      <SelectGamePageInner />
+    </RequireAuth>
+  )
+}
+
+function SelectGamePageInner() {
   const router = useRouter()
   const { t } = useT()
   const { setSelectedGame, selectedGame } = useApp()
@@ -89,7 +99,7 @@ export default function SelectGamePage() {
             letterSpacing: '0.05em',
           }}
         >
-          SQUADFINDER
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}><LogoMark size={22} />SQUADFINDER</span>
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
@@ -97,7 +107,7 @@ export default function SelectGamePage() {
             style={{
               background: 'none',
               border: 'none',
-              color: '#4a5568',
+              color: '#8b95a5',
               fontSize: '13px',
               cursor: 'pointer',
               fontFamily: 'inherit',
@@ -105,7 +115,7 @@ export default function SelectGamePage() {
           >
             {t('← Back')}
           </button>
-          <span style={{ color: '#4a5568', fontSize: '12px' }}>/</span>
+          <span style={{ color: '#8b95a5', fontSize: '12px' }}>/</span>
           <span style={{ color: '#8b95a5', fontSize: '13px' }}>{t('Select Game')}</span>
         </div>
 

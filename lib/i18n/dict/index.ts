@@ -6,6 +6,7 @@ import { selectGame } from './selectGame'
 import { profile } from './profile'
 import { matches } from './matches'
 import { social } from './social'
+import { launch } from './launch'
 
 /**
  * Translations are keyed by the English source text itself, so `t('Select Game')` reads naturally
@@ -16,7 +17,7 @@ import { social } from './social'
  */
 export type Namespace = Partial<Record<Exclude<LangCode, 'en'>, Record<string, string>>>
 
-const NAMESPACES: Namespace[] = [common, login, auth, selectGame, profile, matches, social]
+const NAMESPACES: Namespace[] = [common, login, auth, selectGame, profile, matches, social, launch]
 
 export const DICTIONARY: Partial<Record<LangCode, Record<string, string>>> = {}
 

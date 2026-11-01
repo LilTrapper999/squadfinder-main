@@ -1,6 +1,6 @@
 # SPEC — Launch readiness (everything Claude can do before release)
 
-**Status: not started. Revision r2 (2026-10-31):** chat removed from the product (U-04, D-05), username bans added (D-15), scheduling gaps closed, review fixes applied. This is a new spec. It does not edit or supersede any earlier spec; it collects what is still open in them (mainly `SPEC_DB_CHANGES.md` step 5, `GAME_UPDATES.md`, `SPEC_AMENDMENT_11.md` "Phase 2") and adds what a read-through of the chats and a code audit (2026-10-31) turned up.
+**Status: Phase A in progress (O-12, O-04, O-10 scaffold, O-11 done; O-01 partly - see docs/SECURITY_NOTES.md). Revision r2 (2026-10-31):** chat removed from the product (U-04, D-05), username bans added (D-15), scheduling gaps closed, review fixes applied. This is a new spec. It does not edit or supersede any earlier spec; it collects what is still open in them (mainly `SPEC_DB_CHANGES.md` step 5, `GAME_UPDATES.md`, `SPEC_AMENDMENT_11.md` "Phase 2") and adds what a read-through of the chats and a code audit (2026-10-31) turned up.
 
 **Contract.** If every item below is done to its "Done when", the app is ready to release. Nothing here depends on a dashboard, console, account, DNS or third-party setting — those are deliberately not in this spec (they are listed separately on request).
 
@@ -368,3 +368,41 @@ When rows 1–15 are green, this spec is complete.
 11. Account deletion requires a sign-in within the last 10 minutes (O-03).
 12. The client ⇄ RPC contract is tested by running the `lib/db/*` wrappers against PGlite (O-10).
 13. CSP uses `'unsafe-inline'` for scripts rather than nonces, to keep legal pages static (O-02).
+
+## 5. Changelog (implementation notes)
+
+### D-08 · Discovery at scale (migration `20261101000600_scale_discovery.sql`)
+Measured with `npm run test:scale` (20,000 users, 20,000 profiles, 80,000 requests, 160,000 request events, 16,000 allies, 2,000 fresh searchers; PGlite, single-threaded WebAssembly, so only the ratio carries over to a real project).
+
+| Function | Before | After |
+|---|---|---|
+| `find_squad_matches` (include online, limit 50) | 938 ms | 119 ms |
+| `get_my_pending_request_cards` | 1 ms | 2 ms |
+| `get_my_allies` | 0 ms | 1 ms |
+| `count_searching_by_game` | 1 ms | 1 ms |
+| `get_my_outbound_requests` | 1 ms | 1 ms |
+
+- **Cause:** `find_squad_matches` scored every profile of the base game (presence lookup plus `calculate_match` per row) and only then kept the people who were present. It now starts from fresh `lfg_presence` / `user_presence` rows, joins the profile by its `(user_id, game_id)` key, and scores only those.
+- **Behaviour change:** at most 1,500 present candidates are scored per call, searchers first and freshest first. With fewer than 1,500 people present the result is identical to before; beyond that the freshest searchers win the slots. All `run.mjs` discovery tests pass unchanged.
+- **Index added:** `lfg_presence (last_seen_at)`, used by housekeeping deletes and the counts.
+- **Plan check:** keyed lookups (by user, by pair, pending/outbound/allies/caps) must never sequentially scan a hot table. Range scans over "everyone present right now" (candidates, `count_searching_by_game`) are declared in `scale.mjs` because with a large fresh fraction a sequential scan is the correct plan; the 1,500 cap and housekeeping bound the work. `test:db` now runs the scale test.
+
+### D-12 · Bundle idempotence
+The bundle is made safe to run twice by wrapping each file in a marker check (`sf_migrations.applied`), not by rewriting the applied migration files. The wrapped SQL is the migration text unchanged, so the first run does exactly what applying the files one by one does, and `supabase/tests/bundle.mjs` proves the two schemas are equal.
+
+### Least-privilege grants (migration `20261101000700_least_privilege_grants.sql`)
+Not a numbered item; found while writing the access inventory (O-14). `authenticated` held `insert` on `allies` and `insert, delete` on `users` although no policy allows them. Both are revoked so a missing policy is no longer the only barrier. Two tests in `supabase/tests/run.mjs` pin the final privilege table.
+
+### Deviations and decisions
+- **Edge runtime for the image routes.** `opengraph-image`, `twitter-image` and `apple-icon` export `runtime = 'edge'`: on Windows the Node prerender of `ImageResponse` fails with "Invalid URL". The routes are dynamic; behaviour is unchanged.
+- **Maintenance switch** (O-17) is a root `middleware.ts`; headers and the CSP stay in `next.config.mjs`.
+- **CSP** ships report-only; enforcement is `CSP_MODE=enforce` (runbook step 5).
+- **O-01 (Next 16 / React 19)** was not done, by decision: the two audit findings are not reachable from this app (SECURITY_NOTES, "Dependencies").
+- **O-06 (Sentry)** was not implemented; the privacy policy therefore lists no monitoring sub-processor.
+
+### Not done or not verified
+- Playwright suites (`e2e/`) and the axe/Lighthouse audits are written or specified but were never run: they need a browser install and, for signed-in flows, a Supabase test project.
+- No migration was applied to any real project; everything DB-related is proven on PGlite only.
+- Signed-in pages were not exercised in a real browser; the public pages were checked at 360, 390, 768 and 1440 px.
+- U-16: per-game role subtitles and question labels are still English.
+- Game logos remain hot-linked; one (VALORANT) is dead and shows the placeholder.

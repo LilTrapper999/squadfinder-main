@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # check:secrets scans history
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test:db
+      - run: npm test
+      - run: npm run check:secrets
+      - run: npm run check:seed
+      - run: npm run build
+        env:
+          # Public values only; the build never contacts Supabase.
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+      # Nothing server-only may reach the browser bundle (names are checked even though no real values exist here).
+      - run: npm run check:secrets -- --bundle .next/static
+      # Report-only until the Next major upgrade lands (see docs/SECURITY_NOTES.md).
+      - run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true

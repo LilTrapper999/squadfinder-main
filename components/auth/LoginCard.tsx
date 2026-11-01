@@ -2,21 +2,27 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useApp } from '@/context/AppContext'
 import { useT } from '@/context/I18nContext'
-import { SHOW_DEV_FEATURES } from '@/lib/launch'
 import { supabase } from '@/lib/supabase/client'
 import EmailAuthForm from '@/components/auth/EmailAuthForm'
+import LogoMark from '@/components/ui/LogoMark'
+import { redirectOrigin } from '@/lib/siteUrl'
 
 export default function LoginCard() {
   const router = useRouter()
   const { t } = useT()
-  const { isReturningUser, setIsReturningUser } = useApp()
-  const [rememberMe, setRememberMe] = useState(false)
+  const [deleted, setDeleted] = useState(false)
   const [hoveredGoogle, setHoveredGoogle] = useState(false)
-  const [hoveredSkip, setHoveredSkip] = useState(false)
   const [signingIn, setSigningIn] = useState(false)
   const [signInError, setSignInError] = useState(false)
+
+  // /?deleted=1 is where account deletion lands: say so once, then tidy the address bar.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('deleted') === '1') {
+      setDeleted(true)
+      window.history.replaceState(null, '', '/')
+    }
+  }, [])
 
   // Google redirects back to this page with a session in the URL; supabase-js picks it up
   // and fires SIGNED_IN. An already-signed-in visitor is sent straight into the app.
@@ -38,7 +44,7 @@ export default function LoginCard() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/`,
+        redirectTo: `${redirectOrigin()}/`,
         // Always show Google's account chooser so a returning user can pick (or switch) accounts
         // instead of being signed straight back in as the last one.
         queryParams: { prompt: 'select_account' },
@@ -49,11 +55,6 @@ export default function LoginCard() {
       setSigningIn(false)
       setSignInError(true)
     }
-  }
-
-  function handleDevSkip() {
-    // Dev bypass — skips auth entirely, goes straight to the app
-    router.push('/select-game')
   }
 
   return (
@@ -71,9 +72,12 @@ export default function LoginCard() {
         zIndex: 1,
       }}
     >
-      {/* Wordmark */}
+      {/* Logo + wordmark */}
       <div
         style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
           fontFamily: 'var(--font-rajdhani), sans-serif',
           fontSize: '28px',
           fontWeight: 700,
@@ -82,7 +86,8 @@ export default function LoginCard() {
           marginBottom: '24px',
         }}
       >
-        SQUADFINDER
+        <LogoMark size={44} />
+        <span>SQUADFINDER</span>
       </div>
 
       {/* Heading */}
@@ -144,6 +149,12 @@ export default function LoginCard() {
         </span>
       </button>
 
+      {deleted && (
+        <p role="status" style={{ fontSize: '13px', color: '#86efac', margin: 0 }}>
+          {t('Your account has been deleted.')}
+        </p>
+      )}
+
       {signInError && (
         <p role="alert" style={{ fontSize: '13px', color: '#e5484d', margin: 0 }}>
           {t('Sign-in failed. Please try again.')}
@@ -160,7 +171,7 @@ export default function LoginCard() {
             fontSize: '12px',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
-            color: '#4a5568',
+            color: '#8b95a5',
           }}
         >
           {t('or')}
@@ -172,83 +183,6 @@ export default function LoginCard() {
         <EmailAuthForm />
       </div>
 
-      {/* Dev bypass — skip OAuth. Removed at launch (see lib/launch.ts). */}
-      {SHOW_DEV_FEATURES && (
-      <button
-        onClick={handleDevSkip}
-        onMouseEnter={() => setHoveredSkip(true)}
-        onMouseLeave={() => setHoveredSkip(false)}
-        style={{
-          width: '100%',
-          padding: '11px 20px',
-          backgroundColor: 'transparent',
-          border: `1px solid ${hoveredSkip ? 'rgba(232,160,32,0.4)' : 'rgba(255,255,255,0.06)'}`,
-          borderRadius: '8px',
-          cursor: 'pointer',
-          transition: 'all 0.15s ease',
-          fontFamily: 'var(--font-rajdhani), sans-serif',
-          fontWeight: 700,
-          fontSize: '13px',
-          letterSpacing: '0.06em',
-          color: hoveredSkip ? '#e8a020' : 'rgba(255,255,255,0.3)',
-          textTransform: 'uppercase',
-          marginBottom: '20px',
-        }}
-      >
-        ⚡ Enter Without Login (Dev)
-      </button>
-      )}
-
-      {/* Remember me */}
-      <label
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          cursor: 'pointer',
-          marginBottom: SHOW_DEV_FEATURES ? '28px' : 0,
-        }}
-      >
-        <input
-          type="checkbox"
-          checked={rememberMe}
-          onChange={() => setRememberMe(!rememberMe)}
-          style={{ accentColor: '#e8a020', width: '16px', height: '16px', cursor: 'pointer' }}
-        />
-        <span style={{ fontSize: '14px', color: '#8b95a5' }}>{t('Remember me')}</span>
-      </label>
-
-      {/* Divider + returning-user toggle below are demo-only. Removed at launch (see lib/launch.ts). */}
-      {SHOW_DEV_FEATURES && (<>
-      <div
-        style={{
-          height: '1px',
-          backgroundColor: 'rgba(255,255,255,0.06)',
-          marginBottom: '20px',
-        }}
-      />
-
-      {/* Returning user toggle */}
-      <label
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          cursor: 'pointer',
-        }}
-      >
-        <input
-          type="checkbox"
-          checked={isReturningUser}
-          onChange={() => setIsReturningUser(!isReturningUser)}
-          style={{ accentColor: '#e8a020', width: '16px', height: '16px', cursor: 'pointer' }}
-        />
-        <span style={{ fontSize: '13px', color: '#4a5568' }}>
-          Returning user{' '}
-          <span style={{ color: '#e8a020', fontSize: '11px' }}>(demo)</span>
-        </span>
-      </label>
-      </>)}
     </div>
   )
 }

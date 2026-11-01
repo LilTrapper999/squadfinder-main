@@ -1,20 +1,27 @@
 'use client'
 
+import RequireAuth from '@/components/auth/RequireAuth'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useApp } from '@/context/AppContext'
+import { ERROR_MESSAGES } from '@/lib/db/rpc'
 import { useT } from '@/context/I18nContext'
-import { GAME_QUESTIONS, findGameById } from '@/lib/mockData'
+import { useCatalogue } from '@/context/CatalogueContext'
 import { explainMatch } from '@/lib/matching'
 import { buildProfileFromAnswers, gameKey } from '@/lib/profileAnswers'
 import { Game, GameCategory, SquadRequest } from '@/lib/types'
 import { useWindowWidth } from '@/lib/useWindowWidth'
-import { useLookingCounts } from '@/lib/useLookingPresence'
+import { useSearchingCounts } from '@/lib/useSearchingCounts'
 import RequestCard from '@/components/notifications/RequestCard'
+import ReportDialog from '@/components/reports/ReportDialog'
 import GameTile from '@/components/game-select/GameTile'
 import AnimatedBackground from '@/components/ui/AnimatedBackground'
+import LogoMark from '@/components/ui/LogoMark'
+import ErrorBanner from '@/components/ui/ErrorBanner'
 
 const MOBILE_BREAKPOINT = 768
+/** Cards drawn per game before "Load more"; keeps a very full inbox light. */
+const PAGE_SIZE = 50
 
 const CATEGORY_LABELS: Record<GameCategory, string> = {
   extraction: 'Extraction Shooters',
@@ -33,7 +40,10 @@ interface GameBucket {
  * Groups pending requests by game, then files each game under its category. Every category is
  * present (its tab always shows) but only games that actually hold requests appear inside it.
  */
-function bucketRequests(requests: SquadRequest[]): Record<GameCategory, GameBucket[]> {
+function bucketRequests(
+  requests: SquadRequest[],
+  findGameById: (id: string) => Game | undefined,
+): Record<GameCategory, GameBucket[]> {
   const byGame = new Map<string, GameBucket>()
 
   for (const request of requests) {
@@ -75,6 +85,14 @@ function CountBadge({ count, size = 'md' }: { count: number; size?: 'sm' | 'md' 
 }
 
 export default function NotificationsPage() {
+  return (
+    <RequireAuth>
+      <NotificationsPageInner />
+    </RequireAuth>
+  )
+}
+
+function NotificationsPageInner() {
   const router = useRouter()
   const { t } = useT()
   const {
@@ -84,14 +102,17 @@ export default function NotificationsPage() {
     declineSquadRequest,
     declineAndBlockSquadRequest,
     requestError,
+    reloadAll,
     clearRequestError,
+    userId,
   } = useApp()
-  const lookingCounts = useLookingCounts()
+  const lookingCounts = useSearchingCounts(!!userId)
 
   const width = useWindowWidth()
   const isMobile = width < MOBILE_BREAKPOINT
 
-  const grouped = bucketRequests(squadRequests)
+  const { questions, findGameById } = useCatalogue()
+  const grouped = bucketRequests(squadRequests, findGameById)
   const countFor = (category: GameCategory) =>
     grouped[category].reduce((n, b) => n + b.requests.length, 0)
 
@@ -99,7 +120,9 @@ export default function NotificationsPage() {
   const [pickedCategory, setPickedCategory] = useState<GameCategory | null>(null)
   const category = pickedCategory ?? CATEGORY_ORDER.find((c) => grouped[c].length > 0) ?? CATEGORY_ORDER[0]
   const [activeGameId, setActiveGameId] = useState<string | null>(null)
+  const [shownCount, setShownCount] = useState(PAGE_SIZE)
   const [hoverTab, setHoverTab] = useState<GameCategory | null>(null)
+  const [reporting, setReporting] = useState<SquadRequest | null>(null)
 
   const buckets = grouped[category]
   // Resolved against the current tab's games, so answering a game's last request (or switching
@@ -156,17 +179,17 @@ export default function NotificationsPage() {
               letterSpacing: '0.05em',
               flexShrink: 0,
             }}>
-              SQUADFINDER
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}><LogoMark size={22} />SQUADFINDER</span>
             </span>
           )}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
             <button
               onClick={() => router.push('/squad-matches')}
-              style={{ background: 'none', border: 'none', color: '#4a5568', fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+              style={{ background: 'none', border: 'none', color: '#8b95a5', fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
             >
               {t('← Back')}
             </button>
-            <span style={{ color: '#4a5568', fontSize: '12px', flexShrink: 0 }}>/</span>
+            <span style={{ color: '#8b95a5', fontSize: '12px', flexShrink: 0 }}>/</span>
             <span style={{ color: '#8b95a5', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('Notifications')}</span>
           </div>
         </div>
@@ -181,30 +204,12 @@ export default function NotificationsPage() {
           </h1>
 
           {requestError && (
-            <div
-              role="alert"
-              style={{
-                marginTop: '12px',
-                padding: '10px 14px',
-                borderRadius: '8px',
-                backgroundColor: 'rgba(239,68,68,0.08)',
-                border: '1px solid rgba(239,68,68,0.3)',
-                color: '#fca5a5',
-                fontSize: '13px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                gap: '12px',
-              }}
-            >
-              <span>{requestError}</span>
-              <button
-                onClick={clearRequestError}
-                aria-label={t('Dismiss')}
-                style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', fontSize: '16px', lineHeight: 1 }}
-              >
-                ×
-              </button>
-            </div>
+            <ErrorBanner
+              message={ERROR_MESSAGES[requestError]}
+              onDismiss={clearRequestError}
+              onRetry={reloadAll}
+              style={{ marginTop: '12px' }}
+            />
           )}
 
           <div
@@ -316,7 +321,7 @@ export default function NotificationsPage() {
 
             <div style={{ padding: `${isMobile ? '16px' : '20px'} ${gutter} 40px` }}>
               {buckets.length === 0 ? (
-                <p style={{ margin: '24px 0', textAlign: 'center', fontSize: '13px', color: 'rgba(255,255,255,0.4)' }}>
+                <p style={{ margin: '24px 0', textAlign: 'center', fontSize: '13px', color: 'rgba(255,255,255,0.62)' }}>
                   {t('No requests in this category.')}
                 </p>
               ) : (
@@ -341,7 +346,7 @@ export default function NotificationsPage() {
                         <GameTile
                           game={game}
                           selected={activeBucket?.game.id === game.id}
-                          onSelect={() => setActiveGameId(game.id)}
+                          onSelect={() => { setActiveGameId(game.id); setShownCount(PAGE_SIZE) }}
                           lookingCount={lookingCounts[game.id] ?? 0}
                         />
                         <span style={{ position: 'absolute', top: '-6px', right: '-6px', zIndex: 3 }}>
@@ -375,7 +380,7 @@ export default function NotificationsPage() {
                             alignItems: 'start',
                           }}
                         >
-                          {activeBucket.requests.map((request) => {
+                          {activeBucket.requests.slice(0, shownCount).map((request) => {
                             // Score each request against the profile for ITS game, not the selected one
                             const myProfile = buildProfileFromAnswers(gameKey(findGameById(request.gameId)), profileAnswers)
 
@@ -387,20 +392,36 @@ export default function NotificationsPage() {
                                 onAccept={() => acceptSquadRequest(request.id)}
                                 onDecline={() => declineSquadRequest(request.id)}
                                 onDeclineAndBlock={() => declineAndBlockSquadRequest(request.id)}
+                                onReport={() => setReporting(request)}
                               />
                             )
                           })}
                         </div>
 
+                        {activeBucket.requests.length > shownCount && (
+                          <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                            <p style={{ margin: 0, fontSize: '12px', color: '#8b95a5' }}>
+                              {t('Showing {shown} of {total}', { shown: shownCount, total: activeBucket.requests.length })}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => setShownCount((n) => n + PAGE_SIZE)}
+                              style={{ minHeight: '44px', padding: '0 22px', borderRadius: '8px', border: '1px solid rgba(232,160,32,0.4)', backgroundColor: 'transparent', color: '#e8a020', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }}
+                            >
+                              {t('Load more')}
+                            </button>
+                          </div>
+                        )}
+
                         {/* A request for a game with no question set can't be scored meaningfully */}
-                        {!GAME_QUESTIONS[gameKey(activeBucket.game)] && (
-                          <p style={{ margin: '16px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
+                        {!questions[gameKey(activeBucket.game)] && (
+                          <p style={{ margin: '16px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.62)' }}>
                             {t('No question set for this game yet — scores are indicative only.')}
                           </p>
                         )}
                       </>
                     ) : (
-                      <p style={{ margin: '8px 0', textAlign: 'center', fontSize: '13px', color: 'rgba(255,255,255,0.4)' }}>
+                      <p style={{ margin: '8px 0', textAlign: 'center', fontSize: '13px', color: 'rgba(255,255,255,0.62)' }}>
                         {t('Pick a game above to see who asked to squad up.')}
                       </p>
                     )}
@@ -411,6 +432,15 @@ export default function NotificationsPage() {
           </>
         )}
       </div>
+
+      {reporting && (
+        <ReportDialog
+          target={{ kind: 'request', requestId: reporting.id }}
+          name={reporting.senderUsername}
+          onClose={() => setReporting(null)}
+          onAlsoBlock={async () => declineAndBlockSquadRequest(reporting.id)}
+        />
+      )}
     </div>
   )
 }

@@ -8,11 +8,11 @@
 import { useRef, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Game, GameCategory } from '@/lib/types'
-import { GAMES_BY_CATEGORY, GAME_QUESTIONS } from '@/lib/mockData'
+import { useCatalogue } from '@/context/CatalogueContext'
 import { useApp } from '@/context/AppContext'
 import { gameKey, isProfileComplete } from '@/lib/profileAnswers'
 import { useWindowWidth } from '@/lib/useWindowWidth'
-import { useLookingCounts } from '@/lib/useLookingPresence'
+import { useSearchingCounts } from '@/lib/useSearchingCounts'
 import { useT } from '@/context/I18nContext'
 import GameTile from './GameTile'
 import GameAlliesPanel from './GameAlliesPanel'
@@ -52,9 +52,10 @@ export default function GameGrid({
 }: GameGridProps) {
   const router = useRouter()
   const { t } = useT()
-  const { setSelectedVersion, isReturningUser, profileAnswers } = useApp()
-  const games = GAMES_BY_CATEGORY[category] ?? []
-  const lookingCounts = useLookingCounts()
+  const { setSelectedVersion, isReturningUser, profileAnswers, userId } = useApp()
+  const { gamesByCategory, questions } = useCatalogue()
+  const games = gamesByCategory[category] ?? []
+  const lookingCounts = useSearchingCounts(!!userId)
   const gridRef = useRef<HTMLDivElement>(null)
   const [cols, setCols] = useState(3)
   const [hoverTab, setHoverTab] = useState<GameCategory | null>(null)
@@ -76,9 +77,11 @@ export default function GameGrid({
   }, [])
 
   // Every game now has exactly one version (each version is its own tile) — lock it in.
+  const setVersionRef = useRef(setSelectedVersion)
+  setVersionRef.current = setSelectedVersion
   useEffect(() => {
-    setSelectedVersion(selectedGame ? selectedGame.versions[0] ?? null : null)
-  }, [selectedGame?.id])
+    setVersionRef.current(selectedGame ? selectedGame.versions[0] ?? null : null)
+  }, [selectedGame])
 
   // Keep the selected tile in view — picking a game further down the grid shouldn't leave it
   // scrolled off-screen while the page is still scrolled up top.
@@ -87,14 +90,14 @@ export default function GameGrid({
     document
       .getElementById(`game-tile-${selectedGame.id}`)
       ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-  }, [selectedGame?.id])
+  }, [selectedGame])
 
   function handleFindSquad() {
     // Returning users skip build-profile only when they actually have a complete profile for
     // THIS game. "Returning" says nothing about the game just picked — sending them straight
     // to matches was letting them match on required answers they had never given.
     const key = gameKey(selectedGame)
-    const complete = isProfileComplete(key, profileAnswers, GAME_QUESTIONS[key])
+    const complete = isProfileComplete(key, profileAnswers, questions[key])
     router.push(isReturningUser && complete ? '/squad-matches' : '/build-profile')
   }
 

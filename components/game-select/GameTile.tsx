@@ -87,7 +87,7 @@ export default function GameTile({ game, selected, onSelect, lookingCount = 0 }:
             width: '6px',
             height: '6px',
             borderRadius: '50%',
-            backgroundColor: lookingCount > 0 ? '#22c55e' : '#4a5568',
+            backgroundColor: lookingCount > 0 ? '#22c55e' : '#8b95a5',
             boxShadow: lookingCount > 0 ? '0 0 5px rgba(34,197,94,0.8)' : 'none',
           }}
         />
@@ -96,7 +96,7 @@ export default function GameTile({ game, selected, onSelect, lookingCount = 0 }:
           style={{
             fontSize: '10px',
             fontWeight: 700,
-            color: lookingCount > 0 ? '#22c55e' : 'rgba(255,255,255,0.4)',
+            color: lookingCount > 0 ? '#22c55e' : 'rgba(255,255,255,0.62)',
           }}
         >
           {lookingCount}
@@ -138,10 +138,18 @@ export default function GameTile({ game, selected, onSelect, lookingCount = 0 }:
       {/* Logo image — top 70% */}
       <div style={{ flex: '0 0 70%', position: 'relative', overflow: 'hidden' }}>
         {showImg ? (
+          // A plain <img> on purpose: logos are hot-linked from many publisher/Steam CDNs, and routing
+          // them through next/image would need an allow-list of every host plus Vercel image quota.
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             className="game-tile-image"
             src={game.logoUrl}
-            alt={game.name}
+            alt=""
+            width={184}
+            height={129}
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
             onError={() => setImgError(true)}
             style={{
               width: '100%',
@@ -211,7 +219,7 @@ export default function GameTile({ game, selected, onSelect, lookingCount = 0 }:
           }}
         >
           {game.name}{' '}
-          <sup className="game-tile-mark" style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}>
+          <sup className="game-tile-mark" style={{ fontSize: '8px', color: 'rgba(255,255,255,0.62)', fontWeight: 400 }}>
             {game.mark}
           </sup>
         </p>

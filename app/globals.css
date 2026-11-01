@@ -23,8 +23,9 @@ html, body {
   overflow-x: hidden;
 }
 
-/* ── Typography ── */
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+/* ── Typography ──
+   Inter and Rajdhani are loaded by next/font in app/layout.tsx (self-hosted), so there is no
+   third-party font request here. */
 
 /* ── Heading Animations ── */
 @keyframes mainPulse {

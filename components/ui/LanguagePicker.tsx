@@ -153,7 +153,7 @@ export default function LanguagePicker({ selected, onChange }: LanguagePickerPro
               boxSizing: 'border-box',
             }}
           />
-          <p style={{ margin: '5px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
+          <p style={{ margin: '5px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.62)' }}>
             {t('Will be capitalised automatically (e.g. "klingon" → "Klingon")')}
           </p>
         </div>

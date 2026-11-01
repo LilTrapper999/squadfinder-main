@@ -4,12 +4,14 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useT } from '@/context/I18nContext'
 import { useApp } from '@/context/AppContext'
-import { GAME_QUESTIONS, GAME_SPECIFIC_QUESTIONS } from '@/lib/mockData'
+import { useCatalogue } from '@/context/CatalogueContext'
+import { GAME_SPECIFIC_QUESTIONS } from '@/lib/mockData'
 import type { Question } from '@/lib/types'
 import GameQuestionBlock from '@/components/profile/QuestionBlock'
 import CheckboxGrid from '@/components/ui/CheckboxGrid'
 import LanguagePicker from '@/components/ui/LanguagePicker'
 import Slider from '@/components/ui/Slider'
+import { ERROR_MESSAGES, toRpcError } from '@/lib/db/rpc'
 import { useWindowWidth } from '@/lib/useWindowWidth'
 import WelcomeBanner from '@/components/ui/WelcomeBanner'
 // Tick labels — 3 anchors only: [0.0, 5.0, 10.0] (SPEC_AMENDMENT_02 FIX 1). Shared with the
@@ -108,7 +110,7 @@ function QuestionLabel({ children, required }: { children: React.ReactNode; requ
             // Required reads as a warning, Optional stays quiet background text
             fontSize: required ? '11px' : '10px',
             fontWeight: required ? 700 : 400,
-            color: required ? '#ff3b3b' : 'rgba(255,255,255,0.3)',
+            color: required ? '#ff3b3b' : 'rgba(255,255,255,0.62)',
             textTransform: 'uppercase',
             letterSpacing: '0.06em',
             whiteSpace: 'nowrap',
@@ -202,7 +204,7 @@ function CommsSlider({ chat, voice, onChange }: {
                 left: `${(i / maxIndex) * 100}%`,
                 transform: i === 0 ? 'none' : i === maxIndex ? 'translateX(-100%)' : 'translateX(-50%)',
                 fontSize: '9px',
-                color: i === activeIndex ? '#e8a020' : 'rgba(255,255,255,0.4)',
+                color: i === activeIndex ? '#e8a020' : 'rgba(255,255,255,0.62)',
                 fontWeight: i === activeIndex ? 600 : 400,
                 whiteSpace: 'nowrap',
               }}
@@ -298,7 +300,7 @@ function RoleMatchRadioRow({ value, onChange, columns }: {
               <span style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: isSelected ? '#e8a020' : 'rgba(255,255,255,0.8)', userSelect: 'none' }}>
                 {t(opt.label)}
               </span>
-              <span style={{ display: 'block', fontSize: '10px', color: 'rgba(255,255,255,0.35)', userSelect: 'none', marginTop: '1px' }}>
+              <span style={{ display: 'block', fontSize: '10px', color: 'rgba(255,255,255,0.62)', userSelect: 'none', marginTop: '1px' }}>
                 {t(opt.subtitle)}
               </span>
             </span>
@@ -315,6 +317,7 @@ export default function ProfileForm() {
   const router = useRouter()
   const { t } = useT()
   const { selectedGame, profileAnswers, updateProfileAnswer, saveMyProfile } = useApp()
+  const { questions } = useCatalogue()
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const width = useWindowWidth()
@@ -330,7 +333,7 @@ export default function ProfileForm() {
   useEffect(() => {
     if (!selectedGame) router.replace('/select-game')
   }, [selectedGame, router])
-  const gq = GAME_QUESTIONS[key]
+  const gq = questions[key]
 
   // ── helpers ──────────────────────────────────────────────────────────────────
   // Nested key helpers for the game-agnostic groups (e.g. 'vibeCheck.personality')
@@ -465,7 +468,9 @@ export default function ProfileForm() {
       await saveMyProfile()
       router.push('/squad-matches')
     } catch (e) {
-      setSaveError(e instanceof Error ? e.message : t('Could not save your profile. Please try again.'))
+      // Never show a raw database/network message: map it to a translated one.
+      const code = toRpcError(e).code
+      setSaveError(code === 'unknown' ? t('Could not save your profile. Please try again.') : t(ERROR_MESSAGES[code]))
       setSaving(false)
     }
   }
@@ -481,7 +486,7 @@ export default function ProfileForm() {
         {t('Step {current} of {total}', { current: step + 1, total: STEP_COUNT })}
       </p>
       {step === 1 && (
-        <p style={{ margin: '-6px 0 14px', fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>
+        <p style={{ margin: '-6px 0 14px', fontSize: '11px', color: 'rgba(255,255,255,0.62)' }}>
           {t('Gamesmanship · part {current} of {total}', { current: subStep + 1, total: subCount })}
         </p>
       )}
@@ -523,7 +528,7 @@ export default function ProfileForm() {
                     boxSizing: 'border-box',
                   }}
                 />
-                <span style={{ display: 'block', margin: '8px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.35)', lineHeight: 1.4 }}>
+                <span style={{ display: 'block', margin: '8px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.62)', lineHeight: 1.4 }}>
                   {t("This is specific to this game — build a profile for another game and you'll set a different username.")}
                 </span>
               </>
@@ -618,7 +623,7 @@ export default function ProfileForm() {
                             style={{
                               display: 'block',
                               fontSize: '10px',
-                              color: 'rgba(255,255,255,0.35)',
+                              color: 'rgba(255,255,255,0.62)',
                               userSelect: 'none',
                               marginTop: '1px',
                             }}
@@ -691,7 +696,7 @@ export default function ProfileForm() {
           {card === 'weapons' && gq?.weapons && gq.weapons.length > 0 && (
             <QuestionBlock>
               <QuestionLabel required={true}>{t('Weapons — pick at least 1')}</QuestionLabel>
-              <p style={{ margin: '-4px 0 6px', fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>
+              <p style={{ margin: '-4px 0 6px', fontSize: '11px', color: 'rgba(255,255,255,0.62)' }}>
                 {t('Pick as many as you like, from any category.')}
               </p>
               {gq.weapons.map((cat) => (
@@ -739,7 +744,7 @@ export default function ProfileForm() {
 
           {/* V2 — Personality */}
           <QuestionBlock>
-            <QuestionLabel required={true}>{t('Personality vibe')} <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>{t('(pick all that apply)')}</span></QuestionLabel>
+            <QuestionLabel required={true}>{t('Personality vibe')} <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.62)' }}>{t('(pick all that apply)')}</span></QuestionLabel>
             <div
               style={{
                 display: 'grid',
@@ -797,7 +802,7 @@ export default function ProfileForm() {
             style={{
               margin: '0 0 20px',
               fontSize: '11px',
-              color: 'rgba(255,255,255,0.35)',
+              color: 'rgba(255,255,255,0.62)',
               fontFamily: 'Inter, sans-serif',
               lineHeight: 1.4,
             }}
@@ -907,7 +912,7 @@ export default function ProfileForm() {
             borderRadius: '8px',
             border: 'none',
             backgroundColor: stepComplete ? '#e8a020' : 'rgba(255,255,255,0.05)',
-            color: stepComplete ? '#0a0b0f' : '#4a5568',
+            color: stepComplete ? '#0a0b0f' : '#8b95a5',
             fontSize: '15px',
             fontWeight: 700,
             cursor: stepComplete ? 'pointer' : 'not-allowed',

@@ -34,7 +34,7 @@ export default function Slider({ value, onChange, sliderMinLabel, sliderMaxLabel
         }}>
           {display}
         </span>
-        <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', marginLeft: '4px' }}>/ 10</span>
+        <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.62)', marginLeft: '4px' }}>/ 10</span>
       </div>
 
       {/* Slider track + ticks + input */}
@@ -85,7 +85,7 @@ export default function Slider({ value, onChange, sliderMinLabel, sliderMaxLabel
                   left: `${(i / 10) * 100}%`,
                   transform: i === 0 ? 'none' : i === 10 ? 'translateX(-100%)' : 'translateX(-50%)',
                   fontSize: '11px',
-                  color: 'rgba(255,255,255,0.45)',
+                  color: 'rgba(255,255,255,0.62)',
                   whiteSpace: 'nowrap',
                   userSelect: 'none',
                 }}
@@ -134,8 +134,8 @@ export default function Slider({ value, onChange, sliderMinLabel, sliderMaxLabel
       {/* Min / max labels (when no tick labels) */}
       {!tickLabels && (sliderMinLabel || sliderMaxLabel) && (
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '-4px' }}>
-          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>{sliderMinLabel ? t(sliderMinLabel) : ''}</span>
-          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>{sliderMaxLabel ? t(sliderMaxLabel) : ''}</span>
+          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.62)' }}>{sliderMinLabel ? t(sliderMinLabel) : ''}</span>
+          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.62)' }}>{sliderMaxLabel ? t(sliderMaxLabel) : ''}</span>
         </div>
       )}
     </div>

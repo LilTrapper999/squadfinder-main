@@ -1,10 +1,9 @@
 'use client'
 
-import { ReactNode, useEffect, useRef } from 'react'
-import { createPortal } from 'react-dom'
 import { useT } from '@/context/I18nContext'
 import { MatchBreakdown, MatchCategoryBreakdown, MatchFactor, MatchFactorId } from '@/lib/types'
 import { scoreToColour } from '@/lib/matchColour'
+import Dialog from '@/components/ui/Dialog'
 import { CATEGORY_LABEL, RAGE_LABELS, SKILL_LABELS, ScoreCategory, sliderAnchor } from '@/lib/profileAnswers'
 
 interface ScoreBreakdownModalProps {
@@ -127,7 +126,7 @@ function ScaleTrack({ you, them }: { you: number; them: number }) {
 function FactorDetail({ factor, name }: { factor: MatchFactor; name: string }) {
   const { t } = useT()
   const { detail } = factor
-  const noteStyle = { margin: '10px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 } as const
+  const noteStyle = { margin: '10px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.62)', lineHeight: 1.5 } as const
 
   if (detail.kind === 'scale') {
     const labels = factor.id === 'skill' ? SKILL_LABELS : RAGE_LABELS
@@ -209,7 +208,7 @@ function FactorBlock({ factor, categoryLabel, name }: { factor: MatchFactor; cat
         <div style={{ minWidth: 0 }}>
           <span className="sub-heading" style={{ fontSize: '14px', fontWeight: 600 }}>{t(FACTOR_LABEL[factor.id])}</span>
           {factor.weight < 1 && (
-            <span style={{ marginLeft: '8px', fontSize: '10px', color: 'rgba(255,255,255,0.35)' }}>
+            <span style={{ marginLeft: '8px', fontSize: '10px', color: 'rgba(255,255,255,0.62)' }}>
               {t('{weight}% of {category}', { weight: Math.round(factor.weight * 100), category: categoryLabel })}
             </span>
           )}
@@ -261,19 +260,6 @@ function CategoryBlock({
  */
 export default function ScoreBreakdownModal({ category, breakdown, senderUsername, onClose }: ScoreBreakdownModalProps) {
   const { t } = useT()
-  const closeRef = useRef<HTMLButtonElement>(null)
-
-  useEffect(() => {
-    closeRef.current?.focus()
-  }, [])
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
 
   const score =
     category === 'overall' ? breakdown.scores.overall :
@@ -288,101 +274,50 @@ export default function ScoreBreakdownModal({ category, breakdown, senderUsernam
   ]
   const shown = category === 'overall' ? sections : sections.filter((s) => s.id === category)
 
-  const content: ReactNode = (
-    <div
-      onClick={onClose}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 1000,
-        backgroundColor: 'rgba(5,6,9,0.75)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px',
-      }}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="score-breakdown-title"
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          width: '100%',
-          maxWidth: '520px',
-          maxHeight: 'min(86vh, 760px)',
-          display: 'flex',
-          flexDirection: 'column',
-          backgroundColor: '#111318',
-          border: '1px solid rgba(232,160,32,0.4)',
-          borderRadius: '12px',
-          boxShadow: '0 0 24px rgba(232,160,32,0.25), 0 8px 32px rgba(0,0,0,0.6)',
-        }}
-      >
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', padding: '16px 18px 12px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-          <div style={{ minWidth: 0 }}>
-            <h2
-              id="score-breakdown-title"
-              className="sub-heading"
-              style={{ margin: 0, fontSize: '17px', letterSpacing: '0.06em', textTransform: 'uppercase', color: '#e8a020' }}
-            >
-              {t(CATEGORY_LABEL[category])}
-            </h2>
-            <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#8b95a5', overflowWrap: 'anywhere' }}>
-              {t('You vs {name}', { name: senderUsername })}
-            </p>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-            <span style={{ fontSize: '28px', fontWeight: 700, lineHeight: 1, color: scoreToColour(score), fontFamily: 'var(--font-rajdhani), sans-serif' }}>
-              {score}%
-            </span>
-            <button
-              ref={closeRef}
-              onClick={onClose}
-              aria-label={t('Close')}
-              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: '16px', lineHeight: 1, cursor: 'pointer', padding: '4px', fontFamily: 'inherit' }}
-            >
-              ✕
-            </button>
-          </div>
+  return (
+    <Dialog title={t(CATEGORY_LABEL[category])} onClose={onClose} maxWidth={520}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginTop: '-6px' }}>
+          <p style={{ margin: 0, fontSize: '12px', color: '#8b95a5', overflowWrap: 'anywhere' }}>
+            {t('You vs {name}', { name: senderUsername })}
+          </p>
+          <span
+            style={{ fontSize: '28px', fontWeight: 700, lineHeight: 1, color: scoreToColour(score), fontFamily: 'var(--font-rajdhani), sans-serif', flexShrink: 0 }}
+          >
+            {score}%
+          </span>
         </div>
 
-        {/* Body */}
-        <div style={{ overflowY: 'auto', padding: '14px 18px 18px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {category === 'overall' && (
-            <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>
-              {t('The overall match is the average of the three scores below.')}
-            </p>
-          )}
+        {category === 'overall' && (
+          <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>
+            {t('The overall match is the average of the three scores below.')}
+          </p>
+        )}
 
-          {/* Legend for the colours used in the chips and slider dots */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px', fontSize: '11px', color: '#8b95a5' }}>
-            {[
-              { colour: SHARED_COLOUR, label: t('Both of you') },
-              { colour: YOU_COLOUR, label: t('Only you') },
-              { colour: THEM_COLOUR, label: t('Only {name}', { name: senderUsername }) },
-            ].map(({ colour, label }) => (
-              <span key={colour} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                <span aria-hidden="true" style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: colour }} />
-                {label}
-              </span>
-            ))}
-          </div>
-
-          {shown.map(({ id, data }) => (
-            <CategoryBlock
-              key={id}
-              label={t(CATEGORY_LABEL[id])}
-              breakdown={data}
-              name={senderUsername}
-              showHeader={category === 'overall'}
-            />
+        {/* Legend for the colours used in the chips and slider dots */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px', fontSize: '11px', color: '#8b95a5' }}>
+          {[
+            { colour: SHARED_COLOUR, label: t('Both of you') },
+            { colour: YOU_COLOUR, label: t('Only you') },
+            { colour: THEM_COLOUR, label: t('Only {name}', { name: senderUsername }) },
+          ].map(({ colour, label }) => (
+            <span key={colour} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+              <span aria-hidden="true" style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: colour }} />
+              {label}
+            </span>
           ))}
         </div>
-      </div>
-    </div>
-  )
 
-  return createPortal(content, document.body)
+        {shown.map(({ id, data }) => (
+          <CategoryBlock
+            key={id}
+            label={t(CATEGORY_LABEL[id])}
+            breakdown={data}
+            name={senderUsername}
+            showHeader={category === 'overall'}
+          />
+        ))}
+      </div>
+    </Dialog>
+  )
 }

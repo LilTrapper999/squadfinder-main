@@ -204,6 +204,41 @@ const asRecord = (p) => ({
 await boot()
 await loadGames()
 
+console.log('\nFresh database (D-07)')
+
+const SEED_TABLES = ['games', 'game_reference_data']
+const USER_TABLES = ['users', 'game_profiles', 'squad_requests', 'squad_request_events', 'allies', 'user_blocks', 'user_presence',
+  'lfg_presence', 'api_rate_limits', 'banned_usernames', 'reports', 'game_updates']
+const rowCounts = async (tables) => Object.fromEntries(await Promise.all(tables.map(async (t) =>
+  [t, Number((await sudo(`select count(*) as c from public.${t}`))[0].c)])))
+
+await test('D-07: migrations + seed leave no users, profiles, requests, allies, blocks or bans', async () => {
+  eq(await rowCounts(USER_TABLES), Object.fromEntries(USER_TABLES.map((t) => [t, 0])))
+  const [{ c }] = await sudo('select count(*) as c from auth.users')
+  eq(Number(c), 0, 'no auth users either')
+})
+await test('D-07: the seed can be applied again with identical results, even with real users present', async () => {
+  const seed = readFileSync(path.join(repoRoot, 'supabase', 'seed.sql'), 'utf8')
+  // content only: updated_at legitimately moves when the seed upserts
+  const fingerprint = async () => (await sudo(`select md5(string_agg(concat_ws('~', g.id, g.slug, g.name, g.category, g.mark, g.logo_url, g.version_label,
+      g.version_date, g.base_game_id, g.is_selectable), '|' order by g.id)) as h from public.games g`))[0].h
+    + (await sudo(`select md5(string_agg(concat_ws('~', r.game_id, r.maps, r.weapons, r.roles), '|' order by r.game_id)) as h from public.game_reference_data r`))[0].h
+  const before = { counts: await rowCounts(SEED_TABLES), fp: await fingerprint() }
+  const u = await mkUser('seeded')
+  await db.exec(seed)
+  await db.exec(seed)
+  eq({ counts: await rowCounts(SEED_TABLES), fp: await fingerprint() }, before)
+  eq(Number((await sudo('select count(*) as c from public.users where id = $1', [u]))[0].c), 1, 'real user untouched')
+  await sudo('delete from auth.users where id = $1', [u])
+})
+await test('D-07: every selectable game has reference data through its base game, and slugs are unique', async () => {
+  const orphans = await sudo(`select g.slug from public.games g
+    where g.is_selectable and not exists (select 1 from public.game_reference_data r where r.game_id = coalesce(g.base_game_id, g.id))`)
+  eq(orphans.map((r) => r.slug), [])
+  const dupes = await sudo('select slug from public.games group by slug having count(*) > 1')
+  eq(dupes, [])
+})
+
 console.log('\nPrivileges (§0)')
 
 const CLIENT_FUNCTIONS = [
@@ -213,8 +248,9 @@ const CLIENT_FUNCTIONS = [
   'accept_squad_request(uuid)', 'decline_squad_request(uuid)', 'decline_and_block_squad_request(uuid)',
   'withdraw_squad_request(uuid)', 'send_squad_request(uuid,uuid)',
   'get_my_pending_request_cards()', 'count_my_pending_requests()', 'get_my_outbound_requests()',
-  'is_chat_participant(uuid)', 'find_squad_matches(uuid,boolean,integer)',
-  'get_my_allies()', 'remove_ally(uuid)', 'chat_message_visible(uuid,timestamp with time zone)',
+  'find_squad_matches(uuid,boolean,integer)',
+  'get_my_allies()', 'remove_ally(uuid)',
+  'export_my_data()', 'normalize_username(text)', 'report_ally(uuid,report_reason,text)', 'report_request(uuid,report_reason,text)',
 ].sort()
 
 await test('only the intended functions are executable by authenticated', async () => {
@@ -241,12 +277,35 @@ await test('anon has no privilege on any table; nobody can TRUNCATE', async () =
    where n.nspname = 'public' and c.relkind in ('r','v')`)
   eq(rows.filter((r) => r.anon_any || r.auth_truncate).map((r) => r.relname), [])
 })
+await test('least privilege: the exact table privileges signed-in clients hold', async () => {
+  const rows = await sudo(`select table_name, string_agg(privilege_type, ',' order by privilege_type) as p
+      from information_schema.role_table_grants
+     where table_schema = 'public' and grantee = 'authenticated' group by 1 order by 1`)
+  eq(Object.fromEntries(rows.map((r) => [r.table_name, r.p])), {
+    allies: 'SELECT,UPDATE',
+    game_profiles: 'DELETE,INSERT,SELECT,UPDATE',
+    game_reference_data: 'SELECT',
+    games: 'SELECT',
+    users: 'SELECT',
+  })
+  const cols = await sudo(`select table_name, privilege_type, string_agg(column_name, ',' order by column_name) as cols
+      from information_schema.column_privileges
+     where table_schema = 'public' and grantee = 'authenticated' and table_name = 'users' and privilege_type = 'UPDATE' group by 1, 2`)
+  eq(cols.map((r) => r.cols), ['show_online_players'])
+})
+await test('a client cannot insert an ally or touch its own users row beyond the one setting', async () => {
+  const u = await mkUser()
+  await rejects(U(u).q(`insert into public.allies (user_id, ally_user_id) values ($1, $1)`, [u]), /permission denied/)
+  await rejects(U(u).q(`delete from public.users where id = $1`, [u]), /permission denied/)
+  await rejects(U(u).q(`insert into public.users (id) values (gen_random_uuid())`), /permission denied/)
+})
 await test('locked tables are unreachable to clients', async () => {
   const u = await mkUser()
-  for (const t of ['squad_requests', 'squad_request_events', 'user_blocks', 'user_presence', 'lfg_presence', 'api_rate_limits']) {
+  for (const t of ['squad_requests', 'squad_request_events', 'user_blocks', 'user_presence', 'lfg_presence', 'api_rate_limits', 'reports', 'banned_usernames']) {
     await rejects(U(u).q(`select * from public.${t}`), /permission denied/, t)
     await rejects(U(u).q(`insert into public.${t} default values`), /permission denied/, t)
   }
+  await rejects(U(u).q('select * from public.open_reports'), /permission denied/, 'open_reports')
 })
 await test('is_blocked / has_blocked / can_contact are not callable by clients (no block oracle)', async () => {
   const [a, b] = [await mkUser(), await mkUser()]
@@ -409,7 +468,7 @@ await test('discovery: p_limit is clamped to 50 and calls are rate-limited', asy
 
 console.log('\nRequest state machine (§3.4, §3.5)')
 
-await test('full flow: send → card → accept → allies, chat, outbound status', async () => {
+await test('full flow: send → card → accept → allies, outbound status', async () => {
   const { A, B, pb } = await pair()
   const [sent] = await send(A, G.pvp, pb)
   eq(sent.status, 'pending')
@@ -424,10 +483,10 @@ await test('full flow: send → card → accept → allies, chat, outbound statu
 
   await U(B).q('select public.accept_squad_request($1)', [sent.request_id])
   eq((await sudo('select count(*)::int c from public.allies where squad_request_id = $1', [sent.request_id]))[0].c, 2)
-  eq((await sudo('select count(*)::int c from public.ally_chats where squad_request_id = $1', [sent.request_id]))[0].c, 1)
   eq((await outbound(A))[0].status, 'accepted')
   const allies = await U(A).q('select * from public.get_my_allies()')
   eq(allies.length, 1)
+  eq(allies[0].request_id, sent.request_id, 'ally row links back to the request that created it')
   eq((await cards(B)).length, 0)
 })
 await test('a recipient cannot reach "accepted" (or anything) by direct DML', async () => {
@@ -621,55 +680,27 @@ await test('accept re-checks blocks with the generic error', async () => {
   await rejects(U(B).q('select public.accept_squad_request($1)', [x.request_id]), /no longer available/)
 })
 
-console.log('\nAllies and chat (§3.10, §3.11, D8, D10)')
+console.log('\nAllies (§3.10, D8, D10) and chat removal (D-05)')
 
 async function allies() {
   const w = await pair()
   const [{ request_id }] = await send(w.A, G.pvp, w.pb)
   await U(w.B).q('select public.accept_squad_request($1)', [request_id])
-  const chat = (await sudo('select id from public.ally_chats where squad_request_id = $1', [request_id]))[0].id
   const aAlly = (await U(w.A).q('select * from public.get_my_allies()'))[0]
-  return { ...w, request_id, chat, aAlly }
+  return { ...w, request_id, aAlly }
 }
 
-await test('chat: server sets expires_at/sent_at; content length enforced; chat columns locked', async () => {
-  const { A, B, chat, request_id } = await allies()
-  const far = '2099-01-01T00:00:00Z'
-  await U(A).q(`insert into public.chat_messages (ally_chat_id, sender_id, content, sent_at, expires_at) values ($1,$2,'hi',$3,$3)`, [chat, A, far])
-  let m = (await sudo('select * from public.chat_messages where ally_chat_id = $1', [chat]))[0]
-  assert(m.expires_at === null, 'expires_at must ignore client value when disappearing is off')
-  assert(new Date(m.sent_at).getFullYear() < 2090, 'sent_at is server time')
-  await U(B).q('update public.ally_chats set disappearing_messages = true where id = $1', [chat])
-  await U(A).q(`insert into public.chat_messages (ally_chat_id, sender_id, content, expires_at) values ($1,$2,'bye',null)`, [chat, A])
-  m = (await sudo(`select * from public.chat_messages where content = 'bye'`))[0]
-  const hrs = (new Date(m.expires_at) - Date.now()) / 36e5
-  assert(hrs > 23 && hrs < 25, `expected ~24h, got ${hrs}`)
-  await rejects(U(A).q(`insert into public.chat_messages (ally_chat_id, sender_id, content) values ($1,$2,'')`, [chat, A]), /chat_messages_content_len/)
-  await rejects(U(A).q(`insert into public.chat_messages (ally_chat_id, sender_id, content) values ($1,$2,$3)`, [chat, A, 'x'.repeat(2001)]), /chat_messages_content_len/)
-  await rejects(U(A).q('update public.ally_chats set squad_request_id = $1 where id = $2', [randomUUID(), chat]), /only disappearing_messages/)
-  // sender spoofing / strangers
-  const stranger = await mkUser()
-  await rejects(U(stranger).q(`insert into public.chat_messages (ally_chat_id, sender_id, content) values ($1,$2,'x')`, [chat, stranger]), /row-level security/)
-  await rejects(U(B).q(`insert into public.chat_messages (ally_chat_id, sender_id, content) values ($1,$2,'x')`, [chat, A]), /row-level security/)
+await test('D-05: the schema contains no chat objects', async () => {
+  const tables = await sudo(`select relname from pg_class c join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public' and c.relkind in ('r','v') and c.relname ~ 'chat'`)
+  eq(tables, [])
+  const fns = await sudo(`select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and p.proname ~ 'chat'`)
+  eq(fns, [])
 })
-await test('chat: expired messages are hidden even if never purged', async () => {
-  const { A, B, chat } = await allies()
-  await U(A).q(`insert into public.chat_messages (ally_chat_id, sender_id, content) values ($1,$2,'old')`, [chat, A])
-  await sudo(`update public.chat_messages set expires_at = now() - interval '1 minute' where content = 'old'`)
-  eq((await U(B).q('select * from public.chat_messages where ally_chat_id = $1', [chat])).length, 0)
-})
-await test('D8: block_ally → blocker stops receiving; blocked party notices nothing; unblock restores', async () => {
-  const { A, B, chat, aAlly } = await allies()
-  await U(B).q(`insert into public.chat_messages (ally_chat_id, sender_id, content) values ($1,$2,'from B before')`, [chat, B])
-  await U(A).q(`insert into public.chat_messages (ally_chat_id, sender_id, content) values ($1,$2,'from A before')`, [chat, A])
+await test('D8: block_ally → blocker sees block_id; blocked party notices nothing; unblock restores', async () => {
+  const { A, B, aAlly } = await allies()
   await U(A).q('select public.block_ally($1)', [aAlly.ally_id])
-
-  // B keeps sending: accepted, no error
-  await U(B).q(`insert into public.chat_messages (ally_chat_id, sender_id, content) values ($1,$2,'from B after')`, [chat, B])
-  const seenByA = (await U(A).q('select content from public.chat_messages where ally_chat_id = $1', [chat])).map((r) => r.content)
-  eq(seenByA, ['from A before'], 'A (blocker) sees none of B\'s messages')
-  const seenByB = (await U(B).q('select content from public.chat_messages where ally_chat_id = $1 order by sent_at, content', [chat])).map((r) => r.content).sort()
-  eq(seenByB, ['from A before', 'from B after', 'from B before'], 'B\'s view of the thread is unchanged')
 
   // block_id is only ever the caller's OWN block
   assert((await U(A).q('select * from public.get_my_allies()'))[0].block_id, 'blocker gets block_id')
@@ -681,16 +712,12 @@ await test('D8: block_ally → blocker stops receiving; blocked party notices no
 
   const [{ block_id }] = await U(A).q('select * from public.get_my_blocks()')
   await U(A).q('select public.unblock_user($1)', [block_id])
-  eq((await U(A).q('select content from public.chat_messages where ally_chat_id = $1', [chat])).length, 3, 'unblock restores everything')
   eq((await U(B).q('select 1 from public.game_profiles where user_id = $1', [A])).length, 1)
 })
 await test('D10: remove_ally ends the relationship for both sides and allows a fresh request later', async () => {
-  const { A, B, chat, pb, request_id, aAlly } = await allies()
-  await U(A).q(`insert into public.chat_messages (ally_chat_id, sender_id, content) values ($1,$2,'hello')`, [chat, A])
+  const { A, B, pb, request_id, aAlly } = await allies()
   await U(A).q('select public.remove_ally($1)', [aAlly.ally_id])
   eq((await sudo('select count(*)::int c from public.allies where user_id in ($1,$2)', [A, B]))[0].c, 0)
-  eq((await sudo('select count(*)::int c from public.ally_chats where id = $1', [chat]))[0].c, 0)
-  eq((await sudo('select count(*)::int c from public.chat_messages where ally_chat_id = $1', [chat]))[0].c, 0)
   eq((await reqRow(request_id)).status, 'ended')
   eq((await U(B).q('select * from public.get_my_allies()')).length, 0)
   eq((await U(B).q('select 1 from public.game_profiles where user_id = $1', [A])).length, 0)
@@ -745,6 +772,301 @@ await test('realtime.messages policy: a user can receive on their own topic only
   eq(await count(u, `user:${u}`), 1)
   eq(await count(u, `user:${v}`), 0)
   await rejects(U(u).q('insert into realtime.messages default values'), /permission denied|row-level security/)
+})
+
+console.log('\nLaunch readiness: privacy, deletion, export, bans, reports (D-01, D-02, D-03, D-09, D-10, D-14, D-15)')
+
+const count = async (sql, params) => Number((await sudo(sql, params))[0].c)
+
+await test('D-09: no Google profile data is stored on users', async () => {
+  eq(await sudo(`select column_name from information_schema.columns
+                  where table_schema = 'public' and table_name = 'users' and column_name in ('display_name','avatar_url')`), [])
+  const id = randomUUID()
+  await sudo(`insert into auth.users (id, raw_user_meta_data) values ($1, '{"full_name":"Real Name","avatar_url":"http://x"}'::jsonb)`, [id])
+  const [row] = await sudo('select * from public.users where id = $1', [id])
+  assert(row, 'users row created')
+  assert(!JSON.stringify(row).includes('Real Name'), 'name not persisted')
+})
+await test('D-10: a client can change show_online_players and nothing else on users', async () => {
+  const u = await mkUser()
+  await U(u).q('update public.users set show_online_players = true where id = $1', [u])
+  eq((await sudo('select show_online_players from public.users where id = $1', [u]))[0].show_online_players, true)
+  await rejects(U(u).q(`update public.users set created_at = now() where id = $1`, [u]), /permission denied/)
+  await rejects(U(u).q(`update public.users set id = $1 where id = $2`, [randomUUID(), u]), /permission denied/)
+})
+await test('D-14: a failure inside handle_new_user cannot block sign-up', async () => {
+  await sudo('alter table public.users add constraint tmp_break check (false) not valid')
+  try {
+    const id = randomUUID()
+    await sudo(`insert into auth.users (id, raw_user_meta_data) values ($1, '{}'::jsonb)`, [id])   // must not throw
+    eq(await count('select count(*)::int c from public.users where id = $1', [id]), 0)
+  } finally {
+    await sudo('alter table public.users drop constraint tmp_break')
+  }
+  // and the normal path is idempotent
+  const id2 = await mkUser()
+  await sudo('select public.handle_new_user() from (select 1) x where false')
+  eq(await count('select count(*)::int c from public.users where id = $1', [id2]), 1)
+})
+
+async function populatedUser() {
+  // A has: profile, presence, outbound + inbound requests, an ally, a block each way, events, rate-limit rows, reports.
+  const A = await mkUser('A'), B = await mkUser('B'), C = await mkUser('C'), D = await mkUser('D')
+  const pa = await mkProfile(A, G.tarkov, { in_game_username: 'Alpha' })
+  const pb = await mkProfile(B, G.tarkov, { in_game_username: 'Bravo' })
+  const pc = await mkProfile(C, G.tarkov, { in_game_username: 'Charlie' })
+  const pd = await mkProfile(D, G.tarkov, { in_game_username: 'Delta' })
+  for (const u of [A, B, C, D]) { await online(u); await search(u, G.pvp) }
+  const [{ request_id: toB }] = await send(A, G.pvp, pb)           // A → B (will be accepted)
+  await U(B).q('select public.accept_squad_request($1)', [toB])
+  await send(C, G.pvp, pa)                                           // C → A pending (inbound for A)
+  await send(A, G.pvp, pd)                                           // A → D pending (outbound for A)
+  await sudo(`insert into public.user_blocks (blocker_id, blocked_id, label) values ($1,$2,'x'), ($3,$1,'y')`, [A, C, D])
+  await U(A).q('select public.report_ally((select ally_id from public.get_my_allies() limit 1), $1)', ['spam'])
+  await sudo(`insert into public.reports (reporter_id, reported_user_id, game_id, reported_username, target_kind, reason)
+              values ($1,$2,$3,'Alpha','ally','spam')`, [B, A, G.tarkov])
+  return { A, B, C, D }
+}
+
+await test('D-01: deleting an account leaves zero rows behind and counterparties simply lose the entry', async () => {
+  const { A, B, C, D } = await populatedUser()
+  assert(await count('select count(*)::int c from public.squad_request_events where sender_id = $1 or recipient_id = $1', [A]) > 0, 'fixture has events')
+  await sudo('delete from auth.users where id = $1', [A])
+
+  const refs = [
+    ['users', 'id'], ['game_profiles', 'user_id'], ['user_presence', 'user_id'], ['lfg_presence', 'user_id'],
+    ['api_rate_limits', 'user_id'], ['squad_requests', 'sender_id'], ['squad_requests', 'recipient_id'],
+    ['squad_request_events', 'sender_id'], ['squad_request_events', 'recipient_id'],
+    ['allies', 'user_id'], ['allies', 'ally_user_id'], ['user_blocks', 'blocker_id'], ['user_blocks', 'blocked_id'],
+    ['reports', 'reporter_id'], ['reports', 'reported_user_id'],
+  ]
+  for (const [t, c] of refs) eq(await count(`select count(*)::int c from public.${t} where ${c} = $1`, [A]), 0, `${t}.${c}`)
+
+  // counterparties: no dangling ally, no ghost request, no leftover block pointing at nobody
+  eq((await U(B).q('select * from public.get_my_allies()')).length, 0)
+  eq((await cards(C)).length, 0)
+  eq((await outbound(C)).length, 0)
+  eq((await U(D).q('select * from public.get_my_blocks()')).length, 0)
+  // reports A filed stay, anonymised, because the reported player is still there
+  eq(await count('select count(*)::int c from public.reports where reporter_id is null', []), 1)
+})
+
+await test('D-02: export_my_data holds only the caller\'s own data (no other user ids, no pre-acceptance usernames)', async () => {
+  const { A, B, C, D } = await populatedUser()
+  const [{ export_my_data: dump }] = await U(A).q('select public.export_my_data()')
+  const text = JSON.stringify(dump)
+  for (const other of [B, C, D]) assert(!text.includes(other), 'no other user id')
+  assert(!text.includes(A), 'not even its own id is needed')
+  assert(!text.includes('Delta'), 'pending outbound target stays anonymous')
+  assert(!text.includes('Charlie'), 'inbound sender stays out of the export')
+  assert(text.includes('Bravo'), 'accepted ally username is included')
+  assert(text.includes('Alpha'), 'own profile username is included')
+  eq(Object.keys(dump).sort(), ['account', 'allies', 'blocks', 'exported_at', 'profiles', 'sent_requests'])
+  eq(await U(await mkUser()).q('select public.export_my_data() as d').then((r) => r[0].d.profiles), [])
+})
+
+console.log('\nUsername bans (D-15)')
+
+async function banFixture() {
+  await sudo('delete from public.banned_usernames')
+  const A = await mkUser('A'), B = await mkUser('B')
+  const pa = await mkProfile(A, G.tarkov, { in_game_username: 'Alpha' })
+  const pb = await mkProfile(B, G.tarkov, { in_game_username: 'BadActor' })
+  await online(A); await online(B)
+  await search(A, G.pvp); await search(B, G.pvp)
+  return { A, B, pa, pb }
+}
+const ban = (name, game = null) => sudo('select public.ban_username($1, $2, $3) as id', [name, game, 'test']).then((r) => r[0].id)
+
+await test('D-15: ban hides the profile from discovery, requests and ally lists — for everyone else and for itself', async () => {
+  const { A, B, pa, pb } = await banFixture()
+  const sees = async (uid, ref) => (await U(uid).q('select * from public.find_squad_matches($1)', [G.pvp])).some((r) => r.match_ref === ref)
+  assert(await sees(A, pb), 'visible before the ban')
+  const [{ request_id: pending }] = await send(A, G.pvp, pb)
+  const id = await ban('  bad\u200Bactor  ')                         // case, spacing and zero-width variants
+  assert(id, 'ban id returned')
+  eq((await reqRow(pending)).status, 'withdrawn', 'pending requests involving the name are withdrawn')
+  eq(await count('select count(*)::int c from public.lfg_presence where user_id = $1', [B]), 0, 'presence cleared')
+  assert(!(await sees(A, pb)), 'gone from discovery')
+  await rejects(send(A, G.pvp, pb), /no longer available/, 'cannot be requested')
+  await search(B, G.pvp)                                             // the account still works…
+  eq((await U(B).q('select * from public.find_squad_matches($1)', [G.pvp])).length, 0, '…but sees nobody')
+  await rejects(send(B, G.pvp, pa), /no longer available/, 'and cannot send')
+})
+await test('D-15: a banned username cannot be saved (case, spacing and zero-width variants), but the account keeps working', async () => {
+  const { A, B } = await banFixture()
+  await ban('BadActor')
+  const C = await mkUser('C')
+  for (const variant of ['BADACTOR', 'bad actor', 'Bad\u200BActor', ' ＢａｄActor ']) {
+    await rejects(mkProfile(C, G.cs2, { in_game_username: variant }), /isn't available/, variant)
+  }
+  await mkProfile(C, G.cs2, { in_game_username: 'Fine' })
+  await rejects(U(B).q(`update public.game_profiles set in_game_username = 'bad actor' where user_id = $1`, [B]), /isn't available/)
+  await U(B).q(`update public.game_profiles set in_game_username = 'NewName' where user_id = $1`, [B])   // renaming is allowed
+  assert((await U(A).q('select * from public.find_squad_matches($1)', [G.pvp])).length >= 1, 'new name is visible again')
+})
+await test('D-15: bans hide existing allies, and unban restores everything', async () => {
+  const { A, B, pb } = await banFixture()
+  const [{ request_id }] = await send(A, G.pvp, pb)
+  await U(B).q('select public.accept_squad_request($1)', [request_id])
+  eq((await U(A).q('select * from public.get_my_allies()')).length, 1)
+  const id = await ban('BadActor')
+  eq((await U(A).q('select * from public.get_my_allies()')).length, 0, 'ally list loses the banned player')
+  eq((await U(B).q('select * from public.get_my_allies()')).length, 0, 'and the banned player sees no allies')
+  await sudo('select public.unban_username($1)', [id])
+  eq((await U(A).q('select * from public.get_my_allies()')).length, 1, 'unban restores')
+})
+await test('D-15: per-game scope — a ban on one game leaves the same name usable elsewhere', async () => {
+  const { A, B } = await banFixture()
+  await ban('BadActor', G.cs2)
+  assert((await U(A).q('select * from public.find_squad_matches($1)', [G.pvp])).length >= 1, 'tarkov unaffected')
+  await rejects(mkProfile(await mkUser('C'), G.cs2, { in_game_username: 'badactor' }), /isn't available/)
+  await mkProfile(await mkUser('D'), G.dayz, { in_game_username: 'badactor' })
+  void B
+})
+await test('D-15: the ban list holds no user id and survives deleting the account that held the name', async () => {
+  const { B } = await banFixture()
+  await ban('BadActor')
+  eq((await sudo(`select column_name from information_schema.columns where table_schema = 'public' and table_name = 'banned_usernames'`))
+    .map((r) => r.column_name).sort(), ['created_at', 'game_id', 'id', 'reason', 'username_norm'])
+  await sudo('delete from auth.users where id = $1', [B])
+  eq(await count(`select count(*)::int c from public.banned_usernames where username_norm = 'badactor'`, []), 1)
+})
+await test('D-15: pending requests from a banned sender never reach the recipient', async () => {
+  const { A, B, pa } = await banFixture()
+  await send(B, G.pvp, pa)
+  eq((await cards(A)).length, 1)
+  await ban('BadActor')
+  eq((await cards(A)).length, 0)
+  eq((await U(A).q('select public.count_my_pending_requests() as c'))[0].c, 0, 'bell follows the cards')
+})
+
+console.log('\nAbuse reports (D-03)')
+
+await test('D-03: reports are unreadable to clients; the reporter never receives a user id', async () => {
+  const { A, B, aAlly } = await allies()
+  const res = await U(A).q('select public.report_ally($1, $2, $3)', [aAlly.ally_id, 'harassment', 'rude in voice'])
+  assert(res.length === 1 && [null, ''].includes(Object.values(res[0])[0]), 'returns nothing')
+  for (const t of ['reports', 'banned_usernames', 'open_reports']) await rejects(U(A).q(`select * from public.${t}`), /permission denied/, t)
+  const [row] = await sudo('select * from public.open_reports where reports >= 1 and reporters = 1 limit 1')
+  assert(row, 'review view has the report')
+  assert(row.reported_username && !JSON.stringify(row).includes(B), 'review row carries the in-game username, not an id')
+  void B
+})
+await test('D-03: de-duplicated per reporter and target; reporting reveals nothing to the reported player', async () => {
+  const { A, B, aAlly } = await allies()
+  await U(A).q('select public.report_ally($1, $2)', [aAlly.ally_id, 'spam'])
+  await U(A).q('select public.report_ally($1, $2)', [aAlly.ally_id, 'hate'])
+  eq(await count('select count(*)::int c from public.reports where reported_user_id = $1', [B]), 1)
+  eq((await U(B).q('select * from public.get_my_allies()')).length, 1, 'B sees no change')
+  eq((await U(B).q('select * from public.get_my_blocks()')).length, 0)
+})
+await test('D-03: a request can be reported by its recipient only; strangers cannot report allies', async () => {
+  const { A, B, pb } = await pair()
+  const [{ request_id }] = await send(A, G.pvp, pb)
+  await rejects(U(A).q('select public.report_request($1, $2)', [request_id, 'spam']), /not found/, 'sender cannot')
+  await U(B).q('select public.report_request($1, $2, $3)', [request_id, 'inappropriate_username', 'x'])
+  eq(await count(`select count(*)::int c from public.reports where target_kind = 'request'`, []), 1)
+  const { aAlly } = await allies()
+  await rejects(U(await mkUser()).q('select public.report_ally($1, $2)', [aAlly.ally_id, 'spam']), /ally not found/)
+  await rejects(U(B).q('select public.report_ally($1, $2)', [aAlly.ally_id, 'nonsense']), /invalid input value/)
+})
+await test('D-03: details are length-limited and reports are rate limited (10 per day)', async () => {
+  const { A, aAlly } = await allies()
+  await rejects(U(A).q('select public.report_ally($1, $2, $3)', [aAlly.ally_id, 'other', 'x'.repeat(1001)]), /too long/)
+  const u = await mkUser()
+  for (let i = 0; i < 10; i++) {
+    const w = await allies()
+    await sudo(`update public.api_rate_limits set n = n where false`)
+    await U(w.A).q('select public.report_ally($1, $2)', [w.aAlly.ally_id, 'spam'])
+  }
+  void u
+  // an eleventh report from one reporter inside the window is refused
+  const w = await pair()
+  const gp = await sudo('select id from public.game_profiles where user_id = $1', [w.B])
+  void gp
+  await sudo(`insert into public.api_rate_limits (user_id, bucket, window_start, n) values ($1,'report', now(), 10)
+              on conflict (user_id, bucket) do update set n = 10, window_start = now()`, [A])
+  await rejects(U(A).q('select public.report_ally($1, $2)', [aAlly.ally_id, 'other']), /slow down/)
+})
+
+console.log('\nHousekeeping and update audit (D-04, D-13)')
+
+await test('D-04: run_housekeeping removes exactly the stale rows and is service-role only', async () => {
+  const old = await mkUser('old'), fresh = await mkUser('fresh')
+  await sudo(`insert into public.user_presence (user_id, last_seen_at) values ($1, now() - interval '2 days'), ($2, now() - interval '1 hour')
+              on conflict (user_id) do update set last_seen_at = excluded.last_seen_at`, [old, fresh])
+  await sudo(`insert into public.lfg_presence (user_id, game_id, last_seen_at) values ($1, $3, now() - interval '2 days'), ($2, $3, now() - interval '1 hour')
+              on conflict (user_id) do update set last_seen_at = excluded.last_seen_at`, [old, fresh, G.pvp])
+  await sudo(`insert into public.squad_request_events (sender_id, recipient_id, game_id, sent_at)
+              values ($1, $2, $3, now() - interval '91 days'), ($1, $2, $3, now() - interval '5 days')`, [old, fresh, G.pvp])
+  await sudo(`insert into public.api_rate_limits (user_id, bucket, window_start, n)
+              values ($1, 'x', now() - interval '3 days', 1), ($2, 'x', now() - interval '1 hour', 1)
+              on conflict (user_id, bucket) do update set window_start = excluded.window_start`, [old, fresh])
+
+  const liveBefore = {
+    users: await count('select count(*)::int c from public.users', []),
+    requests: await count('select count(*)::int c from public.squad_requests', []),
+  }
+  const [{ r }] = await sudo('select public.run_housekeeping() as r')
+  assert(r.user_presence >= 1 && r.lfg_presence >= 1 && r.squad_request_events >= 1 && r.api_rate_limits >= 1, 'counts reported')
+
+  eq(await count('select count(*)::int c from public.user_presence where user_id = $1', [old]), 0)
+  eq(await count('select count(*)::int c from public.user_presence where user_id = $1', [fresh]), 1)
+  eq(await count('select count(*)::int c from public.lfg_presence where user_id = $1', [old]), 0)
+  eq(await count('select count(*)::int c from public.lfg_presence where user_id = $1', [fresh]), 1)
+  eq(await count('select count(*)::int c from public.squad_request_events where sender_id = $1', [old]), 1, 'only the 5-day-old event is left')
+  eq(await count(`select count(*)::int c from public.api_rate_limits where bucket = 'x' and user_id = $1`, [old]), 0)
+  eq(await count(`select count(*)::int c from public.api_rate_limits where bucket = 'x' and user_id = $1`, [fresh]), 1)
+  eq({ users: await count('select count(*)::int c from public.users', []), requests: await count('select count(*)::int c from public.squad_requests', []) }, liveBefore, 'no live data touched')
+
+  const [{ svc, auth, anon }] = await sudo(`select has_function_privilege('service_role', 'public.run_housekeeping()', 'execute') as svc,
+    has_function_privilege('authenticated', 'public.run_housekeeping()', 'execute') as auth,
+    has_function_privilege('anon', 'public.run_housekeeping()', 'execute') as anon`)
+  eq([svc, auth, anon], [true, false, false])
+  await rejects(U(fresh).q('select public.run_housekeeping()'), /permission denied/)
+})
+
+await test('D-13: reverting an applied update puts the catalogue back exactly as it was', async () => {
+  const snap = async () => ({
+    ref: (await sudo('select maps, weapons, roles from public.game_reference_data where game_id = $1', [G.tarkov]))[0],
+    tile: (await sudo('select version_label, version_date from public.games where id = $1', [G.pvp]))[0],
+  })
+  const before = await snap()
+  const firstCat = Object.keys(before.ref.weapons)[0]
+
+  // what the cron would have written
+  await sudo(`update public.game_reference_data set
+      maps = maps || '["ZZ Test Map"]'::jsonb,
+      roles = roles || '[{"value":"zz-role","label":"ZZ Role","subtitle":""}]'::jsonb,
+      weapons = jsonb_set(jsonb_set(weapons, array[$2::text], (weapons -> $2::text) || '["ZZ Gun"]'::jsonb), array['ZZ Category'], '["ZZ Rifle"]'::jsonb)
+    where game_id = $1`, [G.tarkov, firstCat])
+  await sudo(`update public.games set version_label = 'ZZ Season' where id = $1`, [G.pvp])
+  const ins = (game, kind, oldV, newV) => sudo(
+    `insert into public.game_updates (game_id, kind, old_value, new_value, applied) values ($1,$2,$3,$4,true) returning id`, [game, kind, oldV, newV]).then((r) => r[0].id)
+  const ids = [
+    await ins(G.tarkov, 'map', null, 'ZZ Test Map'),
+    await ins(G.tarkov, 'role', null, 'ZZ Role'),
+    await ins(G.tarkov, 'weapon', null, `${firstCat}: ZZ Gun`),
+    await ins(G.tarkov, 'weapon', null, 'ZZ Category: ZZ Rifle'),
+    await ins(G.pvp, 'version', before.tile.version_label, 'ZZ Season'),
+  ]
+  assert(JSON.stringify(await snap()) !== JSON.stringify(before), 'the fixture really changed the catalogue')
+
+  for (const id of ids) eq((await sudo('select public.revert_game_update($1) as ok', [id]))[0].ok, true)
+  eq(await snap(), before, 'catalogue equals its prior state')
+  eq(await count(`select count(*)::int c from public.game_updates where id = any($1::uuid[]) and status = 'reverted' and not applied`, [ids]), 5)
+  eq((await sudo('select public.revert_game_update($1) as ok', [ids[0]]))[0].ok, false, 'a second revert is a no-op')
+  eq(await snap(), before, 'and changes nothing')
+
+  // a reverted addition can be recorded again
+  await ins(G.tarkov, 'map', null, 'ZZ Test Map')
+  await rejects(ins(G.tarkov, 'map', null, 'zz test map'), /duplicate key/, 'live duplicates are still refused')
+  await sudo(`delete from public.game_updates where new_value ilike 'zz%' or id = any($1::uuid[])`, [ids])
+
+  await rejects(sudo('select public.revert_game_update($1)', [randomUUID()]), /unknown game update/)
+  const [{ auth }] = await sudo(`select has_function_privilege('authenticated', 'public.revert_game_update(uuid)', 'execute') as auth`)
+  eq(auth, false)
 })
 
 // ── Summary ────────────────────────────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@
 `/api/cron/update-games` runs once a day (06:00 UTC, see `vercel.json`). For each base game it asks Claude (`claude-sonnet-5-5`, web search tool) for the live season/patch label and any new weapons, maps or roles, validates the answer, and applies only label changes and additions to Supabase. Nothing is ever deleted. Every change is logged in `public.game_updates`.
 
 ## Setup
-1. Run `supabase/migrations/20260801000100_game_updates.sql` (after the schema migrations and seed).
+1. The `game_updates` table comes with the migrations (`supabase/bundle/all_migrations.sql` on a new project).
 2. In Vercel project env vars set: `ANTHROPIC_API_KEY`, `CRON_SECRET` (Vercel sends it as `Authorization: Bearer ...` to cron routes), `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_URL`.
 3. Deploy. Cron jobs only run on production deployments. Test manually with `curl -H "Authorization: Bearer $CRON_SECRET" https://<host>/api/cron/update-games`.
 
@@ -13,6 +13,7 @@ Game ids are derived exactly as in `scripts/generate-seed.mjs` (UUIDv5), so the 
 Web content is treated as data: only plain short names pass validation, URLs/markup are rejected, additions per kind are capped per run, and re-runs are idempotent (existing items are skipped; a unique index blocks duplicate audit rows).
 
 ## Limitations
-- The UI still reads `lib/mockData.ts`. DB updates only reach players once the app reads the catalogue from Supabase.
-- Model output can be wrong or stale; review `game_updates` periodically. Changes are applied automatically (`applied = true`), not queued for approval.
-- Very large catalogues may not finish in the 10-minute (600s) limit; the response reports `skippedForTime`, and the start point rotates daily so different games are skipped each time. Note: Vercel only allows a 600s function duration on plans/config that support it (Pro with Fluid Compute); on Hobby it is capped lower.
+- The app reads the static list in `lib/mockData.ts` and overlays what this job adds (new weapons, maps, roles and relabelled seasons) at runtime through `CatalogueContext`. The overlay only adds and relabels; it never removes, so it cannot hide something the static list has. Re-seeding the database resets the lists to the code's snapshot until the next run adds the entries again.
+- Model output can be wrong or stale; review `game_updates` periodically. Changes are applied automatically, not queued for approval, and each one can be undone with `select public.revert_game_update(<id>)` (see RUNBOOK).
+- A run is capped by games (`GAME_UPDATES_MAX_GAMES`), tokens (`GAME_UPDATES_MAX_TOKENS`) and the route's 300-second `maxDuration`; the response reports what was skipped, and the starting point rotates daily so different games are skipped each time. Vercel Hobby caps function duration lower than that, so check your plan.
+- `GAME_UPDATES_ENABLED=false` stops it; `?dry=1` runs the lookups without writing anything.

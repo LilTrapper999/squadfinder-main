@@ -5,7 +5,10 @@ import { useT } from '@/context/I18nContext'
 import { MatchBreakdown } from '@/lib/types'
 import { scoreToColour } from '@/lib/matchColour'
 import { CATEGORY_LABEL, ScoreCategory } from '@/lib/profileAnswers'
-import ScoreBreakdownModal from './ScoreBreakdownModal'
+import dynamic from 'next/dynamic'
+
+// Only fetched when someone opens a score; most visits never do.
+const ScoreBreakdownModal = dynamic(() => import('./ScoreBreakdownModal'), { ssr: false })
 
 interface ScoreBarsProps {
   scores: { overall: number; gamesmanship: number; vibe: number; comms: number }
@@ -69,7 +72,7 @@ export default function ScoreBars({ scores, breakdown, displayName }: ScoreBarsP
 
   const chevron = (size: string) =>
     interactive && (
-      <span aria-hidden="true" style={{ marginLeft: '4px', fontSize: size, color: 'rgba(255,255,255,0.35)' }}>›</span>
+      <span aria-hidden="true" style={{ marginLeft: '4px', fontSize: size, color: 'rgba(255,255,255,0.62)' }}>›</span>
     )
 
   return (

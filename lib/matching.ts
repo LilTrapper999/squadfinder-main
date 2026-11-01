@@ -4,7 +4,6 @@
 import {
   Profile,
   MatchScores,
-  MatchResult,
   MatchBreakdown,
   MatchFactor,
   MatchFactorDetail,
@@ -222,30 +221,4 @@ export function explainMatch(me: Profile, them: Profile): MatchBreakdown {
       factors: [factor('languages', commsScore(me, them), 1, overlapDetail(me.languages, them.languages))],
     },
   }
-}
-
-/**
- * rankMatches
- *
- * Takes the current user's profile and an array of mock opponent profiles,
- * calculates match scores for each, and returns them sorted by overall
- * score descending (best match first).
- */
-export function rankMatches(
-  me: Profile,
-  opponents: Array<{ id: string; profile: Profile; status: string; statusGame: string | null }>
-): Array<MatchResult & { status: string; statusGame: string | null }> {
-  return opponents
-    .map((opponent, index) => ({
-      matchId: `match-${String(index + 1).padStart(2, '0')}`,
-      scores: calculateMatch(me, opponent.profile),
-      profile: opponent.profile,
-      status: opponent.status,
-      statusGame: opponent.statusGame,
-    }))
-    .sort((a, b) => b.scores.overall - a.scores.overall)
-    .map((result, index) => ({
-      ...result,
-      matchId: `match-${String(index + 1).padStart(2, '0')}`, // re-label after sort
-    }))
 }

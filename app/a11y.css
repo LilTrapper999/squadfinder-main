@@ -1,0 +1,70 @@
+/* Accessibility baseline (U-15). Kept apart from globals.css, which is rewritten rather than patched. */
+
+/* A visible focus ring on everything keyboard-reachable. Mouse clicks do not show it. */
+:focus-visible {
+  outline: 2px solid #e8a020;
+  outline-offset: 2px;
+}
+
+/* Inputs draw their own border change; keep the ring but do not clip it inside overflow:hidden parents. */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline-offset: 0;
+}
+
+/* Skip link target (first focusable element on every page). */
+.skip-link {
+  position: absolute;
+  inset-inline-start: 8px;
+  top: -64px;
+  z-index: 1000;
+  padding: 10px 14px;
+  background: #e8a020;
+  color: #0a0b0f;
+  font-weight: 700;
+  border-radius: 6px;
+  text-decoration: none;
+}
+.skip-link:focus {
+  top: 8px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* People who ask their OS for less motion get none: no background animation, pulses, floats or glow. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animated-bg,
+  .animated-grid {
+    display: none !important;
+  }
+}
+
+/* Page roots share the viewport with the footer and the offline banner, so they must not claim a full
+   viewport of their own (globals.css gives them min-height: 100vh and width: 100vw, which pushes the
+   footer over the content on short screens and adds a horizontal scrollbar next to a vertical one).
+   They are flex children of <main>, which sizes them. */
+.login-page,
+.page-content {
+  min-height: 0;
+  width: 100%;
+}

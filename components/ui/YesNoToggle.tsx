@@ -23,7 +23,7 @@ export default function YesNoToggle({ value, onChange }: YesNoToggleProps) {
               borderRadius: '8px',
               border: `2px solid ${isSelected ? '#e8a020' : 'rgba(255,255,255,0.1)'}`,
               backgroundColor: isSelected ? 'rgba(232,160,32,0.12)' : 'transparent',
-              color: isSelected ? '#e8a020' : 'rgba(255,255,255,0.5)',
+              color: isSelected ? '#e8a020' : 'rgba(255,255,255,0.62)',
               fontSize: '16px',
               fontWeight: 700,
               cursor: 'pointer',

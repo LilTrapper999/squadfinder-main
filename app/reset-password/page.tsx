@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useT } from '@/context/I18nContext'
 import { supabase } from '@/lib/supabase/client'
 import { Field, capsFont } from '@/components/auth/AuthField'
+import LogoMark from '@/components/ui/LogoMark'
 
 const MIN_PASSWORD_LENGTH = 8
 
@@ -85,7 +86,7 @@ export default function ResetPasswordPage() {
         }}
       >
         <div style={{ ...capsFont, fontSize: '28px', color: '#e8a020', letterSpacing: '0.05em', marginBottom: '24px' }}>
-          SQUADFINDER
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}><LogoMark size={22} />SQUADFINDER</span>
         </div>
 
         {status === 'checking' && (

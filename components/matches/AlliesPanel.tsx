@@ -1,11 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Ally } from '@/lib/types'
 import { useApp } from '@/context/AppContext'
 import { useT } from '@/context/I18nContext'
 import { useWindowWidth } from '@/lib/useWindowWidth'
+import ReportDialog from '@/components/reports/ReportDialog'
 
 function getScoreColor(value: number): string {
   if (value >= 90) return '#22c55e'
@@ -29,9 +29,8 @@ export function sortAllies(allies: Ally[]): Ally[] {
 
 /** Dot colour + label for an ally's presence. "Online" covers searching and in-game alike. */
 function presenceOf(status: Ally['status']): { color: string; label: string } {
-  if (status === 'ingame') return { color: '#22c55e', label: 'In game' }
   if (status === 'searching' || status === 'online') return { color: '#22c55e', label: 'Online' }
-  return { color: '#4a5568', label: 'Offline' }
+  return { color: '#8b95a5', label: 'Offline' }
 }
 
 interface IconButtonProps {
@@ -63,7 +62,7 @@ function IconButton({ label, active, activeColor, onClick, children }: IconButto
         cursor: 'pointer',
         border: `1px solid ${active || hovered ? activeColor : 'rgba(255,255,255,0.12)'}`,
         backgroundColor: active ? `${activeColor}22` : hovered ? 'rgba(255,255,255,0.04)' : 'transparent',
-        color: active || hovered ? activeColor : 'rgba(255,255,255,0.45)',
+        color: active || hovered ? activeColor : 'rgba(255,255,255,0.62)',
         transition: 'all 0.15s ease',
         padding: 0,
       }}
@@ -78,12 +77,12 @@ function IconButton({ label, active, activeColor, onClick, children }: IconButto
  * Deliberately minimal: username, match percentage, and the two actions — nothing else.
  */
 export function AllyCard({ ally }: AllyCardProps) {
-  const router = useRouter()
   const { t } = useT()
   const { toggleAllyPinned, toggleAllyBlocked } = useApp()
   const [hovered, setHovered] = useState(false)
   const presence = presenceOf(ally.status)
   const [copied, setCopied] = useState(false)
+  const [reportOpen, setReportOpen] = useState(false)
 
   async function copyUsername() {
     try {
@@ -95,12 +94,6 @@ export function AllyCard({ ally }: AllyCardProps) {
     }
   }
 
-  // A blocked ally shouldn't open a chat — the whole point is you've stopped talking.
-  const canOpenChat = !ally.blocked && !ally.blockedYou
-  function openChat() {
-    if (canOpenChat) router.push(`/chat/${ally.id}`)
-  }
-
   const borderColor =
     ally.blocked ? 'rgba(239,68,68,0.45)' :
     ally.pinned ? 'rgba(232,160,32,0.45)' :
@@ -110,12 +103,8 @@ export function AllyCard({ ally }: AllyCardProps) {
   return (
     <div
       className="ally-card"
-      onClick={openChat}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      role={canOpenChat ? 'button' : undefined}
-      tabIndex={canOpenChat ? 0 : undefined}
-      onKeyDown={(e) => { if (e.key === 'Enter') openChat() }}
       style={{
         width: '90%',
         margin: '0 auto 8px',
@@ -128,7 +117,6 @@ export function AllyCard({ ally }: AllyCardProps) {
         gap: '10px',
         flexShrink: 0,
         overflow: 'hidden',
-        cursor: canOpenChat ? 'pointer' : 'default',
         opacity: ally.blocked ? 0.6 : 1,
         transition: 'border-color 0.15s ease, opacity 0.15s ease',
       }}
@@ -164,7 +152,7 @@ export function AllyCard({ ally }: AllyCardProps) {
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              color: copied ? '#22c55e' : 'rgba(255,255,255,0.4)',
+              color: copied ? '#22c55e' : 'rgba(255,255,255,0.62)',
               transition: 'color 0.15s ease',
             }}
           >
@@ -201,13 +189,6 @@ export function AllyCard({ ally }: AllyCardProps) {
             {t(presence.label)}
           </span>
         </div>
-
-        {/* Why the chat is dead — shown on every allies list, per SPEC */}
-        {ally.blockedYou && (
-          <p style={{ margin: '3px 0 0', fontSize: '10px', color: '#ef4444', fontWeight: 600 }}>
-            {t('User has blocked you')}
-          </p>
-        )}
       </div>
 
       {/* Pin (favourite) + dislike (block) */}
@@ -235,7 +216,28 @@ export function AllyCard({ ally }: AllyCardProps) {
             <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
           </svg>
         </IconButton>
+
+        <IconButton
+          label={t('Report {name}', { name: ally.username })}
+          active={false}
+          activeColor="#ef4444"
+          onClick={() => setReportOpen(true)}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+            <line x1="4" y1="22" x2="4" y2="15" />
+          </svg>
+        </IconButton>
       </div>
+
+      {reportOpen && (
+        <ReportDialog
+          target={{ kind: 'ally', allyId: ally.id }}
+          name={ally.username}
+          onClose={() => setReportOpen(false)}
+          onAlsoBlock={ally.blocked ? undefined : async () => toggleAllyBlocked(ally.id)}
+        />
+      )}
     </div>
   )
 }
@@ -324,7 +326,7 @@ export default function AlliesPanel({ allies }: AlliesPanelProps) {
               {t('No allies yet.')}
             </p>
             <p style={{ margin: 0, fontSize: '13px', color: '#8b95a5', lineHeight: 1.5 }}>
-              {t("Accept a squad request to add them as an ally — you'll be able to chat right away.")}
+              {t("Accept a squad request to add an ally — you'll see their in-game username here.")}
             </p>
           </div>
         ) : (
